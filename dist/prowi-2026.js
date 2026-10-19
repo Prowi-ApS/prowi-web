@@ -2240,6 +2240,16 @@ window.__PW_SCENES = {"LiveMoment": {"html": "\n<helmet>\n<style>\n*{box-sizing:
     var p = Object.assign({}, s.defaults);
     p.lang = lang();
     if ('currency' in p) p.currency = p.lang === 'da' ? 'DKK' : 'EUR';
+    // token form set in Webflow: data-scene="phone still noboard fit:Podium"
+    var tok = el.getAttribute('data-scene');
+    if (tok) tok.split(/\s+/).forEach(function (t) {
+      if (!t) return;
+      var kv = t.split(':');
+      if (kv.length === 2) { p[kv[0]] = kv[1]; return; }
+      if (t.indexOf('no') === 0 && (t.slice(2) in p)) { p[t.slice(2)] = false; return; }
+      p[t] = true;
+    });
+    // JSON form set at runtime by page.js
     try {
       var raw = el.getAttribute('data-scene-props');
       if (raw) Object.assign(p, JSON.parse(raw));
