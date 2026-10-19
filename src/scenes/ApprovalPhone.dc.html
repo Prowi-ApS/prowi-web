@@ -69,7 +69,7 @@ class Component extends DCLogic {
     const el = this.rootRef.current;
     if (el && window.ResizeObserver) { this.ro = new ResizeObserver((es) => { const w = es[0].contentRect.width; if (Math.abs(w - this.state.w) > 2) this.setState({ w }); }); this.ro.observe(el); }
     const go = () => { if (this._go) return; this._go = true; this.timers.push(setTimeout(() => this.loop(), 700)); };
-    if (el && window.IntersectionObserver) { this.io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { go(); this.io.disconnect(); } }, { threshold: 0.6 }); this.io.observe(el); } else go();
+    if (el && window.IntersectionObserver) { this.io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { go(); this.io.disconnect(); } }, { threshold: 0.35 }); this.io.observe(el); this.timers.push(setTimeout(go, 6000)); } else go();
   }
   componentWillUnmount() { this.dead = true; this.timers.forEach(clearTimeout); if (this.ro) this.ro.disconnect(); if (this.io) this.io.disconnect(); }
   // 0 awaiting · 1 knob slides · 2 step 1 approved · 3 step 2 approved (statement approved) · hold · reset
@@ -90,7 +90,7 @@ class Component extends DCLogic {
     const y = new Date().getFullYear();
     const period = (function () { const d = new Date(), mi = d.getMonth(), dim = new Date(y, mi + 1, 0).getDate(); const en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mi], da = ['jan.','feb.','mar.','apr.','maj','jun.','jul.','aug.','sep.','okt.','nov.','dec.'][mi]; return lang === 'da' ? '1. ' + da + ' ' + y + ' – ' + dim + '. ' + da + ' ' + y : '1 ' + en + ' ' + y + ' – ' + dim + ' ' + en + ' ' + y; })();
     const s = (w || 250) * 0.956 / 390;
-    const screenStyle = { position: 'absolute', left: '2.2cqw', top: '2.2cqw', width: '390px', height: '844px', transform: 'scale(' + s + ')', transformOrigin: '0 0', borderRadius: '55px', overflow: 'hidden', background: '#EDE7E5', color: '#110663' };
+    const screenStyle = { position: 'absolute', left: ((w || 250) * 0.022) + 'px', top: ((w || 250) * 0.022) + 'px', width: '390px', height: '844px', transform: 'scale(' + s + ')', transformOrigin: '0 0', borderRadius: '55px', overflow: 'hidden', background: '#EDE7E5', color: '#110663' };
     const ease = 'cubic-bezier(0.2,0.8,0.2,1)';
     const d1 = phase >= 2, d2 = phase >= 3;
     const stepBase = { width: '26px', height: '26px', borderRadius: '999px', display: 'grid', placeItems: 'center', fontSize: '11px', fontWeight: 600, flex: 'none', transition: 'background 400ms ' + ease + ', color 400ms' };
