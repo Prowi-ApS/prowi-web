@@ -93,7 +93,9 @@
     if (grad && pieces[0]) {
       var id = 'pwlg-' + key;
       grad.setAttribute('id', id);
-      var p = q('path', pieces[0]); if (p) p.setAttribute('fill', 'url(#' + id + ')');
+      // absolute reference so the gradient resolves even when the page carries a <base href>
+      var ref = 'url("' + (w.location.href.split('#')[0]) + '#' + id + '")';
+      var p = q('path', pieces[0]); if (p) p.setAttribute('fill', ref);
     }
     if (pieces.length < 3 || REDUCED) return;
     var moves = [[79.37, -79.37], [11.9, 115.08], [-115.1, -11.5]];
