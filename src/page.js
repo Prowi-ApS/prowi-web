@@ -12,6 +12,12 @@
   var vw = function () { return d.documentElement.clientWidth || w.innerWidth; };
   var vh = function () { return w.innerHeight || d.documentElement.clientHeight || 800; };
   var raf = w.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
+  // scroll may happen on the window or on an inner scroll container (embeds, previews): listen to both
+  var onScroll = function (fn) {
+    var h = function () { raf(fn); };
+    w.addEventListener('scroll', h, { passive: true });
+    d.addEventListener('scroll', h, { passive: true, capture: true });
+  };
   var tween = function (ms, fn, ease, delay) {
     var t0 = performance.now() + (delay || 0);
     var step = function (now) {
@@ -52,6 +58,7 @@
     '@keyframes pwBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}',
     '@keyframes pwResProg{from{transform:scaleX(0)}to{transform:scaleX(1)}}',
     '@keyframes pwRiseA{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}',
+    '.pw-embed--live{display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;border-color:transparent;color:inherit;font-size:inherit}',
     '.pw-js [data-pw-rv]{opacity:0;transform:translateY(14px)}',
     '.pw-js [data-pw-rv].is-in{opacity:1;transform:none;transition:opacity 650ms ' + EASE + ',transform 650ms ' + EASE + '}',
     '.pw-js .pw-chip-xyqeqn{animation:pwBob 4.2s ease-in-out infinite}',
@@ -298,7 +305,7 @@
       });
     }
     reveal();
-    w.addEventListener('scroll', function () { raf(reveal); }, { passive: true });
+    onScroll(reveal);
     w.addEventListener('resize', reveal);
   })();
 
@@ -331,13 +338,17 @@
   /* ---------- Platform rail: active panel marker + click to scroll ---------- */
   (function rail() {
     var col = q('.pw-17h8c7n'), list = q('.pw-1p2arix'), marker = q('.pw-1xbspa4'); if (!col || !list) return;
-    var panels = qa(':scope > *', col), items = qa(':scope > *', list);
+    var panels = qa(':scope > *', col), items = qa(':scope > *', list).filter(function (el) { return el !== marker; });
     if (!panels.length || !items.length) return;
     var active = 0;
     var ON = 'pw-1jruqq2-1', OFF = 'pw-5bd4s2-1';
-    var onCls = (items[0].className.match(/pw-1jruqq2\S*/) || [ON])[0], offCls = (items[1] && items[1].className.match(/pw-5bd4s2\S*/) || [OFF])[0];
+    var ONS = ['pw-1jruqq2', ON], OFFS = ['pw-5bd4s2', OFF];
     var paint = function () {
-      items.forEach(function (it, i) { it.classList.toggle(onCls, i === active); it.classList.toggle(offCls, i !== active); it.setAttribute('aria-current', i === active ? 'true' : 'false'); });
+      items.forEach(function (it, i) {
+        var on = i === active;
+        ONS.forEach(function (c) { it.classList.toggle(c, on); }); OFFS.forEach(function (c) { it.classList.toggle(c, !on); });
+        it.setAttribute('aria-current', on ? 'true' : 'false');
+      });
       if (marker) { var k = items[active]; marker.style.top = k.offsetTop + 'px'; marker.style.height = k.offsetHeight + 'px'; marker.style.opacity = '1'; }
       var narrow = vw() < 1024;
       panels.forEach(function (p, i) { var inner = p.firstElementChild || p; inner.style.transition = 'opacity 500ms ' + EASE; inner.style.opacity = (narrow || i === active) ? '1' : '0.32'; });
@@ -349,10 +360,10 @@
     };
     items.forEach(function (it, i) {
       it.style.cursor = 'pointer';
-      it.addEventListener('click', function () { var p = panels[i]; if (!p) return; var top = p.getBoundingClientRect().top + (w.scrollY || 0) - (vw() < 1024 ? 122 : 88); w.scrollTo({ top: top, behavior: 'smooth' }); });
+      it.addEventListener('click', function (ev) { ev.preventDefault(); var p = panels[i]; if (!p) return; p.style.scrollMarginTop = (vw() < 1024 ? 122 : 88) + 'px'; try { p.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { p.scrollIntoView(true); } });
     });
-    paint();
-    w.addEventListener('scroll', function () { raf(scan); }, { passive: true });
+    paint(); scan();
+    onScroll(scan);
     w.addEventListener('resize', paint);
     if (d.fonts && d.fonts.ready) d.fonts.ready.then(paint);
   })();

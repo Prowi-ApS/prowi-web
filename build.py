@@ -16,6 +16,8 @@ def parse(name):
     tpl=tpl.replace("url('fonts/ReadexPro-VariableFont_wght.ttf') format('truetype')","url('%s') format('woff2')"%FONT_WOFF2)
     # strip design-doc body resets inside helmet styles (body{margin...}) — keep keyframes
     tpl=re.sub(r'body\{[^}]*\}','',tpl)
+    # strip global link resets (a{...} a:hover{...}) — they would restyle every link on the host page
+    tpl=re.sub(r'(?<![\w.#-])a(?::hover)?\{[^}]*\}','',tpl)
     defaults={k:v.get('default') for k,v in props.items() if not k.startswith('$') and isinstance(v,dict)}
     return {'html':tpl,'js':js,'props':json.dumps({k:v for k,v in props.items() if not k.startswith('$')}),'defaults':defaults}
 scenes={n:parse(n) for n in ['LiveMoment','ApprovalPhone','CompetitionScene']}
