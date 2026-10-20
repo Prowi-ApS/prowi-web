@@ -105,11 +105,15 @@
     if (grad && pieces[0]) {
       var id = grad.getAttribute('id') || ('pwlg-' + key);
       grad.setAttribute('id', id);
+      // bounding-box units: the same diagonal as the design's userSpaceOnUse + flip matrix, without the transform
+      // (WebKit mis-renders userSpaceOnUse gradients under transform-box:fill-box)
+      grad.setAttribute('gradientUnits', 'objectBoundingBox'); grad.removeAttribute('gradientTransform');
+      grad.setAttribute('x1', '0.165'); grad.setAttribute('y1', '-0.166'); grad.setAttribute('x2', '1.163'); grad.setAttribute('y2', '0.834');
       // plain fragment reference; WebKit cannot resolve absolute-URL fills to in-document gradients.
       // Only when the page carries a <base href> pointing elsewhere do we need the absolute form.
       var base = q('base[href]'), here = w.location.href.split('#')[0];
       var ref = (base && base.href.split('#')[0] !== here) ? 'url("' + here + '#' + id + '")' : 'url(#' + id + ')';
-      var p = q('path', pieces[0]); if (p) p.setAttribute('fill', ref);
+      var p = q('path', pieces[0]); if (p) p.setAttribute('fill', ref + ' #4C39CA'); // solid fallback if the reference ever fails
     }
     if (pieces.length < 3 || REDUCED) return;
     var moves = [[79.37, -79.37], [11.9, 115.08], [-115.1, -11.5]];
