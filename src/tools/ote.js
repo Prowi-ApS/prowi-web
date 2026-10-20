@@ -99,7 +99,7 @@
     var diff = ratioT - bm;
     var empty = !(baseT + varT) || !quotaT;
     var verdict = T(empty ? 'Enter all three figures.' : Math.abs(diff) <= 0.4 ? 'In line with the benchmark.' : diff > 0 ? 'Quota is high for this OTE. Reps carry more risk than peers.' : 'Quota is low for this OTE. Commission may be expensive per euro sold.');
-    var vColor = empty ? '#6664A0' : Math.abs(diff) <= 0.4 ? '#0E7A36' : '#B8710A';
+    var vColor = empty ? '#5E5B98' : Math.abs(diff) <= 0.4 ? '#0E7A36' : '#B8710A';
     var mixFixed = oteV ? Math.round(base / oteV * 100) : 0;
     var rate = quota ? vari / quota : 0;
     var per100 = rate ? '€' + (rate * 100).toFixed(2).replace('.', ',') : '—';

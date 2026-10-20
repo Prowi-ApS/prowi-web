@@ -1,6 +1,6 @@
 /* ---- Scene mounter: renders the Claude Design scenes into the .pw-embed placeholders ---- */
 (function () {
-  var SCENES = window.__PW_SCENES || {};
+  var SCENES = window.__PW_SCENES = window.__PW_SCENES || {}; // shared with the scene files, whichever runs first
   var mounted = []; // {el, name, props, root}
   var registered = {};
 
@@ -43,24 +43,15 @@
     var C = window.getDC(m.name);
     m.root.render(window.React.createElement(C, m.props));
   }
-  // Scenes used only on the platform pages live in their own files next to the bundle (dist/scenes/*.js),
-  // fetched with the integrity hash recorded at build time, and mounted when the placeholder comes near the viewport.
+  // Every scene lives in its own file next to the entry (dist/scenes/*.js), fetched by the chunk loader (src/loader.js)
+  // with the integrity hash recorded at build time. Platform-page scenes (window.__PW_LAZY) mount when the placeholder
+  // comes near the viewport; the others mount as soon as their file has run.
   var LAZY = window.__PW_LAZY || {};
   var loading = {};
-  function base() {
-    var s = document.querySelector('script[src*="prowi-2026.js"]');
-    return s ? s.src.replace(/prowi-2026\.js.*$/, '') : '';
-  }
   function want(el, name) {
-    if (loading[name] || !LAZY[name]) return;
-    var b = base(); if (!b) return;
+    if (loading[name] || !window.__pwNeed) return;
     loading[name] = true;
-    var sc = document.createElement('script');
-    sc.src = b + LAZY[name].f; sc.async = true;
-    if (LAZY[name].i) { sc.integrity = LAZY[name].i; sc.crossOrigin = 'anonymous'; }
-    sc.onload = function () { mountAll(); };
-    sc.onerror = function () { console.error('[prowi] could not load scene ' + name); };
-    document.head.appendChild(sc);
+    window.__pwNeed('scene:' + name, function () { mountAll(); });
   }
   var io = window.IntersectionObserver ? new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) { e.target.__pwNear = true; io.unobserve(e.target); mountAll(); } });
@@ -76,7 +67,7 @@
       var el = els[i];
       if (el.__pwMounted) continue;
       var name = el.getAttribute('data-component');
-      if (!SCENES[name]) { if (LAZY[name]) want(el, name); continue; }
+      if (!SCENES[name]) { want(el, name); continue; }
       if (LAZY[name] && !el.__pwNear) { watch(el); continue; }
       register(name);
       el.__pwMounted = true;

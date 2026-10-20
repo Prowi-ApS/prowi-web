@@ -15,7 +15,7 @@
       '.pw-integr__chip,.pw-integr__chip-on{user-select:none}' +
       '.pw-integr__empty{padding:48px 24px;text-align:center;border:1px solid var(--_prowi---pw-border-hairline,rgba(17,6,99,.1));display:flex;flex-direction:column;gap:8px;align-items:center}' +
       '.pw-integr__empty-title{font-size:18px;font-weight:400;color:var(--_prowi---pw-dark-purple,#110663)}' +
-      '.pw-integr__empty-text{font-size:14px;color:var(--_prowi---pw-text-muted,#6664A0)}' +
+      '.pw-integr__empty-text{font-size:14px;color:var(--_prowi---pw-text-muted,#5E5B98)}' +
       '@keyframes pwIntegrIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}' +
       '.pw-integr__in{animation:pwIntegrIn 420ms cubic-bezier(.2,.6,.2,1) both}' +
       '@media (prefers-reduced-motion:reduce){.pw-integr__in{animation:none}}';

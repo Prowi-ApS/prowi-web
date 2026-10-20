@@ -33,7 +33,7 @@
       '.pw-types__chip--empty{color:#C4C2D8}' +
       '.pw-types__empty{padding:48px 24px;text-align:center;border:1px solid rgba(17,6,99,.10);display:flex;flex-direction:column;gap:8px;align-items:center}' +
       '.pw-types__empty-title{font-size:18px;font-weight:400;color:#110663}' +
-      '.pw-types__empty-text{font-size:14px;color:#6664A0}';
+      '.pw-types__empty-text{font-size:14px;color:#5E5B98}';
     document.head.appendChild(st);
   }
 
