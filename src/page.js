@@ -7,6 +7,8 @@
   var DA = LANG === 'da';
   var EASE = 'cubic-bezier(0.2,0.6,0.2,1)', EM = 'cubic-bezier(0.2,0.8,0.2,1)', SPRING = 'cubic-bezier(0.3,1.25,0.5,1)';
   var REDUCED = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // the same bundle runs on every new page; homepage-only modules check HOME (the hero only exists there)
+  var HOME = !!root.querySelector('.pw-hero');
   // Class names are the readable Webflow names (pw-<block>__<part>); see CLASSES.md for the full list.
   var tol = function (sel) { return sel; };
   var q = function (sel, el) { return (el || d).querySelector(tol(sel)); };
@@ -83,12 +85,16 @@
     });
   })();
 
+  /* ---------- Demo page host links: Danish accessible names on the Danish page ---------- */
+  if (DA) qa('.pw-demo__host-link').forEach(function (a) { var l = a.getAttribute('aria-label') || ''; if (l === 'Email Anders') a.setAttribute('aria-label', 'Skriv til Anders'); else if (l === 'Anders on LinkedIn') a.setAttribute('aria-label', 'Anders på LinkedIn'); });
+
   /* ---------- English labels Webflow localisation cannot reach (links that carry inline SVG are not text nodes) ---------- */
   (function enLabels() {
     if (LANG !== 'en') return;
     var H = ['How it works', "Who it's for", 'Connect'];
     qa('.pw-nav__col-link').forEach(function (a, i) { var sp = q('span', a); if (sp && H[i]) sp.textContent = H[i]; });
     qa('.pw-logos__story').forEach(function (el) { var sp = q('span', el) || el; sp.textContent = 'Read the story'; });
+    qa('.pw-cta-demo .pw-cta__label').forEach(function (el) { var n = el; while (n.firstElementChild) n = n.firstElementChild; n.textContent = 'Schedule a 30-minute call'; });
     qa('a[aria-label^="Læs historien om "]').forEach(function (a) { a.setAttribute('aria-label', 'Read the story: ' + a.getAttribute('aria-label').replace('Læs historien om ', '')); });
   })();
 
@@ -219,6 +225,7 @@
         if (menu) { closeMenu(); return; }
         menu = d.createElement('div'); menu.className = 'pw-menu'; menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', T.menu);
         var logoSvg = q('svg.pw-nav__logo-svg'); var logoHtml = logoSvg ? logoSvg.outerHTML.replace(/fill="#110663"/g, 'fill="#FFFFFF"').replace(/fill="url\(#[^)]*\)"/, 'fill="#FFFFFF"') : '';
+        if (!HOME) R = Object.assign({}, R, { why: (DA ? '/' : '/en') + '#why' });
         var links = ['why', 'platform', 'app', 'customers', 'pricing', 'about', 'careers'].map(function (k) { return '<a href="' + R[k] + '">' + T[k] + '</a>'; }).join('');
         menu.innerHTML = '<div class="pw-menu__top"><span class="pw-menu__logo">' + logoHtml + '</span><button type="button" class="pw-menu__close">' + T.close + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div><nav class="pw-menu__nav">' + links + '</nav><div class="pw-menu__foot"><a class="is-cta" href="' + R.demo + '">' + T.cta + '</a><a href="' + R.login + '">' + T.login + '</a></div>';
         d.body.appendChild(menu); d.body.classList.add('pw-menu-open');
@@ -228,13 +235,17 @@
       d.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
       w.addEventListener('resize', function () { if (vw() > 991) closeMenu(); });
     }
-    // "Why Prowi" anchor → the problem section
-    var why = trigs[0]; var prob = qa('section', root)[2];
-    if (why && why.getAttribute('href') === '#why' && prob) prob.id = 'why';
+    // "Why Prowi" anchor → the problem section on the homepage; from other pages it goes to the homepage's section
+    var why = trigs[0];
+    if (why && why.getAttribute('href') === '#why') {
+      if (HOME) { var prob = qa('section', root)[2]; if (prob) prob.id = 'why'; }
+      else why.setAttribute('href', (DA ? '/' : '/en') + '#why');
+    }
   })();
 
   /* ---------- Hero: staged intro + figure parallax ---------- */
   (function hero() {
+    if (!HOME) return;
     var sec = q('section', root); if (!sec) return;
     var h1 = q('h1', sec), kick = q('.pw-hero__badge', sec), sub = q('.pw-hero__lead', sec), ctas = q('.pw-hero__actions', sec);
     var fig = q('.pw-hero__scene', sec) || q('.pw-hero__visual', sec);
@@ -328,11 +339,14 @@
   (function reveals() {
     var STEP = 70, MAXSTEPS = 7;
     var groups = []; // [{trigger, items}]
-    var secs = qa(':scope > section', root).slice(1);
     var steps = q('.pw-platform__steps');
-    secs.forEach(function (sec) {
-      // the section's content container (the hairline rail component sits first in every section)
-      var cont = qa(':scope > *', sec).filter(function (el) { return !el.classList.contains('pw-rail') && !el.querySelector(':scope > .pw-rail') && el.children.length; })[0]; if (!cont) return;
+    // homepage: every section below the hero, its content container (the hairline rail component sits first);
+    // other pages: each content band of the page section is its own group
+    var units = HOME ? qa(':scope > section', root).slice(1).map(function (sec) {
+      return { sec: sec, cont: qa(':scope > *', sec).filter(function (el) { return !el.classList.contains('pw-rail') && !el.querySelector(':scope > .pw-rail') && el.children.length; })[0] };
+    }) : qa('.pw-pricing__band', root).map(function (b) { return { sec: b, cont: b }; });
+    units.forEach(function (u) {
+      var sec = u.sec, cont = u.cont; if (!cont) return;
       var items = [];
       // walk down to the wave level: a header block is one step, a row/grid of cards gives one step per card,
       // column stacks are opened up; scenes and mock-ups stay whole
@@ -344,6 +358,8 @@
         var isRow = (cs.display.indexOf('grid') > -1 && cs.gridTemplateColumns.split(' ').length > 1) || (cs.display.indexOf('flex') > -1 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap !== 'nowrap' && kids.length > 1);
         // own animations: the platform rail switches on scroll position; the getting-started cards land on their own timeline
         if (el.matches('.pw-platform__index, .pw-start__grid')) return;
+        // the plan comparison table lands as one piece
+        if (el.matches('.pw-pricing__table-scroll')) { items.push(el); return; }
         var isHeader = el.matches('.pw-section-head') || kids.some(function (c) { return /^H[1-3]$/.test(c.tagName); });
         // a visual card / mock-up (own background, border or shadow) moves as one piece
         var isCard = depth > 0 && ((cs.backgroundColor && !/rgba?\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) || cs.backgroundImage !== 'none' || cs.boxShadow !== 'none' || parseFloat(cs.borderTopWidth) > 0);
@@ -430,6 +446,7 @@
   })();
 
   (function quarter() {
+    if (!HOME) return;
     var sec = qa(':scope > section', root)[6]; if (!sec) return;
     var amt = q('.pw-quarter__stat-value', sec), pct = q('.pw-quarter__progress-value', sec), bar = q('.pw-quarter__progress-bar', sec), delta = q('.pw-quarter__stat-delta', sec), deltaAmt = q('.pw-quarter__stat-delta-value', sec), nextSub = q('.pw-quarter__next-text', sec);
     var slip = [q('.pw-quarter__deal--meridian', sec), q('.pw-quarter__deal--orbital', sec), q('.pw-quarter__deal--keystone', sec)];
@@ -464,6 +481,7 @@
 
   /* ---------- Results: rule chips cycle, click to pick ---------- */
   (function results() {
+    if (!HOME) return;
     var sec = qa(':scope > section', root)[7]; if (!sec) return;
     var chips = qa('.pw-stack--tight > *', sec), does = q('.pw-results__does', sec), gets = q('.pw-results__gets', sec);
     if (chips.length < 2 || !does || !gets) return;
@@ -530,6 +548,217 @@
     var grid = q('.pw-start__grid'); if (!grid || REDUCED) return;
     var cards = qa(':scope > *', grid); cards.forEach(function (c) { c.style.opacity = '0'; });
     once(grid, function () { cards.forEach(function (c, i) { setTimeout(function () { c.style.animation = 'pwRiseA 600ms ' + EM + ' both'; c.style.opacity = ''; }, 400 + i * 700); }); }, 0.4);
+  })();
+
+  /* ---------- Pricing: annual / monthly toggle ----------
+     Thumb slides with a spring (420ms), pulls 10px toward the other option on hover; prices count over 700ms.
+     Monthly = annual x 1.25 (the struck "was" price), DKK on the Danish page, EUR on the English one. */
+  (function pricing() {
+    var sec = q('.pw-pricing'); if (!sec) return;
+    var seg = q('.pw-pricing__billing', sec); if (!seg) return;
+    var thumb = q('.pw-pricing__billing-thumb', seg);
+    var opts = qa(':scope > a, :scope > button', seg); if (opts.length < 2) return;
+    var save = q('.pw-pricing__save', opts[0]);
+    var TIERS = [{ amt: 37, dkk: 269 }, { amt: 49, dkk: 349 }, { amt: 89, dkk: 699 }];
+    var cards = qa('.pw-pricing__tiers > *', sec).slice(0, 3);
+    var rows = cards.map(function (c, i) { return { price: q('.pw-pricing__price', c), was: q('.pw-pricing__price-was', c), onb: q('.pw-pricing__onboarding', c), t: TIERS[i] }; });
+    var SUF = DA ? [' · årlig betaling', ' · månedlig betaling'] : [' · annual billing', ' · monthly billing'];
+    var leaf = function (el) { var n = el; while (n && n.firstElementChild) n = n.firstElementChild; return n || el; };
+    var money = function (t, k) { return DA ? Math.round(t.dkk * k) + ' kr.' : '€' + Math.round(t.amt * k); };
+    var annual = true, k = 1, hov = -1, pull = 0, ready = false;
+    var paintThumb = function () {
+      if (!thumb) return;
+      var on = annual ? 0 : 1, b = opts[on];
+      var p = (hov >= 0 && hov !== on) ? pull * 10 : 0;
+      thumb.style.transition = ready ? 'transform 420ms cubic-bezier(0.34,1.56,0.64,1), width 420ms cubic-bezier(0.34,1.56,0.64,1)' : 'none';
+      thumb.style.width = (b.offsetWidth + Math.abs(p) * 0.6) + 'px';
+      thumb.style.transform = 'translateX(' + (b.offsetLeft + (on === 0 ? p : -p)) + 'px)';
+    };
+    var paintPrices = function () {
+      rows.forEach(function (r) { if (r.price) leaf(r.price).textContent = money(r.t, k); });
+    };
+    var paint = function () {
+      opts.forEach(function (b, i) {
+        var on = (i === 0) === annual;
+        b.className = on ? 'pw-pricing__billing-option--on' : 'pw-pricing__billing-option';
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      if (save) { save.style.background = annual ? '' : '#F4F1FE'; save.style.color = annual ? '' : '#4C39CA'; }
+      rows.forEach(function (r) {
+        if (r.was) { r.was.style.display = annual ? '' : 'none'; leaf(r.was).textContent = money(r.t, 1.25); }
+        if (r.onb) { var l = leaf(r.onb); l.textContent = l.textContent.replace(/ · .*$/, '') + SUF[annual ? 0 : 1]; }
+      });
+      paintThumb();
+    };
+    var set = function (a) {
+      if (a === annual) return; annual = a;
+      var from = k, to = a ? 1 : 1.25;
+      paint();
+      if (REDUCED) { k = to; paintPrices(); return; }
+      tween(700, function (e) { k = from + (to - from) * e; paintPrices(); });
+    };
+    opts.forEach(function (b, i) {
+      b.setAttribute('role', 'button'); b.setAttribute('href', '#');
+      b.addEventListener('click', function (e) { e.preventDefault(); set(i === 0); });
+    });
+    seg.addEventListener('mousemove', function (e) {
+      var r = seg.getBoundingClientRect(), x = e.clientX - r.left;
+      var i = x < opts[0].offsetLeft + opts[0].offsetWidth + 2 ? 0 : 1, t = opts[i];
+      var dd = Math.max(-1, Math.min(1, (x - (t.offsetLeft + t.offsetWidth / 2)) / (t.offsetWidth / 2)));
+      var pn = Math.max(0, 1 - Math.abs(dd));
+      if (i !== hov || Math.abs(pn - pull) > 0.05) { hov = i; pull = pn; paintThumb(); }
+    });
+    seg.addEventListener('mouseleave', function () { hov = -1; pull = 0; paintThumb(); });
+    paint(); paintPrices();
+    var settle = function () { paintThumb(); setTimeout(function () { ready = true; }, 50); };
+    if (d.fonts && d.fonts.ready) d.fonts.ready.then(settle); else settle();
+    w.addEventListener('resize', paintThumb);
+  })();
+
+  /* ---------- MCP access: the thinking orb (Fibonacci sphere of dots, ThinkingOrb.dc.html) ---------- */
+  (function orbs() {
+    qa('.pw-pricing__orb').forEach(function (holder) {
+      if (q('canvas', holder)) return;
+      var size = 18, N = 56, color = '#4C39CA', dpr = Math.min(2, w.devicePixelRatio || 1);
+      var c = d.createElement('canvas'); c.className = 'pw-pricing__orb-canvas'; c.setAttribute('aria-hidden', 'true');
+      c.width = size * dpr; c.height = size * dpr; c.style.width = c.style.height = size + 'px';
+      holder.appendChild(c);
+      var ctx = c.getContext('2d'); if (!ctx) return; ctx.scale(dpr, dpr);
+      var R = size / 2 - 1.5, pts = [], ga = Math.PI * (3 - Math.sqrt(5));
+      for (var i = 0; i < N; i++) { var y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = ga * i; pts.push([Math.cos(th) * r, y, Math.sin(th) * r]); }
+      var t0 = performance.now(), visible = true, running = false;
+      var draw = function (now) {
+        var t = (now - t0) / 1000, ay = t * 0.55, ax = Math.sin(t * 0.35) * 0.45 + 0.35;
+        var cy = Math.cos(ay), sy = Math.sin(ay), cx = Math.cos(ax), sx = Math.sin(ax), pulse = 0.85 + 0.15 * Math.sin(t * 1.6);
+        ctx.clearRect(0, 0, size, size); ctx.fillStyle = color;
+        pts.forEach(function (p) {
+          var x1 = p[0] * cy + p[2] * sy, z1 = -p[0] * sy + p[2] * cy, y1 = p[1] * cx - z1 * sx, z2 = p[1] * sx + z1 * cx;
+          var depth = (z2 + 1) / 2;
+          ctx.globalAlpha = 0.18 + depth * 0.82; ctx.beginPath(); ctx.arc(size / 2 + x1 * R, size / 2 + y1 * R, (0.55 + depth * 0.95) * pulse, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+      };
+      var loop = function (now) { if (!visible) { running = false; return; } draw(now); raf(loop); };
+      if (REDUCED) { draw(t0 + 1200); return; }
+      var start = function () { if (!running) { running = true; raf(loop); } };
+      if (w.IntersectionObserver) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) start(); }).observe(holder);
+      else start();
+    });
+  })();
+
+  /* ---------- Book a demo: the modal (form lives in the footer component, so every page has it) ----------
+     Any link to the demo page or to #demo-form opens it in place. Work email only (free-mail domains shake);
+     the native Webflow form carries the choices plus utm_*, referrer and the page URL. */
+  (function demo() {
+    var modal = q('.pw-demo-modal'); if (!modal) return;
+    // out of the footer: a transformed ancestor (section reveal) would otherwise pin the fixed layer to it
+    if (modal.parentNode !== d.body) d.body.appendChild(modal);
+    var form = q('form', modal), email = q('input[type="email"]', modal), name = q('input[name="Name"]', modal), err = q('.pw-demo-modal__error', modal);
+    var closeBtn = q('.pw-demo-modal__close', modal), backdrop = q('.pw-demo-modal__backdrop', modal);
+    if (!form || !email) return;
+    var EN = {
+      title: 'Book a 30-minute call with Anders', name: 'Name', email: 'Work email', reps: 'Reps on commission', crm: 'CRM', src: 'How did you hear about Prowi?',
+      err: 'Please use your work email. Personal addresses (Gmail, Outlook, iCloud …) aren’t accepted.', submit: 'Request a demo', wait: 'Sending …',
+      done: 'Got it. Here is what happens next.', steps: ['Anders replies within one business day with a few times.', 'You bring one comp plan, as it is today.', 'On the call we run it on a real deal. You see the number land in the rep app.'],
+      cal: 'Or pick a time now', fail: 'Something went wrong. Try again, or email anders@prowi.io directly.', close: 'Close', dialog: 'Book a demo', ph: 'Your name'
+    };
+    var setFirstText = function (el, s) { if (!el) return; for (var i = 0; i < el.childNodes.length; i++) { var n = el.childNodes[i]; if (n.nodeType === 3 && n.nodeValue.trim()) { n.nodeValue = s; return; } } };
+    var leaf = function (el) { var n = el; while (n && n.firstElementChild) n = n.firstElementChild; return n || el; };
+    var labels = qa('.pw-demo-modal__label', modal), groupLabels = qa('.pw-demo-modal__group-label', modal);
+    if (!DA) {
+      var tt = q('.pw-demo-modal__title', modal); if (tt) leaf(tt).textContent = EN.title;
+      setFirstText(labels[0], EN.name); setFirstText(labels[1], EN.email);
+      [EN.reps, EN.crm, EN.src].forEach(function (s, i) { if (groupLabels[i]) leaf(groupLabels[i]).textContent = s; });
+      if (err) leaf(err).textContent = EN.err;
+      var dt = q('.pw-demo-modal__done-title', modal); if (dt) leaf(dt).textContent = EN.done;
+      qa('.pw-demo-modal__step-text', modal).forEach(function (el, i) { if (EN.steps[i]) leaf(el).textContent = EN.steps[i]; });
+      var cal = q('.pw-cta-demo-cal .pw-cta__label', modal); if (cal) leaf(cal).textContent = EN.cal;
+      var ft = q('.pw-demo-modal__fail-text', modal); if (ft) leaf(ft).textContent = EN.fail;
+      modal.setAttribute('aria-label', EN.dialog); if (closeBtn) closeBtn.setAttribute('aria-label', EN.close);
+    }
+    var sub = q('input[type="submit"]', form);
+    if (sub) { sub.value = DA ? 'Book demo' : EN.submit; sub.setAttribute('data-wait', DA ? 'Sender …' : EN.wait); }
+    if (name) name.setAttribute('placeholder', DA ? 'Dit navn' : EN.ph);
+    email.setAttribute('placeholder', 'you@company.com');
+    // choice chips → hidden inputs (values stay English so submissions read the same from both locales)
+    var GROUPS = [
+      ['Reps on commission', [['1–10'], ['11–30'], ['31–100'], ['100+']]],
+      ['CRM', [['HubSpot'], ['Salesforce'], ['Pipedrive'], ['Attio'], ['Other', 'Andet']]],
+      ['Heard about Prowi', [['HubSpot Marketplace'], ['Google'], ['LinkedIn'], ['A partner', 'En partner'], ['Recommendation', 'Anbefaling'], ['AI assistant', 'AI-assistent'], ['Other', 'Andet']]]
+    ];
+    qa('.pw-demo-modal__chips', modal).forEach(function (box, gi) {
+      var g = GROUPS[gi]; if (!g) return;
+      var input = q('input[name="' + g[0] + '"]', form) || q('input[type="hidden"]', box.parentNode); if (!input) return;
+      box.setAttribute('role', 'radiogroup'); if (groupLabels[gi]) box.setAttribute('aria-label', groupLabels[gi].textContent.trim());
+      var chips = g[1].map(function (o) {
+        var b = d.createElement('button'); b.type = 'button'; b.className = 'pw-demo-modal__chip'; b.setAttribute('role', 'radio');
+        b.textContent = DA && o[1] ? o[1] : o[0]; b.setAttribute('data-value', o[0]);
+        b.addEventListener('click', function () { input.value = o[0]; paint(); });
+        box.appendChild(b); return b;
+      });
+      var paint = function () { chips.forEach(function (b) { b.setAttribute('aria-checked', b.getAttribute('data-value') === input.value ? 'true' : 'false'); }); };
+      paint();
+    });
+    // where the visitor came from: kept for the session so a later page still carries the landing UTMs
+    var store = {}; try { store = JSON.parse(sessionStorage.getItem('pwAttribution') || '{}'); } catch (e) {}
+    try {
+      var qs = new URLSearchParams(w.location.search), hs = new URLSearchParams((w.location.hash || '').replace(/^#/, ''));
+      ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (k) { var v = qs.get(k) || hs.get(k); if (v) store[k] = v; });
+      if (!store.referrer && d.referrer && d.referrer.indexOf(w.location.host) < 0) store.referrer = d.referrer;
+      sessionStorage.setItem('pwAttribution', JSON.stringify(store));
+    } catch (e) {}
+    var fill = function () {
+      var set = function (n, v) { var el = q('input[name="' + n + '"]', form); if (el) el.value = v || ''; };
+      set('utm_source', store.utm_source); set('utm_medium', store.utm_medium); set('utm_campaign', store.utm_campaign);
+      set('Referrer', store.referrer || d.referrer); set('Page', w.location.href.split('#')[0]);
+    };
+    // work email check
+    var FREE = ['gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.dk', 'yahoo.co.uk', 'hotmail.com', 'hotmail.dk', 'hotmail.co.uk', 'outlook.com', 'outlook.dk', 'live.com', 'live.dk', 'msn.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com', 'protonmail.com', 'proton.me', 'pm.me', 'gmx.com', 'gmx.de', 'mail.com', 'yandex.com', 'zoho.com', 'fastmail.com', 'tutanota.com', 'hey.com', 'mail.dk', 'jubii.dk', 'post.dk', 'ofir.dk', 'sol.dk', 'stofanet.dk', 'youmail.dk', 'tdcadsl.dk', 'webspeed.dk', 'it.dk', 'privat.dk'];
+    var isWork = function (v) { var m = String(v || '').trim().toLowerCase().match(/^[^\s@]+@([^\s@]+\.[a-z]{2,})$/); if (!m) return false; return !FREE.some(function (f) { return m[1] === f || m[1].slice(-(f.length + 1)) === '.' + f; }); };
+    var bad = false;
+    var showErr = function (on) {
+      bad = on; if (err) err.style.display = on ? 'block' : '';
+      email.style.borderColor = on ? '#B42318' : ''; email.setAttribute('aria-invalid', on ? 'true' : 'false');
+      if (on && !REDUCED) { var lab = email.parentNode; lab.style.animation = 'none'; void lab.offsetWidth; lab.style.animation = 'pwShakeX 480ms cubic-bezier(0.36,0.07,0.19,0.97) both'; }
+    };
+    email.addEventListener('blur', function () { if (email.value.trim()) showErr(!isWork(email.value)); });
+    email.addEventListener('input', function () { if (bad && isWork(email.value)) showErr(false); });
+    form.addEventListener('submit', function (e) {
+      if (!isWork(email.value)) { e.preventDefault(); e.stopImmediatePropagation(); showErr(true); email.focus(); return; }
+      fill();
+    }, true);
+    // open / close
+    var opener = null;
+    var open = function () {
+      if (modal.classList.contains('is-open')) return;
+      opener = d.activeElement; fill();
+      modal.classList.add('is-open'); d.body.style.overflow = 'hidden';
+      setTimeout(function () { var f = (name && !name.value) ? name : email; try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } }, 60);
+    };
+    var close = function () {
+      if (!modal.classList.contains('is-open')) return;
+      modal.classList.remove('is-open'); d.body.style.overflow = '';
+      if (opener && opener.focus) try { opener.focus({ preventScroll: true }); } catch (e) {}
+    };
+    if (closeBtn) { closeBtn.setAttribute('role', 'button'); closeBtn.addEventListener('click', function (e) { e.preventDefault(); close(); }); }
+    if (backdrop) backdrop.addEventListener('click', close);
+    d.addEventListener('keydown', function (e) {
+      if (!modal.classList.contains('is-open')) return;
+      if (e.key === 'Escape') { close(); return; }
+      if (e.key === 'Tab') { // keep focus inside the dialog
+        var f = qa('a[href], button, input:not([type="hidden"]), [tabindex]:not([tabindex="-1"])', modal).filter(function (el) { return el.offsetParent !== null; });
+        if (!f.length) return; var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && d.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && d.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    var DEMO = /^(?:https?:\/\/[^\/]+)?\/(?:en\/)?(?:demo|book-demo)(?:-2026)?\/?(?:[?#].*)?$/;
+    d.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a'); if (!a || modal.contains(a) || e.defaultPrevented) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+      var h = a.getAttribute('href') || '';
+      if (h === '#demo-form' || DEMO.test(h)) { e.preventDefault(); open(); }
+    });
+    if (w.location.hash === '#demo-form') setTimeout(open, 400);
   })();
 
   /* ---------- Footer: copyright year ---------- */
