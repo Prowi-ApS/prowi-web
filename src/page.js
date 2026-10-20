@@ -318,29 +318,65 @@
     w.addEventListener('resize', reveal);
   })();
 
-  /* ---------- Section reveals (fade + 14px rise at 94% of the viewport) ---------- */
+  /* ---------- Section reveals ----------
+     Spec: each section below the hero reveals once, when its top passes 80% of the viewport height.
+     Fade 0 -> 1 + 12px rise, 440ms, cubic-bezier(0.2,0.8,0.2,1). Header first, then children 70ms apart
+     (one wave per section). Platform panels are tall, so each panel is its own group. Reduced motion: final state. */
   (function reveals() {
+    var STEP = 70, MAXSTEPS = 7;
+    var groups = []; // [{trigger, items}]
     var secs = qa(':scope > section', root).slice(1);
-    var targets = [];
+    var steps = q('.pw-platform__steps');
     secs.forEach(function (sec) {
-      var cont = sec.firstElementChild; if (!cont) return;
-      var blocks = qa(':scope > *', cont);
-      blocks.forEach(function (b) {
-        var kids = qa(':scope > *', b);
-        // grids: reveal each cell; otherwise the block itself
-        (kids.length > 1 && kids.length < 9 ? kids : [b]).forEach(function (el) { if (el.tagName === 'SECTION' || el.tagName === 'FOOTER') return; el.setAttribute('data-pw-rv', ''); targets.push(el); });
+      // the section's content container (the hairline rail component sits first in every section)
+      var cont = qa(':scope > *', sec).filter(function (el) { return !el.classList.contains('pw-rail') && !el.querySelector(':scope > .pw-rail') && el.children.length; })[0]; if (!cont) return;
+      var items = [];
+      // walk down to the wave level: a header block is one step, a row/grid of cards gives one step per card,
+      // column stacks are opened up; scenes and mock-ups stay whole
+      var collect = function (el, depth) {
+        if (el === steps) return;
+        if (steps && el.contains(steps)) { qa(':scope > *', el).forEach(function (c) { collect(c, depth + 1); }); return; }
+        var kids = qa(':scope > *', el).filter(function (c) { return !c.classList.contains('pw-rail'); });
+        var cs = w.getComputedStyle(el);
+        var isRow = (cs.display.indexOf('grid') > -1 && cs.gridTemplateColumns.split(' ').length > 1) || (cs.display.indexOf('flex') > -1 && cs.flexDirection.indexOf('row') === 0 && cs.flexWrap !== 'nowrap' && kids.length > 1);
+        // own animations: the platform rail switches on scroll position; the getting-started cards land on their own timeline
+        if (el.matches('.pw-platform__index, .pw-start__grid')) return;
+        var isHeader = el.matches('.pw-section-head') || kids.some(function (c) { return /^H[1-3]$/.test(c.tagName); });
+        // a visual card / mock-up (own background, border or shadow) moves as one piece
+        var isCard = depth > 0 && ((cs.backgroundColor && !/rgba?\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) || cs.backgroundImage !== 'none' || cs.boxShadow !== 'none' || parseFloat(cs.borderTopWidth) > 0);
+        // grids/rows of cells (logo strip, quote cards): one step per cell, even when the grid paints the hairlines
+        if (isRow && kids.length > 1 && kids.length <= 8 && !isHeader && !el.matches('.pw-quarter, .pw-embed')) { kids.forEach(function (c) { items.push(c); }); return; }
+        if (isHeader || isCard || !kids.length || depth >= 4 || /^(P|H[1-6]|A|BUTTON|IMG|SVG|SPAN)$/.test(el.tagName) || el.matches('.pw-embed, [data-component]')) { items.push(el); return; }
+        if (kids.length === 1) { collect(kids[0], depth + 1); return; }
+        if (isRow && kids.length <= 8) { kids.forEach(function (c) { items.push(c); }); return; }
+        if (isRow) { items.push(el); return; }
+        kids.forEach(function (c) { collect(c, depth + 1); });
+      };
+      collect(cont, 0);
+      items = items.filter(function (el) { return el.tagName !== 'SECTION' && el.tagName !== 'FOOTER' && !el.classList.contains('pw-rail'); });
+      if (items.length) groups.push({ trigger: sec, items: items });
+    });
+    if (steps) qa(':scope > *', steps).forEach(function (p) { groups.push({ trigger: p, items: [p] }); });
+    groups.forEach(function (g) {
+      g.items.forEach(function (el, k) {
+        el.setAttribute('data-pw-rv', '');
+        el.style.transitionDelay = Math.min(k, MAXSTEPS) * STEP + 'ms';
       });
     });
-    // the platform panel column: each panel separately
-    var col = q('.pw-platform__steps'); if (col) { col.removeAttribute('data-pw-rv'); qa(':scope > *', col).forEach(function (p) { p.setAttribute('data-pw-rv', ''); targets.push(p); }); }
-    // the footer must never be held back
-    qa('footer [data-pw-rv], footer', root).forEach(function (el) { el.removeAttribute('data-pw-rv'); });
-    var show = function (el) { el.classList.add('is-in'); };
-    if (!w.IntersectionObserver || REDUCED) { targets.forEach(show); return; }
-    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } }); }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-    targets.forEach(function (t) { io.observe(t); });
-    // anything already in view at load
-    var check = function () { targets.forEach(function (t) { var r = t.getBoundingClientRect(); if (r.top < vh() * 0.94 && r.bottom > 0) show(t); }); };
+    var show = function (g) {
+      if (g.done) return; g.done = true;
+      g.items.forEach(function (el) { el.classList.add('is-in'); });
+      // drop the stagger delay afterwards so hover transitions on these elements are not delayed
+      setTimeout(function () { g.items.forEach(function (el) { el.style.transitionDelay = ''; }); }, MAXSTEPS * STEP + 500);
+    };
+    if (!w.IntersectionObserver || REDUCED) { groups.forEach(show); return; }
+    var byEl = new Map(); groups.forEach(function (g) { byEl.set(g.trigger, g); });
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { show(byEl.get(e.target)); io.unobserve(e.target); } });
+    }, { threshold: 0, rootMargin: '0px 0px -20% 0px' });
+    groups.forEach(function (g) { io.observe(g.trigger); });
+    // anything whose top is already above the 80% line at load (e.g. reload mid-page)
+    var check = function () { groups.forEach(function (g) { if (!g.done && g.trigger.getBoundingClientRect().top < vh() * 0.8) { show(g); io.unobserve(g.trigger); } }); };
     check(); setTimeout(check, 400);
   })();
 
