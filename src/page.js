@@ -243,7 +243,9 @@
     var h1 = q('h1', sec), kick = q('.pw-link-1wca5rj', sec), sub = q('.pw-p-1p8m0wq', sec), ctas = q('.pw-zn8x3h', sec);
     var fig = q('.pw-1uzws7q', sec) || q('.pw-rcufr0', sec);
     var scene = q('.pw-embed[data-component="LiveMoment"]', sec);
-    var seen = false, introDone = false;
+    var seen = false, introDone = false, introOver = false;
+    // the scene plays only once the intro has finished AND the figure has been scrolled into view (design: heroHold)
+    var release = function () { if (seen && introOver) sceneProps(scene, { hold: false }); };
     // figure parallax: tilts in as it scrolls up; 0 at bottom edge → 1 when its centre reaches 50% of the viewport
     var reveal = function () {
       if (!fig || REDUCED) return;
@@ -253,7 +255,7 @@
       fig.style.transformOrigin = '50% 0%';
       fig.style.transform = 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
       fig.style.opacity = (0.25 + 0.75 * e).toFixed(3);
-      if (!seen && (r.top + r.height / 2) < H * 0.62) { seen = true; finish(); }
+      if (!seen && (r.top + r.height / 2) < H * 0.62) { seen = true; if (introDone) release(); else finish(); }
     };
     if (fig) { fig.style.willChange = 'transform, opacity'; }
     var timers = [];
@@ -264,7 +266,7 @@
       [kick, sub, ctas].forEach(function (el) { if (el) { el.style.opacity = ''; el.style.animation = ''; } });
       if (h1) qa('span.pw-ch', h1).forEach(function (s) { s.style.opacity = ''; s.style.animation = ''; });
       if (sub) qa('span.pw-ln', sub).forEach(function (s) { s.style.opacity = ''; s.style.animation = ''; });
-      sceneProps(scene, { hold: false });
+      introOver = true; release();
     };
     if (REDUCED || !h1) { finish(); }
     else {
@@ -311,7 +313,7 @@
           if (kick) kick.style.animation = 'pwFadeIn 500ms linear both';
           if (ctas) ctas.style.animation = 'pwRise 700ms ' + EASE + ' both';
         });
-        at(acc + 800, function () { sceneProps(scene, { hold: false }); });
+        at(acc + 800, function () { introOver = true; release(); });
         at(acc + 2000, finish);
       });
     }
