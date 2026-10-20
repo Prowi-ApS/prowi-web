@@ -46,7 +46,10 @@ parts.append(minify(open('src/scenes.js',encoding='utf-8').read())+'\n')
 # page CSS: also pasted into the Webflow page head as <style id="pw-css"> (see head-css.html); keep both in sync
 CSS=open('src/page.css',encoding='utf-8').read()
 CSS_MIN=subprocess.run([ESBUILD,'--minify','--loader=css'],input=CSS.encode(),capture_output=True,check=True).stdout.decode().strip() if os.path.exists(ESBUILD) else CSS
-open('dist/head-css.html','w',encoding='utf-8').write('<style id="pw-css">'+CSS_MIN+'</style>\n')
+# Above-the-fold subset (hero HubSpot badge) for the Webflow page head, so the badge is laid out at first paint.
+_TOP=re.sub(r'@media[^{]*\{(?:[^{}]*\{[^}]*\})*\}','',CSS_MIN)
+CRIT=''.join(re.findall(r'\.pw-hero__badge-stars(?:>\*)?\{[^}]*\}',_TOP))+''.join(re.findall(r'@media \(max-width:767px\)\{\.pw-hero__badge.*?\}\}',CSS_MIN))
+open('dist/head-critical.html','w',encoding='utf-8').write('<style id="pw-css-critical">'+CRIT+'</style>\n')
 parts.append('window.__PW_CSS = %s;\n'%json.dumps(CSS_MIN))
 parts.append(minify(open('src/page.js',encoding='utf-8').read())+'\n')
 os.makedirs('dist',exist_ok=True)
