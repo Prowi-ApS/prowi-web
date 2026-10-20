@@ -99,9 +99,24 @@
     if (m) qa('.pw-case__more a[data-story="' + m[1] + '"]').forEach(function (a) { a.style.display = 'none'; });
   })();
 
-  /* ---------- Tool pages: plain internal links (set as URLs, not page links) get the /en prefix on the English site ---------- */
-  if (!DA) qa('[data-tool] a[href^="/"], .pw-fit__bridge a[href^="/"]').forEach(function (a) {
-    var h = a.getAttribute('href'); if (!/^\/en(\/|$)/.test(h)) a.setAttribute('href', '/en' + h);
+  /* ---------- Plain internal links (set as URLs, not page links) get their English path on the English site ---------- */
+  if (!DA) {
+    var EN_PATH = { '/provisionsordbogen': '/commission-dictionary', '/virksomhedstyper-oversigt': '/business-types', '/integrationer': '/integrations',
+      '/kunder': '/customers', '/pris': '/pricing', '/om-os': '/about-us', '/ote-beregner': '/ote-ratio-calculator', '/corrections-beregner': '/corrections-calculator' };
+    qa('a[href^="/"]').forEach(function (a) {
+      if (a.closest('.w-richtext')) return;
+      var h = a.getAttribute('href'); if (/^\/en(\/|$)/.test(h) || /^\/\//.test(h)) return;
+      var m = h.match(/^(\/[^\/?#]*)(.*)$/); var head = m ? m[1] : h, rest = m ? m[2] : '';
+      if (EN_PATH[head] && (!rest || rest.charAt(0) !== '/')) head = EN_PATH[head];
+      a.setAttribute('href', '/en' + head + rest);
+    });
+  }
+
+  /* ---------- CMS dates bound as plain text: show "month year" where the template asks for it (data-format) ---------- */
+  qa('[data-format]').forEach(function (el) {
+    var t = el.querySelector('*') || el; while (t.firstElementChild) t = t.firstElementChild;
+    var d = new Date((t.textContent || '').trim()); if (isNaN(d)) return;
+    t.textContent = d.toLocaleDateString(DA ? 'da-DK' : 'en-GB', { month: 'long', year: 'numeric' });
   });
 
   /* ---------- Demo page host links: Danish accessible names on the Danish page ---------- */
