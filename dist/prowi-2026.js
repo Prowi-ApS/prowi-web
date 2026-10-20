@@ -2399,8 +2399,10 @@ window.__PW_SCENES = {"LiveMoment": {"html": "\n<helmet>\n<style>\n*{box-sizing:
     if (grad && pieces[0]) {
       var id = 'pwlg-' + key;
       grad.setAttribute('id', id);
-      // absolute reference so the gradient resolves even when the page carries a <base href>
-      var ref = 'url("' + (w.location.href.split('#')[0]) + '#' + id + '")';
+      // plain fragment reference; WebKit cannot resolve absolute-URL fills to in-document gradients.
+      // Only when the page carries a <base href> pointing elsewhere do we need the absolute form.
+      var base = q('base[href]'), here = w.location.href.split('#')[0];
+      var ref = (base && base.href.split('#')[0] !== here) ? 'url("' + here + '#' + id + '")' : 'url(#' + id + ')';
       var p = q('path', pieces[0]); if (p) p.setAttribute('fill', ref);
     }
     if (pieces.length < 3 || REDUCED) return;
