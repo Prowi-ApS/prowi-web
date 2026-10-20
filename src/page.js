@@ -413,7 +413,7 @@
     };
     items.forEach(function (it, i) {
       it.style.cursor = 'pointer';
-      it.addEventListener('click', function (ev) { ev.preventDefault(); var p = panels[i]; if (!p) return; p.style.scrollMarginTop = (vw() < 1024 ? 122 : 88) + 'px'; try { p.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { p.scrollIntoView(true); } });
+      it.addEventListener('click', function (ev) { ev.preventDefault(); var p = panels[i]; if (!p) return; p.style.scrollMarginTop = (vw() < 768 ? 122 : vw() < 1024 ? 134 : 100) + 'px'; try { p.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { p.scrollIntoView(true); } });
     });
     paint(); scan();
     onScroll(scan);
