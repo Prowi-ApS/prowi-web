@@ -99,10 +99,11 @@
   /* ---------- Logo: gradient id repair + hover turn ---------- */
   function logo(svg, key) {
     if (!svg) return;
-    var grad = q('linearGradient', svg);
+    // namespace lookup: WebKit's querySelector is unreliable with camelCase SVG tag names in HTML documents
+    var grad = (svg.getElementsByTagNameNS('http://www.w3.org/2000/svg', 'linearGradient') || [])[0] || q('linearGradient', svg) || q('defs > *', svg);
     var pieces = qa('g.pw-1fatfip', svg);
     if (grad && pieces[0]) {
-      var id = 'pwlg-' + key;
+      var id = grad.getAttribute('id') || ('pwlg-' + key);
       grad.setAttribute('id', id);
       // plain fragment reference; WebKit cannot resolve absolute-URL fills to in-document gradients.
       // Only when the page carries a <base href> pointing elsewhere do we need the absolute form.
