@@ -419,6 +419,13 @@
   })();
 
   /* ---------- Q4 chart: chips slide in from "next quarter", bar fills, amount counts ---------- */
+  /* ---------- Q4 chart: the plot strip scrolls sideways at 749px and below (CSS: .pw-quarter__scroll) ---------- */
+  (function quarterScroll() {
+    var plot = q('.pw-quarter__plot'); if (!plot || plot.parentNode.classList.contains('pw-quarter__scroll')) return;
+    var wrap = d.createElement('div'); wrap.className = 'pw-quarter__scroll';
+    plot.parentNode.insertBefore(wrap, plot); wrap.appendChild(plot);
+  })();
+
   (function quarter() {
     var sec = qa(':scope > section', root)[6]; if (!sec) return;
     var amt = q('.pw-quarter__stat-value', sec), pct = q('.pw-quarter__progress-value', sec), bar = q('.pw-quarter__progress-bar', sec), delta = q('.pw-quarter__stat-delta', sec), deltaAmt = q('.pw-quarter__stat-delta-value', sec), nextSub = q('.pw-quarter__next-text', sec);

@@ -55,3 +55,6 @@
 .pw-menu__logo svg{height:28px;width:auto;display:block}
 body.pw-menu-open{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.pw-js [data-pw-rv]{opacity:1;transform:none;transition:none!important}.pw-js .pw-platform__chip--earned,.pw-js .pw-platform__chip--accelerator,.pw-js .pw-platform__chip--trophy{animation:none}}
+@media (max-width:749px){.pw-quarter__scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;border-radius:12px}.pw-quarter__scroll>.pw-quarter__plot{min-width:720px;margin-left:72px;overflow:visible}}
+/* the logo strip bleeds 32px past each side by design; keep it from making the page scroll sideways on phones */
+.pw-root{overflow-x:clip}
