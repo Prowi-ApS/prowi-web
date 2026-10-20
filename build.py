@@ -62,6 +62,10 @@ CRIT=''.join(re.findall(r'\.pw-hero__badge-stars(?:>\*)?\{[^}]*\}',_TOP))+''.joi
 open('dist/head-critical.html','w',encoding='utf-8').write('<style id="pw-css-critical">'+CRIT+'</style>\n')
 parts.append('window.__PW_CSS = %s;\n'%json.dumps(CSS_MIN))
 parts.append(minify(open('src/page.js',encoding='utf-8').read())+'\n')
+# interactive tools (OTE, business case, corrections, fit check): one module each, guarded by their own root element
+import glob as _glob
+for _f in sorted(_glob.glob('src/tools/*.js')):
+    parts.append(minify(open(_f,encoding='utf-8').read())+'\n')
 os.makedirs('dist',exist_ok=True)
 out=''.join(parts)
 open(OUT,'w').write(out)
