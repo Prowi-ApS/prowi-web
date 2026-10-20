@@ -69,3 +69,6 @@ body.pw-menu-open{overflow:hidden}
 .pw-demo-modal__chip[aria-checked="true"]{border-color:#110663;background:#110663;color:#fff}
 .pw-demo-modal__chip:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.pw-demo-modal.is-open .pw-demo-modal__backdrop,.pw-demo-modal.is-open .pw-demo-modal__panel{animation:none}}
+/* Pricing: the toggle thumb stays inside its track; the check glyph uses the system font like the design (Readex Pro has no U+2713) */
+.pw-pricing__billing{overflow:hidden}
+.pw-pricing__cell--yes{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
