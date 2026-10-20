@@ -1,4 +1,4 @@
-import re, json, html, os, hashlib, sys
+import re, json, html, os, hashlib, sys, subprocess, shutil
 SRC='src/scenes/'
 OUT='dist/prowi-2026.js'
 FONT_WOFF2='https://cdn.prod.website-files.com/6853f29490f75918cfe11ed3/fonts/6ad62e79ffa54333cee49f07-ReadexPro-Variable.woff2'
@@ -20,18 +20,30 @@ def parse(name):
     tpl=re.sub(r'(?<![\w.#-])a(?::hover)?\{[^}]*\}','',tpl)
     defaults={k:v.get('default') for k,v in props.items() if not k.startswith('$') and isinstance(v,dict)}
     return {'html':tpl,'js':js,'props':json.dumps({k:v for k,v in props.items() if not k.startswith('$')}),'defaults':defaults}
+
+ESBUILD=os.path.join('node_modules','.bin','esbuild')
+def minify(code):
+    """Minify one self-contained script with esbuild (npm i installs it). Falls back to the source if esbuild is missing."""
+    if os.environ.get('PW_NOMINIFY') or not os.path.exists(ESBUILD): return code
+    r=subprocess.run([ESBUILD,'--minify','--target=es2017','--loader=js','--charset=utf8','--legal-comments=none'],input=code.encode('utf-8'),capture_output=True,check=True)
+    return r.stdout.decode('utf-8')
 scenes={n:parse(n) for n in ['LiveMoment','ApprovalPhone','CompetitionScene']}
 parts=[]
 parts.append('/* Prowi 2026 site bundle — built from the Claude Design export. Do not edit by hand. */\n')
 parts.append('(function(){ if (window.__prowiBundle) return; window.__prowiBundle = true;\n')
 parts.append('window.__resources = Object.assign(window.__resources||{}, %s);\n'%json.dumps(RES))
 parts.append('})();\n')
-parts.append(open('vendor/react.production.min.js').read()+'\n')
-parts.append(open('vendor/react-dom.production.min.js').read()+'\n')
-parts.append(open('src/dc-runtime.js').read()+'\n')
+# UI runtime for the scenes: Preact (preact/compat, ~10 KB gz) exposed as window.React/ReactDOM.
+# Set PW_VENDOR=react to build with the original React 18 files instead (rollback).
+if os.environ.get('PW_VENDOR')=='react':
+    parts.append(open('vendor/react.production.min.js').read()+'\n')
+    parts.append(open('vendor/react-dom.production.min.js').read()+'\n')
+else:
+    parts.append(open('vendor/preact-compat-shim.min.js').read()+'\n')
+parts.append(minify(open('src/dc-runtime.js',encoding='utf-8').read())+'\n')
 parts.append('window.__PW_SCENES = %s;\n'%json.dumps(scenes))
-parts.append(open('src/scenes.js').read()+'\n')
-parts.append(open('src/page.js').read()+'\n')
+parts.append(minify(open('src/scenes.js',encoding='utf-8').read())+'\n')
+parts.append(minify(open('src/page.js',encoding='utf-8').read())+'\n')
 os.makedirs('dist',exist_ok=True)
 out=''.join(parts)
 open(OUT,'w').write(out)
