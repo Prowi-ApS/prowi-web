@@ -106,7 +106,7 @@
   /* ---------- Plain internal links (set as URLs, not page links) get their English path on the English site ---------- */
   if (!DA) qa('.pw-legal__aside nav[aria-label]').forEach(function (n) { n.setAttribute('aria-label', 'Contents'); });
   if (!DA) {
-    var EN_PATH = { '/karriere': '/careers', '/partnerprogram': '/partner-program', '/provisionsmodeller': '/commission-models', '/provisionsordbogen': '/commission-dictionary', '/virksomhedstyper-oversigt': '/business-types', '/integrationer': '/integrations',
+    var EN_PATH = { '/byg-eller-koeb-provisionssoftware': '/build-or-buy-commission-software', '/karriere': '/careers', '/partnerprogram': '/partner-program', '/provisionsmodeller': '/commission-models', '/provisionsordbogen': '/commission-dictionary', '/virksomhedstyper-oversigt': '/business-types', '/integrationer': '/integrations',
       '/kunder': '/customers', '/pris': '/pricing', '/om-os': '/about-us', '/ote-beregner': '/ote-ratio-calculator', '/corrections-beregner': '/corrections-calculator' };
     qa('a[href^="/"]').forEach(function (a) {
       if (a.closest('.w-richtext')) return;

@@ -215,14 +215,18 @@
     });
     if (!radar) return;
     radar.setAttribute('viewBox', '0 0 360 360'); vbScale = 1;
-    if (narrow) {
-      try {
-        var bb = radar.getBBox();
-        var hx = Math.max(180, 180 - bb.x, bb.x + bb.width - 180) + 4, hy = Math.max(180, 180 - bb.y, bb.y + bb.height - 180) + 4;
-        radar.setAttribute('viewBox', [180 - hx, 180 - hy, 2 * hx, 2 * hy].map(f1).join(' '));
-        vbScale = 180 / hx;
-      } catch (e) {}
-    }
+    var wrap = radar.parentNode && radar.parentNode.classList && radar.parentNode.classList.contains('pw-fit__radar-wrap') ? radar.parentNode : null;
+    if (wrap) wrap.style.maxWidth = '';
+    // the axis labels sit outside the 360-unit chart: widen the viewBox so they are always inside the svg
+    // (no reliance on overflow:visible, which some hosts/editors clip); on desktop the wrapper grows by the same
+    // factor so the chart itself keeps the design's 440px size
+    try {
+      var bb = radar.getBBox();
+      var hx = Math.max(180, 180 - bb.x, bb.x + bb.width - 180) + 4, hy = Math.max(180, 180 - bb.y, bb.y + bb.height - 180) + 4;
+      radar.setAttribute('viewBox', [180 - hx, 180 - hy, 2 * hx, 2 * hy].map(f1).join(' '));
+      vbScale = 180 / hx;
+      if (!narrow && wrap) { wrap.style.maxWidth = Math.round(440 * hx / 180) + 'px'; }
+    } catch (e) {}
   }
   if (radar) radar.setAttribute('aria-label', T.radar);
   layoutLabels();
