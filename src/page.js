@@ -240,8 +240,11 @@
     var fig = q('.pw-hero__scene', sec) || q('.pw-hero__visual', sec);
     var scene = q('.pw-embed[data-component="LiveMoment"]', sec);
     var seen = false, introDone = false, introOver = false;
-    // the scene plays only once the intro has finished AND the figure has been scrolled into view (design: heroHold)
-    var release = function () { if (seen && introOver) sceneProps(scene, { hold: false }); };
+    // the pipeline scene starts when the intro (title, sentences, CTA) has finished AND either the figure is scrolled
+    // into view or 3 s have passed since the intro ended - whichever comes first
+    var released = false, AUTO_MS = 3000;
+    var release = function (force) { if (released || !introOver || !(seen || force)) return; released = true; sceneProps(scene, { hold: false }); };
+    var introEnded = function () { if (introOver) return; introOver = true; release(); setTimeout(function () { release(true); }, AUTO_MS); };
     // figure parallax: tilts in as it scrolls up; 0 at bottom edge → 1 when its centre reaches 50% of the viewport
     var reveal = function () {
       if (!fig || REDUCED) return;
@@ -262,7 +265,7 @@
       [kick, sub, ctas].forEach(function (el) { if (el) { el.style.opacity = ''; el.style.animation = ''; } });
       if (h1) qa('span.pw-ch', h1).forEach(function (s) { s.style.opacity = ''; s.style.animation = ''; });
       if (sub) qa('span.pw-ln', sub).forEach(function (s) { s.style.opacity = ''; s.style.animation = ''; });
-      introOver = true; release();
+      introEnded();
     };
     if (REDUCED || !h1) { finish(); }
     else {
@@ -309,7 +312,7 @@
           if (kick) kick.style.animation = 'pwFadeIn 500ms linear both';
           if (ctas) ctas.style.animation = 'pwRise 700ms ' + EASE + ' both';
         });
-        at(acc + 800, function () { introOver = true; release(); });
+        at(acc + 220 + 700, introEnded); // CTA rise (700ms) has landed
         at(acc + 2000, finish);
       });
     }
