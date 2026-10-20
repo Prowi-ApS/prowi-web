@@ -43,6 +43,11 @@ else:
 parts.append(minify(open('src/dc-runtime.js',encoding='utf-8').read())+'\n')
 parts.append('window.__PW_SCENES = %s;\n'%json.dumps(scenes))
 parts.append(minify(open('src/scenes.js',encoding='utf-8').read())+'\n')
+# page CSS: also pasted into the Webflow page head as <style id="pw-css"> (see head-css.html); keep both in sync
+CSS=open('src/page.css',encoding='utf-8').read()
+CSS_MIN=subprocess.run([ESBUILD,'--minify','--loader=css'],input=CSS.encode(),capture_output=True,check=True).stdout.decode().strip() if os.path.exists(ESBUILD) else CSS
+open('dist/head-css.html','w',encoding='utf-8').write('<style id="pw-css">'+CSS_MIN+'</style>\n')
+parts.append('window.__PW_CSS = %s;\n'%json.dumps(CSS_MIN))
 parts.append(minify(open('src/page.js',encoding='utf-8').read())+'\n')
 os.makedirs('dist',exist_ok=True)
 out=''.join(parts)
