@@ -24,6 +24,21 @@
   var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
   var visible = function (el) { return el && !/\bw-condition-invisible\b/.test(el.className) && el.style.display !== 'none'; };
 
+  // Webflow cannot do negated / option-value conditions via our build, so they are resolved here:
+  // status pills (a hidden span[data-status-text] carries the Status option) and "!logo" fallback marks.
+  var scopeOf = function (el) { return el.closest('.w-dyn-item') || item || hub || document; };
+  each(document.querySelectorAll('[data-status-text]'), function (st) {
+    var sc = scopeOf(st), planned = /future/i.test(st.textContent || '');
+    each(sc.querySelectorAll('.pw-integr__pill-live'), function (p) { if (scopeOf(p) === sc) p.style.display = planned ? 'none' : ''; });
+    each(sc.querySelectorAll('.pw-integr__pill-planned'), function (p) { if (scopeOf(p) === sc) p.style.display = planned ? '' : 'none'; });
+  });
+  each(document.querySelectorAll('[data-if="!logo"]'), function (m) {
+    var sc = scopeOf(m), img = null;
+    each(sc.querySelectorAll('img'), function (i) { if (!img && scopeOf(i) === sc && /logo/.test(i.className)) img = i; });
+    var has = img && !/\bw-dyn-bind-empty\b/.test(img.className) && (img.getAttribute('src') || '').length > 0;
+    m.style.display = has ? 'none' : '';
+  });
+
   // logo fallback: first letter + hue from the name (design intMark)
   each(document.querySelectorAll('.pw-integr__mark, .pw-int__mark-lg, .pw-int__more-mark'), function (m) {
     var n = (m.textContent || '').trim(); if (!n) return;
@@ -36,13 +51,18 @@
     var here = location.pathname.replace(/\/+$/, '');
     var curName = ((item.querySelector('.pw-int__crumb-current') || {}).textContent || '').trim();
     each(item.querySelectorAll('.pw-int__more'), function (list) {
-      var cards = list.querySelectorAll('.pw-int__more-card'), kept = 0;
-      each(cards, function (a) {
-        var box = a.closest('.w-dyn-item') || a;
+      var cards = list.querySelectorAll('.pw-int__more-card'), kept = 0, curType = null;
+      var isOwn = function (a) {
         var path = (a.getAttribute('href') || '').replace(/^https?:\/\/[^/]+/, '').replace(/\/+$/, '');
         var nm = ((a.querySelector('.pw-int__more-name') || {}).textContent || '').trim();
-        var own = (path && (path === here || (here.slice(-path.length) === path && /\//.test(path)))) || (curName && nm === curName);
-        if (own || kept >= 4) box.style.display = 'none'; else kept++;
+        return (path && (path === here || (here.slice(-path.length) === path && /\//.test(path)))) || (curName && nm === curName);
+      };
+      var typeOf = function (a) { var t = (a.closest('.w-dyn-item') || a).querySelector('[data-type-text]'); return t ? t.textContent.trim() : null; };
+      each(cards, function (a) { if (curType === null && isOwn(a)) curType = typeOf(a); });
+      each(cards, function (a) {
+        var box = a.closest('.w-dyn-item') || a;
+        var other = curType !== null && typeOf(a) !== curType;
+        if (isOwn(a) || other || kept >= 4) box.style.display = 'none'; else kept++;
       });
       if (!kept) { var band = list.closest('.pw-faq-block'); if (band && band.parentNode) band.parentNode.style.display = 'none'; }
     });
