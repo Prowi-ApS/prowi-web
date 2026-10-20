@@ -2652,7 +2652,7 @@ window.__PW_SCENES = {"LiveMoment": {"html": "\n<helmet>\n<style>\n*{box-sizing:
         var k = items[active]; marker.style.top = k.offsetTop + 'px'; marker.style.height = k.offsetHeight + 'px'; marker.style.opacity = '1';
         // sit on the container rail's left hairline, like the design (indLeft)
         var railEl = q('.pw-rail', col.closest('section') || d);
-        if (railEl) { var dx = railEl.getBoundingClientRect().left - list.getBoundingClientRect().left - 0.5; marker.style.left = (Math.round(dx * 2) / 2) + 'px'; }
+        if (railEl && railEl.offsetWidth > 0) { var dx = railEl.getBoundingClientRect().left - list.getBoundingClientRect().left - 0.5; marker.style.left = (Math.round(dx * 2) / 2) + 'px'; }
       }
       var narrow = vw() < 1024;
       panels.forEach(function (p, i) { var inner = p.firstElementChild || p; inner.style.transition = 'opacity 500ms ' + EASE; inner.style.opacity = (narrow || i === active) ? '1' : '0.32'; });
