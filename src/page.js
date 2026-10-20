@@ -344,7 +344,7 @@
     // other pages: each content band of the page section is its own group
     var units = HOME ? qa(':scope > section', root).slice(1).map(function (sec) {
       return { sec: sec, cont: qa(':scope > *', sec).filter(function (el) { return !el.classList.contains('pw-rail') && !el.querySelector(':scope > .pw-rail') && el.children.length; })[0] };
-    }) : qa('.pw-pricing__band', root).map(function (b) { return { sec: b, cont: b }; });
+    }) : qa('.pw-pricing__band, .pw-feature__stats, .pw-feature__step, .pw-feature__hood, .pw-feature__next, .pw-platform-hub__setup, .pw-platform-hub__cta', root).map(function (b) { return { sec: b, cont: b }; });
     units.forEach(function (u) {
       var sec = u.sec, cont = u.cont; if (!cont) return;
       var items = [];
