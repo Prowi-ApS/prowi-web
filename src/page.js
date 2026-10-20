@@ -10,7 +10,7 @@
   // Webflow suffixes a class with "-1" when the same name is created twice (e.g. the platform rail marker is
   // .pw-1xbspa4-1 on the live page). Every .pw-xxx in a selector therefore also matches .pw-xxx-1.
   var SUPPORTS_IS = (function () { try { d.querySelector(':is(a)'); return true; } catch (e) { return false; } })();
-  var tol = function (sel) { return SUPPORTS_IS ? sel.replace(/\.(pw-[a-z0-9-]*[a-z0-9])(?![a-z0-9-])/g, function (m, c) { return /-1$/.test(c) ? m : ':is(.' + c + ',.' + c + '-1)'; }) : sel; };
+  var tol = function (sel) { return SUPPORTS_IS ? sel.replace(/\.(pw-[a-z0-9_-]*[a-z0-9])(?![a-z0-9_-])/g, function (m, c) { return /-1$/.test(c) ? m : ':is(.' + c + ',.' + c + '-1)'; }) : sel; };
   var q = function (sel, el) { return (el || d).querySelector(tol(sel)); };
   var qa = function (sel, el) { return Array.prototype.slice.call((el || d).querySelectorAll(tol(sel))); };
   var vw = function () { return d.documentElement.clientWidth || w.innerWidth; };
