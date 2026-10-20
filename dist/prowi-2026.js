@@ -2302,8 +2302,12 @@ window.__PW_SCENES = {"LiveMoment": {"html": "\n<helmet>\n<style>\n*{box-sizing:
   var DA = LANG === 'da';
   var EASE = 'cubic-bezier(0.2,0.6,0.2,1)', EM = 'cubic-bezier(0.2,0.8,0.2,1)', SPRING = 'cubic-bezier(0.3,1.25,0.5,1)';
   var REDUCED = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var q = function (sel, el) { return (el || d).querySelector(sel); };
-  var qa = function (sel, el) { return Array.prototype.slice.call((el || d).querySelectorAll(sel)); };
+  // Webflow suffixes a class with "-1" when the same name is created twice (e.g. the platform rail marker is
+  // .pw-1xbspa4-1 on the live page). Every .pw-xxx in a selector therefore also matches .pw-xxx-1.
+  var SUPPORTS_IS = (function () { try { d.querySelector(':is(a)'); return true; } catch (e) { return false; } })();
+  var tol = function (sel) { return SUPPORTS_IS ? sel.replace(/\.(pw-[a-z0-9-]*[a-z0-9])(?![a-z0-9-])/g, function (m, c) { return /-1$/.test(c) ? m : ':is(.' + c + ',.' + c + '-1)'; }) : sel; };
+  var q = function (sel, el) { return (el || d).querySelector(tol(sel)); };
+  var qa = function (sel, el) { return Array.prototype.slice.call((el || d).querySelectorAll(tol(sel))); };
   var vw = function () { return d.documentElement.clientWidth || w.innerWidth; };
   var vh = function () { return w.innerHeight || d.documentElement.clientHeight || 800; };
   var raf = w.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
