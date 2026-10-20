@@ -43,13 +43,41 @@
     var C = window.getDC(m.name);
     m.root.render(window.React.createElement(C, m.props));
   }
+  // Scenes used only on the platform pages live in their own files next to the bundle (dist/scenes/*.js),
+  // fetched with the integrity hash recorded at build time, and mounted when the placeholder comes near the viewport.
+  var LAZY = window.__PW_LAZY || {};
+  var loading = {};
+  function base() {
+    var s = document.querySelector('script[src*="prowi-2026.js"]');
+    return s ? s.src.replace(/prowi-2026\.js.*$/, '') : '';
+  }
+  function want(el, name) {
+    if (loading[name] || !LAZY[name]) return;
+    var b = base(); if (!b) return;
+    loading[name] = true;
+    var sc = document.createElement('script');
+    sc.src = b + LAZY[name].f; sc.async = true;
+    if (LAZY[name].i) { sc.integrity = LAZY[name].i; sc.crossOrigin = 'anonymous'; }
+    sc.onload = function () { mountAll(); };
+    sc.onerror = function () { console.error('[prowi] could not load scene ' + name); };
+    document.head.appendChild(sc);
+  }
+  var io = window.IntersectionObserver ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.__pwNear = true; io.unobserve(e.target); mountAll(); } });
+  }, { rootMargin: '300px 0px' }) : null;
+  function watch(el) {
+    if (el.__pwWatched) return; el.__pwWatched = true;
+    if (io) io.observe(el); else { el.__pwNear = true; }
+    if (!io) mountAll();
+  }
   function mountAll() {
     var els = document.querySelectorAll('.pw-embed[data-component]');
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       if (el.__pwMounted) continue;
       var name = el.getAttribute('data-component');
-      if (!SCENES[name]) continue;
+      if (!SCENES[name]) { if (LAZY[name]) want(el, name); continue; }
+      if (LAZY[name] && !el.__pwNear) { watch(el); continue; }
       register(name);
       el.__pwMounted = true;
       el.classList.add('pw-embed--live');
@@ -66,7 +94,8 @@
         if (mounted[i].el === el) { Object.assign(mounted[i].props, patch); render(mounted[i]); }
       }
     },
-    mounted: mounted
+    mounted: mounted,
+    loaded: function () { mountAll(); }
   };
   var tries = 0;
   (function wait() {

@@ -751,6 +751,29 @@
         if (e.shiftKey && d.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && d.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     });
+    // "Or pick a time now": Anders' cal.com calendar opens inline in the pop-up (vanilla embed, loaded on demand),
+    // with name and email carried over from the form
+    var CAL = 'anders-goosmann/30min', calBtn = q('.pw-cta-demo-cal', modal);
+    var showCal = function () {
+      var inner = q('.pw-demo-modal__done-inner', modal); if (!inner) return;
+      var box = q('.pw-demo-modal__cal', modal);
+      if (!box) { box = d.createElement('div'); box.className = 'pw-demo-modal__cal'; box.id = 'pw-cal-inline'; inner.appendChild(box); }
+      if (calBtn) calBtn.style.display = 'none';
+      modal.classList.add('is-cal');
+      (function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var dd = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; dd.head.appendChild(dd.createElement('script')).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(w, 'https://app.cal.com/embed/embed.js', 'init');
+      if (box.__pwCal) return; box.__pwCal = true;
+      w.Cal('init', '30min', { origin: 'https://app.cal.com' });
+      w.Cal.config = w.Cal.config || {}; w.Cal.config.forwardQueryParams = true;
+      var cfg = { layout: 'month_view', useSlotsViewOnSmallScreen: 'true' };
+      if (name && name.value.trim()) cfg.name = name.value.trim();
+      if (email.value.trim()) cfg.email = email.value.trim();
+      w.Cal.ns['30min']('inline', { elementOrSelector: '#pw-cal-inline', config: cfg, calLink: CAL });
+      w.Cal.ns['30min']('ui', { hideEventTypeDetails: false, layout: 'month_view', cssVarsPerTheme: { light: { 'cal-brand': '#4C39CA' } } });
+    };
+    if (calBtn) {
+      calBtn.setAttribute('href', 'https://cal.com/' + CAL);
+      calBtn.addEventListener('click', function (e) { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); showCal(); });
+    }
     var DEMO = /^(?:https?:\/\/[^\/]+)?\/(?:en\/)?(?:demo|book-demo)(?:-2026)?\/?(?:[?#].*)?$/;
     d.addEventListener('click', function (e) {
       var a = e.target.closest && e.target.closest('a'); if (!a || modal.contains(a) || e.defaultPrevented) return;

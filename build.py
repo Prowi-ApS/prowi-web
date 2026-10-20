@@ -28,6 +28,16 @@ def minify(code):
     r=subprocess.run([ESBUILD,'--minify','--target=es2017','--loader=js','--charset=utf8','--legal-comments=none'],input=code.encode('utf-8'),capture_output=True,check=True)
     return r.stdout.decode('utf-8')
 scenes={n:parse(n) for n in ['LiveMoment','ApprovalPhone','CompetitionScene']}
+# platform-page scenes: separate files, loaded on demand with SRI (see scenes.js)
+LAZY_NAMES=['StudioScene','CockpitScene','FlowScene','TopPerformers']
+import base64 as _b64
+os.makedirs('dist/scenes',exist_ok=True)
+lazy={}
+for n in LAZY_NAMES:
+    if not os.path.exists(SRC+n+'.dc.html'): continue
+    body='(function(){var S=window.__PW_SCENES=window.__PW_SCENES||{};S[%s]=%s;if(window.__pwScenes&&window.__pwScenes.loaded)window.__pwScenes.loaded(%s);})();\n'%(json.dumps(n),json.dumps(parse(n)),json.dumps(n))
+    open('dist/scenes/%s.js'%n,'w',encoding='utf-8').write(body)
+    lazy[n]={'f':'scenes/%s.js'%n,'i':'sha384-'+_b64.b64encode(hashlib.sha384(body.encode('utf-8')).digest()).decode()}
 parts=[]
 parts.append('/* Prowi 2026 site bundle — built from the Claude Design export. Do not edit by hand. */\n')
 parts.append('(function(){ if (window.__prowiBundle) return; window.__prowiBundle = true;\n')
@@ -41,7 +51,7 @@ if os.environ.get('PW_VENDOR')=='react':
 else:
     parts.append(open('vendor/preact-compat-shim.min.js').read()+'\n')
 parts.append(minify(open('src/dc-runtime.js',encoding='utf-8').read())+'\n')
-parts.append('window.__PW_SCENES = %s;\n'%json.dumps(scenes))
+parts.append('window.__PW_SCENES = Object.assign(window.__PW_SCENES||{}, %s);\nwindow.__PW_LAZY = %s;\n'%(json.dumps(scenes),json.dumps(lazy)))
 parts.append(minify(open('src/scenes.js',encoding='utf-8').read())+'\n')
 # page CSS: also pasted into the Webflow page head as <style id="pw-css"> (see head-css.html); keep both in sync
 CSS=open('src/page.css',encoding='utf-8').read()
