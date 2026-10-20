@@ -87,11 +87,11 @@
 
   /* ---------- Customer stories: locale links + hide the current story in "More stories" ----------
      Story links are plain URLs (/kunder/<slug>) because rich text and collection links cannot be page links;
-     on the English site they point at /en/customers/<slug>. */
+     on the English site they get the /en prefix (the collection path is not localised yet; see the launch list). */
   (function stories() {
     qa('a[data-story]').forEach(function (a) {
       var slug = a.getAttribute('data-story');
-      if (!DA) a.setAttribute('href', '/en/customers/' + slug);
+      if (!DA) a.setAttribute('href', '/en' + (a.getAttribute('href') || '/kunder/' + slug).replace(/^\/en(?=\/)/, ''));
     });
     var m = w.location.pathname.match(/\/(?:kunder|customers)\/([^\/?#]+)/);
     if (m) qa('.pw-case__more a[data-story="' + m[1] + '"]').forEach(function (a) { a.style.display = 'none'; });
