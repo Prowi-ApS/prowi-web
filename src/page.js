@@ -771,8 +771,8 @@
       bkh: 'You are booked.', before: 'Before the call', b1: 'Pick one comp plan to bring.', b2: 'Have one recent closed deal in mind.',
       b3: 'Invite whoever runs payroll, if you like.', backsite: 'Back to the site'
     };
-    var TX = DA ? { name: 'Navn', email: 'Arbejdsmail', next: 'Fortsæt', wait: 'Fortsæt', reps: 'sælgere', of: 'af', err: 'Brug venligst din arbejdsmail. Private adresser (Gmail, Outlook, iCloud …) accepteres ikke.', close: 'Luk', dialog: 'Book demo', fail: 'Noget gik galt. Prøv igen, eller skriv direkte til anders@prowi.io.' }
-      : { name: 'Name', email: 'Work email', next: 'Continue', wait: 'Continue', reps: 'reps', of: 'of', err: 'Please use your work email. Personal addresses (Gmail, Outlook, iCloud …) aren’t accepted.', close: 'Close', dialog: 'Book a demo', fail: 'Something went wrong. Try again, or email anders@prowi.io directly.' };
+    var TX = DA ? { name: 'Navn', email: 'Arbejdsmail', next: 'Fortsæt', wait: 'Fortsæt', reps: 'sælgere', of: 'af', err: 'Brug venligst din arbejdsmail. Private adresser (Gmail, Outlook, iCloud …) accepteres ikke.', phName: 'Dit navn', phEmail: 'navn@virksomhed.dk', close: 'Luk', dialog: 'Book demo', fail: 'Noget gik galt. Prøv igen, eller skriv direkte til anders@prowi.io.' }
+      : { name: 'Name', email: 'Work email', next: 'Continue', wait: 'Continue', reps: 'reps', of: 'of', err: 'Please use your work email. Personal addresses (Gmail, Outlook, iCloud …) aren’t accepted.', phName: 'Your name', phEmail: 'name@company.com', close: 'Close', dialog: 'Book a demo', fail: 'Something went wrong. Try again, or email anders@prowi.io directly.' };
     var setFirstText = function (el, s) { if (!el) return; for (var i = 0; i < el.childNodes.length; i++) { var n = el.childNodes[i]; if (n.nodeType === 3 && n.nodeValue.trim()) { n.nodeValue = s; return; } } };
     if (!DA) qa('[data-dm-t]', dm).forEach(function (el) { var s = EN[el.getAttribute('data-dm-t')]; if (s) el.textContent = s; });
     var labels = qa('.pw-demo-modal__label', dm); setFirstText(labels[0], TX.name); setFirstText(labels[1], TX.email);
@@ -781,7 +781,9 @@
     modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-label', TX.dialog);
     if (closeBtn) { closeBtn.setAttribute('aria-label', TX.close); closeBtn.setAttribute('role', 'button'); }
     sub.value = TX.next; sub.setAttribute('data-wait', TX.wait);
-    [name, email].forEach(function (el) { if (el) { el.removeAttribute('placeholder'); el.value = ''; } });
+    [name, email].forEach(function (el) { if (el) el.value = ''; });
+    if (name) name.setAttribute('placeholder', TX.phName);
+    if (email) email.setAttribute('placeholder', TX.phEmail);
     if (name) name.removeAttribute('required'); // only the work email gates step 1
     var hid = function (n) { return q('input[name="' + n + '"]', form); };
     ['Reps on commission', 'CRM', 'Heard about Prowi'].forEach(function (n) { var el = hid(n); if (el) el.value = ''; });
@@ -950,18 +952,32 @@
         if (e.shiftKey && d.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && d.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     });
-    var DEMO = /^(?:https?:\/\/[^\/]+)?\/(?:en\/)?(?:demo|book-demo)(?:-2026)?\/?(?:[?#].*)?$/;
-    d.addEventListener('click', function (e) {
-      var a = e.target.closest && e.target.closest('a,button'); if (!a || modal.contains(a) || e.defaultPrevented) return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+    // Every "Book demo" CTA opens the pop-up in place. Matched on the link's resolved path (any host, so Webflow preview
+    // and staging hosts count too), on [data-demo-open], or on the button text. Runs in the capture phase on window,
+    // ahead of Webflow's own link handling, and stops the click so nothing navigates to the Demo page.
+    var DEMO_PATH = /^\/(?:en\/)?(?:demo|book-demo)(?:-2026)?\/?$/;
+    var DEMO_TEXT = /^\s*(?:book\s+(?:a\s+)?demo|book\s+en\s+demo)\s*$/i;
+    var isDemoLink = function (a) {
+      if (a.hasAttribute('data-demo-open')) return true;
       var h = a.getAttribute('href') || '';
-      if (a.hasAttribute('data-demo-open') || h === '#demo-form' || DEMO.test(h)) {
-        e.preventDefault();
+      if (h === '#demo-form') return true;
+      if (a.tagName === 'A' && h && h.charAt(0) !== '#') {
+        var path = ''; try { path = new URL(h, w.location.href).pathname; } catch (err) {}
+        if (DEMO_PATH.test(path)) return true;
+      }
+      var lab = a.querySelector('.pw-cta__label') || a;
+      return DEMO_TEXT.test(lab.textContent || '');
+    };
+    w.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a,button'); if (!a || modal.contains(a)) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+      if (isDemoLink(a)) {
+        e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
         var cls = (a.className && typeof a.className === 'string' ? a.className.split(/\s+/)[0] : '') || 'link';
         var named = a.getAttribute('data-demo-source');
         open(named || cls, !!named);
       }
-    });
+    }, true);
     if (w.location.hash === '#demo-form') setTimeout(function () { open('hash'); }, 400);
     render();
   })();
