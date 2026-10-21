@@ -49,6 +49,7 @@
       '.pw-mf[data-mf-ready] ~ .pw-footer svg [fill="#110663"]{fill:#FFFFFF}' +
       // iOS Safari tints its toolbar with the body colour: use the curtain's rendered colour (#110663 under the grain)
       'body.pw-mf-dark{background-color:#15087B}' +
+      '[data-mf-root][data-mf-full]{background-color:#15087B}' +
       '[data-mf-root] [data-mf-curtain] svg{position:absolute;inset:0;width:100%;height:100%;opacity:0.85;mix-blend-mode:overlay;pointer-events:none}' +
       '[data-mf-root] .pw-mf__orb{translate:-50% -50%;aspect-ratio:1}' +
       '[data-mf-root] .pw-mf__orb-a{filter:blur(26px);will-change:transform;animation:mfOrb 18s ' + SWAY + ' infinite}' +
@@ -125,7 +126,10 @@
     nx.putImageData(im, 0, 0); darkPat = c.createPattern(n, 'repeat') || 'rgb(17,6,99)';
     return darkPat;
   }
+  var _full = null;
   function drawTiles(P) {
+    // fully dark: the page behind turns dark too, so a pixel gap while Safari's bar slides never shows white
+    var full = P >= 1; if (full !== _full) { _full = full; if (full) root.setAttribute('data-mf-full', '1'); else root.removeAttribute('data-mf-full'); }
     if (!tctx) return;
     if (P <= 0) { tiles.style.display = 'none'; return; }
     tiles.style.display = 'block';
