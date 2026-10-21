@@ -548,7 +548,7 @@
     var finish = function () {
       if (introDone) return; introDone = true;
       timers.forEach(clearTimeout);
-      [kick, sub, ctas].forEach(function (el) { if (el) { el.style.opacity = ''; el.style.animation = ''; } });
+      [kick, sub, ctas].forEach(function (el) { if (el) { el.style.opacity = ''; el.style.animation = ''; el.style.visibility = ''; el.style.pointerEvents = ''; } });
       if (h1) qa('span.pw-ch', h1).forEach(function (s) { s.style.opacity = ''; s.style.animation = ''; });
       if (sub) qa('span.pw-ln', sub).forEach(function (s) { s.style.opacity = ''; s.style.animation = ''; });
       introEnded();
@@ -581,8 +581,8 @@
           tn.parentNode.replaceChild(frag, tn);
         }
       }
-      if (kick) kick.style.opacity = '0';
-      if (ctas) ctas.style.opacity = '0';
+      if (kick) { kick.style.opacity = '0'; kick.style.pointerEvents = 'none'; kick.style.visibility = 'hidden'; }
+      if (ctas) { ctas.style.opacity = '0'; ctas.style.pointerEvents = 'none'; ctas.style.visibility = 'hidden'; }
       var navEnd = 120 + 520 + 160;
       at(navEnd, function () { chars.forEach(function (s, i) { s.style.animation = 'pwCharIn 520ms ' + EM + ' ' + (i * 28) + 'ms both'; }); });
       var titleEnd = navEnd + chars.length * 28 + 520;
@@ -595,8 +595,8 @@
           acc += dur + GAP[Math.min(i, 3)];
         });
         at(acc + 220, function () {
-          if (kick) kick.style.animation = 'pwFadeIn 500ms linear both';
-          if (ctas) ctas.style.animation = 'pwRise 700ms ' + EASE + ' both';
+          if (kick) { kick.style.visibility = ''; kick.style.pointerEvents = ''; kick.style.animation = 'pwFadeIn 500ms linear both'; }
+          if (ctas) { ctas.style.visibility = ''; ctas.style.pointerEvents = ''; ctas.style.animation = 'pwRise 700ms ' + EASE + ' both'; }
         });
         at(acc + 220 + 700, introEnded); // CTA rise (700ms) has landed
         at(acc + 2000, finish);
