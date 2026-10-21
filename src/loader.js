@@ -24,19 +24,23 @@
       var c = C[name];
       if (!c || !base) e.done = true;
       else {
-        var sc = d.createElement('script');
-        sc.src = base + c.f;
-        sc.async = !ordered;
-        if (c.i && base.indexOf('file:') !== 0) { sc.integrity = c.i; sc.crossOrigin = 'anonymous'; }
+        var add = function (retry) {
+          var sc = d.createElement('script');
+          sc.src = base + c.f + (retry ? '?r=1' : '');
+          sc.async = !ordered;
+          if (c.i && base.indexOf('file:') !== 0) { sc.integrity = c.i; sc.crossOrigin = 'anonymous'; }
+          sc.onload = function () { fin(true); };
+          // a just-published commit can fail on the CDN's first request: try once more before giving up
+          sc.onerror = function () { if (!retry) setTimeout(function () { add(true); }, 800); else fin(false); };
+          (d.head || d.documentElement).appendChild(sc);
+        };
         var fin = function (ok) {
           if (e.done) return; e.done = true;
           if (!ok) console.error('[prowi] could not load ' + c.f);
           var l = e.cbs; e.cbs = [];
           l.forEach(function (f) { try { f(); } catch (err) { setTimeout(function () { throw err; }); } });
         };
-        sc.onload = function () { fin(true); };
-        sc.onerror = function () { fin(false); };
-        (d.head || d.documentElement).appendChild(sc);
+        add(false);
       }
     }
     if (cb) { if (e.done) cb(); else e.cbs.push(cb); }
