@@ -28,11 +28,18 @@
   function catLabel(daName) { return isEn ? (CAT_EN[daName] || daName) : daName; }
 
   // Category labels: remember the Danish option name, show the English label on /en pages.
-  each(document.querySelectorAll('[data-insider-cat]'), function (el) {
-    var da = txt(el);
-    el.setAttribute('data-cat-da', da);
-    if (isEn && CAT_EN[da] && CAT_EN[da] !== da) el.textContent = CAT_EN[da];
-  });
+  // Idempotent: safe to run again when CMS content arrives late (Webflow's Designer preview renders bound fields after
+  // page scripts have run) or is re-rendered.
+  function translateCats() {
+    each(document.querySelectorAll('[data-insider-cat]'), function (el) {
+      var da = txt(el);
+      if (!da) return;
+      if (!CAT_EN[da]) { if (!el.getAttribute('data-cat-da')) el.setAttribute('data-cat-da', da); return; }
+      el.setAttribute('data-cat-da', da);
+      if (isEn && CAT_EN[da] !== da) el.textContent = CAT_EN[da];
+    });
+  }
+  translateCats();
 
   if (!document.getElementById('pw-insider-css')) {
     var st = document.createElement('style');
@@ -149,10 +156,11 @@
 
   // ---------------- POST ----------------
   if (postRoot) (function () {
-    var body = postRoot.querySelector('[data-rt="post-body"], .pw-post__body');
-    var titleEl = postRoot.querySelector('.pw-post__title');
     function norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9æøå]+/g, ' ').trim(); }
 
+    function prep() {
+    var body = postRoot.querySelector('[data-rt="post-body"], .pw-post__body');
+    var titleEl = postRoot.querySelector('.pw-post__title');
     if (body) {
       // 1. hide a leading heading that repeats the item name (many live posts start with <h2>Title</h2>)
       var first = body.firstElementChild;
@@ -169,18 +177,28 @@
         t.parentNode.insertBefore(w, t); w.appendChild(t);
       });
     }
+    }
+    prep();
 
     // 3. table of contents from the visible h2s (design: 01, 02 ... with the active section marked)
+    var offTplKeep = null;
+    function buildToc() {
     var nav = postRoot.querySelector('[data-insider-toc]');
     var label = postRoot.querySelector('[data-insider-toc-label]');
+    var body = postRoot.querySelector('[data-rt="post-body"], .pw-post__body');
     var heads = body ? Array.prototype.filter.call(body.querySelectorAll('h2'), function (h) { return h.style.display !== 'none' && txt(h); }) : [];
+    if (nav && nav.getAttribute('data-built') === '1') return true;
     if (nav) {
       var onTpl = nav.querySelector('.pw-post__toc-item--on');
-      var offTpl = nav.querySelector('.pw-post__toc-item');
+      var offTpl = nav.querySelector('.pw-post__toc-item') || offTplKeep;
+      if (offTpl) offTplKeep = offTpl.cloneNode(true);
       var links = [];
-      if (heads.length < 2 || !onTpl || !offTpl) {
+      if (heads.length < 2 || !offTpl) {
         nav.style.display = 'none'; if (label) label.style.display = 'none';
+        return false;
       } else {
+        nav.style.display = ''; if (label) label.style.display = '';
+        nav.setAttribute('data-built', '1');
         nav.innerHTML = '';
         heads.forEach(function (h, i) {
           if (!h.id) h.id = 'art-sec-' + (i + 1);
@@ -220,6 +238,28 @@
         spy();
       }
       nav.setAttribute('data-ready', '1');
+    }
+    return true;
+    }
+    var tocDone = buildToc();
+
+    // Late or re-rendered CMS content (Webflow's Designer preview fills bound fields after scripts run): watch the post
+    // for 10 s and redo the category label and the contents whenever its content changes.
+    if (window.MutationObserver) {
+      var busy = false, timer = 0;
+      var mo = new MutationObserver(function () {
+        if (busy) return;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          busy = true;
+          translateCats();
+          prep();
+          tocDone = buildToc() || tocDone;
+          setTimeout(function () { busy = false; }, 0);
+        }, 60);
+      });
+      mo.observe(postRoot, { childList: true, subtree: true, characterData: true });
+      setTimeout(function () { mo.disconnect(); }, 10000);
     }
 
     // 4. keep reading: drop the current post, show three
