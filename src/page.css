@@ -230,3 +230,8 @@ body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
 .pw-board__row--open .pw-board__detail{display:flex}
 .pw-board__detail b{font-weight:600;color:#0f172a;margin-right:4px}
 @media (max-width:479px){.pw-board__detail{padding-left:4px}}
+.pw-board__select>.pw-board__menu{position:absolute;top:calc(100% + 6px);left:0;z-index:20;display:flex;flex-direction:column;min-width:100%;padding:6px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 12px 32px rgba(17,6,99,.14),0 2px 6px rgba(17,6,99,.06);animation:pwMenuIn 160ms cubic-bezier(.2,.6,.2,1) both}
+@keyframes pwMenuIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pw-board__opt{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;font-size:13px;color:#0f172a;text-align:left;white-space:nowrap;padding:8px 12px;border-radius:8px;cursor:pointer}
+.pw-board__opt:hover,.pw-board__opt:focus-visible{background:#f1f0f9;outline:none}
+.pw-board__opt--on{font-weight:600;color:#4c3cb4}

@@ -944,17 +944,42 @@
       tb.addEventListener('click', go);
       tb.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
     });
+    // month and year pickers: a small drop-down with a few recent options
+    var menuOpen = null;
+    var closeMenu = function () { if (menuOpen) { menuOpen.m.remove(); menuOpen.sl.setAttribute('aria-expanded', 'false'); menuOpen = null; } };
+    d.addEventListener('click', function (e) { if (menuOpen && !menuOpen.sl.contains(e.target)) closeMenu(); });
+    d.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+    var options = function (i) {
+      if (i === 1) return [Y0, Y0 - 1].map(function (y) { return { label: String(y), on: y === cur.y, pick: function () { cur.y = y; if (y === Y0 && cur.m > M0) cur.m = M0; } }; });
+      var out = [];
+      for (var k = 0; k < 4; k++) {
+        var mm = (cur.y === Y0 ? M0 : 11) - k; if (mm < 0) break;
+        (function (m) { out.push({ label: MONTHS[m], on: m === cur.m, pick: function () { cur.m = m; } }); })(mm);
+      }
+      return out;
+    };
     sels.forEach(function (sl, i) {
-      sl.style.cursor = 'pointer'; sl.setAttribute('role', 'button'); sl.setAttribute('tabindex', '0');
-      var go = function () {
+      sl.style.cursor = 'pointer'; sl.style.position = 'relative'; sl.setAttribute('role', 'button'); sl.setAttribute('tabindex', '0');
+      sl.setAttribute('aria-haspopup', 'listbox'); sl.setAttribute('aria-expanded', 'false');
+      var open = function () {
         takeOver();
-        if (i === 0) { cur.m = (cur.m + 11) % 12; if (cur.m === 11) cur.y--; if (cur.y < Y0 - 1) { cur.y = Y0; cur.m = M0; } }
-        else { cur.y = cur.y === Y0 ? Y0 - 1 : Y0; if (cur.y === Y0 && cur.m > M0) cur.m = M0; }
-        setT(sels[0], MONTHS[cur.m]); if (sels[1]) setT(sels[1], String(cur.y));
-        render(true);
+        if (menuOpen && menuOpen.sl === sl) { closeMenu(); return; }
+        closeMenu();
+        var m = d.createElement('div'); m.className = 'pw-board__menu'; m.setAttribute('role', 'listbox');
+        options(i).forEach(function (o) {
+          var b = d.createElement('button'); b.type = 'button'; b.className = 'pw-board__opt' + (o.on ? ' pw-board__opt--on' : ''); b.textContent = o.label; b.setAttribute('role', 'option');
+          b.addEventListener('click', function (e) {
+            e.stopPropagation(); o.pick(); closeMenu();
+            setT(sels[0], MONTHS[cur.m]); if (sels[1]) setT(sels[1], String(cur.y));
+            render(true);
+          });
+          m.appendChild(b);
+        });
+        sl.appendChild(m); sl.setAttribute('aria-expanded', 'true'); menuOpen = { m: m, sl: sl };
+        var first = q('.pw-board__opt--on', m) || m.firstChild; if (first && first.focus) try { first.focus({ preventScroll: true }); } catch (e) {}
       };
-      sl.addEventListener('click', go);
-      sl.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      sl.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.pw-board__menu')) return; open(); });
+      sl.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target === sl) { e.preventDefault(); open(); } });
     });
     if (sels[0]) setT(sels[0], MONTHS[cur.m]); if (sels[1]) setT(sels[1], String(cur.y));
     rows.forEach(function (row) {
