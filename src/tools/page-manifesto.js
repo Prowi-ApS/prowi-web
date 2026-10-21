@@ -10,6 +10,9 @@
   var w = window, d = document;
   var reduced = !!(w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches);
   var EASE = 'cubic-bezier(0.2,0.8,0.2,1)', SWAY = 'cubic-bezier(0.45,0,0.55,1)';
+  // touch screens: dim the unread words without the per-word blur (iOS WebKit paints colour fringes between blurred
+  // inline spans, and it is the expensive part of every scroll frame)
+  var noBlur = !!(w.matchMedia && w.matchMedia('(hover: none), (pointer: coarse)').matches);
 
   // The CTA label sits in a span inside a link block, which Webflow localization can't reach: translate it here.
   if (/^en/i.test(d.documentElement.getAttribute('lang') || '') || /^\/en(\/|$)/.test(w.location.pathname)) {
@@ -39,6 +42,7 @@
       '[data-mf-root] .pw-mf__orb-b{filter:blur(18px);mix-blend-mode:screen;will-change:transform,opacity;animation:mfOrbB 13s ' + SWAY + ' infinite}' +
       '[data-mf-root] .pw-mf__orb-c{aspect-ratio:1;filter:blur(20px);will-change:transform,opacity;animation:mfGlow 9s ' + SWAY + ' infinite}' +
       '[data-mf-root] [data-mf-track]{transition:letter-spacing 1100ms ' + EASE + ',opacity 700ms ease-out;will-change:letter-spacing,opacity}' +
+      '[data-mf-root] [data-mf-rv]{transition:opacity 700ms ease-out,transform 700ms ' + EASE + '}' +
       '[data-mf-root] .pw-mf__cta:focus-visible{outline:2px solid #FFFFFF;outline-offset:3px}' +
       '@media (prefers-reduced-motion: reduce){[data-mf-root] [data-mf-anim],[data-mf-root] .pw-mf__orb-a,[data-mf-root] .pw-mf__orb-b,[data-mf-root] .pw-mf__orb-c{animation:none!important}[data-mf-root] [data-mf-w],[data-mf-root] [data-mf-track],[data-mf-root] [data-mf-dot]{transition:none!important}}';
     d.head.appendChild(st);
@@ -117,7 +121,7 @@
         x.a = q;
         var al = (DIM + (1 - DIM) * q).toFixed(3);
         x.el.style.color = x.em ? 'rgba(76,57,202,' + al + ')' : 'rgba(17,6,99,' + al + ')';
-        x.el.style.filter = q >= 1 ? 'none' : 'blur(' + ((1 - q) * 4).toFixed(2) + 'px)';
+        if (!noBlur) x.el.style.filter = q >= 1 ? 'none' : 'blur(' + ((1 - q) * 4).toFixed(2) + 'px)';
       });
     });
     // curtain: the page turns dark purple while the close rises from the bottom to 25% of the viewport
@@ -132,9 +136,9 @@
       }
     }
     _cq = cq;
+    // reveal line = where the words above are half lit (reading line + half a ramp)
     if (pendingHeads.length) pendingHeads = pendingHeads.filter(function (h) {
-      if (h.style.opacity === '1') return false;
-      if (h.getBoundingClientRect().bottom < vh * 0.6) { show(h); return false; }
+      if (h.getBoundingClientRect().top < focal + ramp * 0.5) { show(h); return false; }
       return true;
     });
     paintDots(vh);
@@ -164,17 +168,27 @@
     });
   }
 
-  /* ---------- principle headlines: tracking settles and fades in, once, at 40% visibility (opacity only < 720px) ---------- */
-  var heads = Array.prototype.slice.call(root.querySelectorAll('[data-mf-track]'));
+  /* ---------- reveals: each principle (its [n] number, headline and line together) and each section headline fades in
+     when it reaches the reading line, so nothing below the line is ink before the words above it. Principle headlines
+     also settle their tracking (wide screens only). Static markup stays visible without the script. ---------- */
   var wide = (w.innerWidth || 1024) >= 720;
-  var show = function (el) { el.style.opacity = '1'; el.style.letterSpacing = '-0.01em'; };
-  if (reduced || !('IntersectionObserver' in w)) heads.forEach(show);
+  var heads = Array.prototype.slice.call(root.querySelectorAll('[data-mf-track]'));
+  var units = [];
+  heads.forEach(function (h) { var u = h.closest('.pw-mf__item') || h; if (units.indexOf(u) < 0) units.push(u); });
+  Array.prototype.forEach.call(root.querySelectorAll('[data-mf-sec] h2'), function (h) {
+    if (!h.closest('[data-mf-hero]') && secs.indexOf(h.closest('[data-mf-sec]')) !== secs.length - 1 && units.indexOf(h) < 0) units.push(h);
+  });
+  var show = function (u) {
+    u.style.opacity = '1'; u.style.transform = 'none';
+    Array.prototype.forEach.call(u.matches('[data-mf-track]') ? [u] : u.querySelectorAll('[data-mf-track]'), function (h) { h.style.letterSpacing = '-0.01em'; });
+  };
+  if (reduced) units.forEach(show);
   else {
-    heads.forEach(function (h) { h.style.opacity = '0'; h.style.letterSpacing = wide ? '0.09em' : '-0.01em'; });
-    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } }); }, { threshold: 0.4 });
-    heads.forEach(function (h) { io.observe(h); });
-    // a fast scroll or an anchor jump can skip a headline without it ever intersecting: show anything already passed
-    pendingHeads = heads.slice();
+    units.forEach(function (u) {
+      u.setAttribute('data-mf-rv', '1'); u.style.opacity = '0'; u.style.transform = 'translateY(10px)';
+      Array.prototype.forEach.call(u.matches('[data-mf-track]') ? [u] : u.querySelectorAll('[data-mf-track]'), function (h) { h.style.letterSpacing = wide ? '0.09em' : '-0.01em'; });
+    });
+    pendingHeads = units.slice();
   }
 
   var rT = 0;
