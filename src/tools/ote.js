@@ -26,7 +26,9 @@
   function sizeName(n) { return isEn ? (n === 'SMB' ? 'SMBs' : n.toLowerCase() + 's') : SIZE_NAME_DA[n]; }
 
   function num(s) { return Number(String(s).replace(/[^0-9]/g, '')) || 0; }
-  function group(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); } // de-DE grouping
+  // thousands: '.' on Danish pages, ',' on English pages; decimals the other way round
+  function group(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, isEn ? ',' : '.'); }
+  function dec(x, k) { var s = x.toFixed(k); return isEn ? s : s.replace('.', ','); }
   function fmtE(n) { var r = Math.round(n); return (r < 0 ? '-' : '') + '€' + group(Math.abs(r)); }
 
   function out(k) { return root.querySelector('[data-o="' + k + '"]'); }
@@ -50,6 +52,7 @@
     if (lab && lab !== span.parentNode) inp.setAttribute('aria-label', lab.textContent.trim());
     span.parentNode.replaceChild(inp, span);
     tgt[KEYMAP[key]] = num(inp.value);
+    if (tgt[KEYMAP[key]]) inp.value = group(tgt[KEYMAP[key]]);
     inp.addEventListener('input', function () {
       var raw = inp.value, caret = inp.selectionStart == null ? raw.length : inp.selectionStart;
       var digitsBefore = raw.slice(0, caret).replace(/[^0-9]/g, '').replace(/^0+/, '').length;
@@ -102,7 +105,7 @@
     var vColor = empty ? '#5E5B98' : Math.abs(diff) <= 0.4 ? '#0E7A36' : '#B8710A';
     var mixFixed = oteV ? Math.round(base / oteV * 100) : 0;
     var rate = quota ? vari / quota : 0;
-    var per100 = rate ? '€' + (rate * 100).toFixed(2).replace('.', ',') : '—';
+    var per100 = rate ? '€' + dec(rate * 100, 2) : '—';
 
     setText('ote', fmtE(oteV));
     setText('base', fmtE(base));
@@ -110,11 +113,11 @@
     setText('mix', mixFixed + ' / ' + (100 - mixFixed));
     var bar = out('mixbar'); if (bar) bar.style.width = mixFixed + '%';
     setText('mixnote', T(mixFixed >= 70 ? 'Base-heavy. Typical for CSM and SDR roles.' : mixFixed >= 55 ? 'Balanced. Typical for account executives.' : 'Variable-heavy. Typical for enterprise closers and new-business hunters.'));
-    setText('ratio', ratio ? ratio.toFixed(1) + '×' : '—');
+    setText('ratio', ratio ? dec(ratio, 1) + '×' : '—');
     setText('bench', T('Benchmark {t} for {s}').replace('{t}', String(bm) + '×').replace('{s}', sizeName(sz[0])));
     setText('verdict', verdict);
     var vb = out('verdictbox'); if (vb) vb.style.color = vColor;
-    setText('rate', rate ? (rate * 100).toFixed(1) + '%' : '—');
+    setText('rate', rate ? dec(rate * 100, 1) + (isEn ? '%' : ' %') : '—');
     setText('per100', T('Of every €100 the rep closes, {p} goes to commission at target.').replace('{p}', per100));
     [0.8, 1, 1.2].forEach(function (pct, i) {
       setText('s' + i + 'total', fmtE(base + vari * pct));

@@ -23,8 +23,8 @@
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var DEF = { reps: 25, paid: 900000, finH: 24, repH: 1, finCost: 65, repCost: 55, err: 1, cut: 80 };
 
-  // thousands with '.', as the design's toLocaleString('de-DE') in both languages
-  function grp(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  // thousands: '.' on Danish pages, ',' on English pages
+  function grp(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, isDa ? '.' : ','); }
   function fE(n) { return (n < 0 ? '−' : '') + '€' + grp(Math.abs(Math.round(n))); }
   function num(n) { var s = String(n); return isDa ? s.replace('.', ',') : s; }
 
@@ -39,6 +39,7 @@
     el.className = span.className;
     el.setAttribute('data-input', key);
     el.value = span.textContent;
+    if (key === 'paid' && /\d/.test(el.value)) el.value = grp(el.value.replace(/\D/g, ''));
     var field = span.parentNode && span.parentNode.parentNode;
     var lab = field && field.firstElementChild;
     if (lab && lab !== span.parentNode) el.setAttribute('aria-label', lab.textContent.trim());
@@ -50,7 +51,7 @@
   function sanitize(key, el) {
     var v = el.value, caret = el.selectionStart == null ? v.length : el.selectionStart, out;
     if (key === 'paid') {
-      // keep digits only, re-group with dots; keep the caret after the same digit
+      // keep digits only, re-group; keep the caret after the same digit
       var digitsBefore = v.slice(0, caret).replace(/\D/g, '').length;
       var d = v.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
       out = d === '' ? '' : grp(d);
@@ -123,10 +124,10 @@
     setText('paybackSub', hasPay ? T('Time until the yearly Prowi fee is covered by savings.') : T('No payback at these inputs.'));
     setText('days', Math.round(finH * 12 * cut / 7.5) + ' ' + T('days'));
     setText('errSub', T('{e}% of {p} paid, 90% caught by live calculation and rep confirmation.').replace('{e}', num(errPct)).replace('{p}', fE(paid)));
-    var pc = Math.round(cut * 100) + '%';
+    var pc = Math.round(cut * 100) + (isDa ? ' %' : '%');
     setText('lineFin', num(finH) + ' ' + T('h') + ' × 12 × €' + num(finCost) + ' × ' + pc);
     setText('lineRep', num(reps) + ' × ' + num(repH) + ' ' + T('h') + ' × 12 × €' + num(repCost) + ' × ' + pc);
-    setText('lineErr', num(errPct) + '% × ' + fE(paid) + ' × 90%');
+    setText('lineErr', num(errPct) + (isDa ? ' % × ' : '% × ') + fE(paid) + (isDa ? ' × 90 %' : ' × 90%'));
     setText('lineCost', num(reps) + ' ' + T('users') + ' × €' + perRep + ' × 12');
 
     if (raf) { cancelAnimationFrame(raf); raf = 0; }

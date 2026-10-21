@@ -311,7 +311,16 @@
         if (menu) { closeMenu(); return; }
         menu = d.createElement('div'); menu.className = 'pw-menu'; menu.setAttribute('role', 'dialog'); menu.setAttribute('aria-label', T.menu);
         var logoSvg = q('svg.pw-nav__logo-svg'); var logoHtml = logoSvg ? logoSvg.outerHTML.replace(/fill="#110663"/g, 'fill="#FFFFFF"').replace(/fill="url\(#[^)]*\)"/, 'fill="#FFFFFF"') : '';
-        if (!HOME) R = Object.assign({}, R, { why: (DA ? '/' : '/en') + '#why' });
+        // use the desktop nav's own links (Webflow page links: the draft URLs now, the final URLs after launch)
+        var navA = qa('a[href]', bar).map(function (a) { return a.getAttribute('href'); });
+        R = Object.assign({}, R);
+        Object.keys(R).forEach(function (k) {
+          if (!/^\//.test(R[k])) return;
+          var hit = navA.filter(function (h) { return h.replace(/-2026(?=\/?(?:[?#]|$))/, '').replace(/\/$/, '') === R[k]; })[0];
+          if (hit) R[k] = hit;
+        });
+        var logoA = q('a.pw-nav__logo', bar), homeHref = logoA ? logoA.getAttribute('href') : (DA ? '/' : '/en');
+        if (!HOME) R.why = homeHref.replace(/#.*$/, '') + '#why';
         var links = ['why', 'platform', 'app', 'customers', 'pricing', 'about', 'careers'].map(function (k) { return '<a href="' + R[k] + '">' + T[k] + '</a>'; }).join('');
         menu.innerHTML = '<div class="pw-menu__top"><span class="pw-menu__logo">' + logoHtml + '</span><button type="button" class="pw-menu__close">' + T.close + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div><nav class="pw-menu__nav">' + links + '</nav><div class="pw-menu__foot"><a class="is-cta" href="' + R.demo + '">' + T.cta + '</a><a href="' + R.login + '">' + T.login + '</a></div>';
         d.body.appendChild(menu); d.body.classList.add('pw-menu-open');
@@ -325,7 +334,7 @@
     var why = trigs[0];
     if (why && why.getAttribute('href') === '#why') {
       if (HOME) { var prob = qa('section', root)[2]; if (prob) prob.id = 'why'; }
-      else why.setAttribute('href', (DA ? '/' : '/en') + '#why');
+      else { var lg = q('a.pw-nav__logo', bar); why.setAttribute('href', (lg ? lg.getAttribute('href').replace(/#.*$/, '') : (DA ? '/' : '/en')) + '#why'); }
     }
   })();
 
