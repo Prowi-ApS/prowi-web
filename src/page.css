@@ -60,9 +60,14 @@
 .pw-menu__toggle{display:flex;width:100%;justify-content:space-between;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.14);color:#fff;font:inherit;font-size:clamp(32px,6vw,64px);font-weight:220;letter-spacing:-.02em;line-height:1.15;padding:10px 0;text-align:left;cursor:pointer}
 .pw-menu__toggle svg{flex:none;transition:transform 220ms cubic-bezier(0.2,0.6,0.2,1)}
 .pw-menu__toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
-.pw-menu__sub{display:flex;flex-direction:column;padding:6px 0 10px 16px;border-bottom:1px solid rgba(255,255,255,.14)}
-.pw-menu__sub[hidden]{display:none}
-.pw-menu__nav .pw-menu__sub a{font-size:clamp(18px,3.4vw,24px);font-weight:300;letter-spacing:0;padding:8px 0;border-bottom:0;color:rgba(255,255,255,.86)}
+.pw-menu__sub{display:grid;grid-template-rows:0fr;opacity:0;border-bottom:1px solid transparent;transition:grid-template-rows 360ms cubic-bezier(0.2,0.7,0.2,1),opacity 260ms ease,border-color 260ms ease}
+.pw-menu__sub.is-open{grid-template-rows:1fr;opacity:1;border-bottom-color:rgba(255,255,255,.14)}
+.pw-menu__sub-in{min-height:0;overflow:hidden;display:flex;flex-direction:column;padding-left:16px}
+.pw-menu__sub-in::before,.pw-menu__sub-in::after{content:"";flex:none;height:6px}
+.pw-menu__sub-in::after{height:10px}
+.pw-menu__nav .pw-menu__sub a{font-size:clamp(18px,3.4vw,24px);font-weight:300;letter-spacing:0;padding:8px 0;border-bottom:0;color:rgba(255,255,255,.86);opacity:0;transform:translateY(-8px);transition:opacity 200ms ease,transform 260ms cubic-bezier(0.2,0.7,0.2,1),padding-left 220ms cubic-bezier(0.2,0.6,0.2,1),color 220ms}
+.pw-menu__sub.is-open a{opacity:1;transform:none;transition-delay:calc(60ms + var(--i,0) * 35ms),calc(60ms + var(--i,0) * 35ms),0s,0s}
+@media (prefers-reduced-motion:reduce){.pw-menu__sub,.pw-menu__nav .pw-menu__sub a,.pw-menu__toggle svg{transition:none!important}}
 body.pw-menu-open{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.pw-js [data-pw-rv]:not(.is-in){opacity:inherit;transform:none}.pw-js [data-pw-rv]{transition:none!important}.pw-js .pw-platform__chip--earned,.pw-js .pw-platform__chip--accelerator,.pw-js .pw-platform__chip--trophy{animation:none}}
 @media (max-width:749px){.pw-quarter__scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;border-radius:12px}.pw-quarter__scroll>.pw-quarter__plot{min-width:720px;margin-left:72px;overflow:visible}}

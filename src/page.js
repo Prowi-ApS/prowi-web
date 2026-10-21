@@ -441,7 +441,7 @@
           var seen = {}; items = items.filter(function (h) { if (seen[h]) return false; seen[h] = 1; return true; });
           return '<div class="pw-menu__group"><button type="button" class="pw-menu__toggle" aria-expanded="false">' + esc(label) +
             '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
-            '<div class="pw-menu__sub" hidden>' + items.join('') + '</div></div>';
+            '<div class="pw-menu__sub" aria-hidden="true"><div class="pw-menu__sub-in">' + items.map(function (h, i) { return h.replace('<a ', '<a tabindex="-1" style="--i:' + i + '" '); }).join('') + '</div></div></div>';
         };
         var one = function (k) { return '<a href="' + R[k] + '">' + T[k] + '</a>'; };
         var links = one('why') + group('pw-nav-panel-platform', T.platform, R.platform) + group('pw-nav-panel-resources', DA ? 'Ressourcer' : 'Resources', '') +
@@ -453,7 +453,11 @@
         qa('.pw-menu__toggle', menu).forEach(function (b) {
           b.addEventListener('click', function () {
             var sub = b.nextElementSibling, open = b.getAttribute('aria-expanded') !== 'true';
-            b.setAttribute('aria-expanded', open ? 'true' : 'false'); if (sub) sub.hidden = !open;
+            b.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (sub) {
+              sub.classList.toggle('is-open', open); sub.setAttribute('aria-hidden', open ? 'false' : 'true');
+              qa('a', sub).forEach(function (a) { if (open) a.removeAttribute('tabindex'); else a.setAttribute('tabindex', '-1'); });
+            }
           });
         });
       });
