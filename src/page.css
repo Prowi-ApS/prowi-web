@@ -171,3 +171,4 @@ body.pw-menu-open{overflow:hidden}
 .pw-root a.pw-types__chip:hover{color:rgb(17, 6, 99)}
 .pw-root a.pw-types__chip--on:hover{color:rgb(255, 255, 255)}
 .pw-root .pw-demo-modal__input::placeholder{color:#A1A0BD;opacity:1}
+.pw-root .pw-plus{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:300}

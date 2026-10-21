@@ -117,6 +117,20 @@
         a.setAttribute('href', '/en' + h);
       }
     });
+    // "100+" in light headlines: Readex Pro's "+" at weight 300 reads oddly, so the design sets the "+" in
+    // Helvetica Neue / Arial (light). Wrap each "+" in story titles and story cards.
+    qa('.pw-case__title, .pw-customers__card-title, .pw-case__more-title').forEach(function (el) {
+      var tw = d.createTreeWalker(el, 4), nodes = [], n;
+      while ((n = tw.nextNode())) if (n.nodeValue.indexOf('+') > -1 && !(n.parentNode.classList && n.parentNode.classList.contains('pw-plus'))) nodes.push(n);
+      nodes.forEach(function (tn) {
+        var parts = tn.nodeValue.split('+'), frag = d.createDocumentFragment();
+        parts.forEach(function (p, i) {
+          if (p) frag.appendChild(d.createTextNode(p));
+          if (i < parts.length - 1) { var s = d.createElement('span'); s.className = 'pw-plus'; s.textContent = '+'; frag.appendChild(s); }
+        });
+        tn.parentNode.replaceChild(frag, tn);
+      });
+    });
     var m = w.location.pathname.match(/\/(?:kunder|customers)\/([^\/?#]+)/);
     if (m) {
       var cur = m[1];
