@@ -15,6 +15,7 @@
   var qa = function (sel, el) { return Array.prototype.slice.call((el || d).querySelectorAll(tol(sel))); };
   var vw = function () { return d.documentElement.clientWidth || w.innerWidth; };
   var vh = function () { return w.innerHeight || d.documentElement.clientHeight || 800; };
+  var TOUCH = !!(w.matchMedia && w.matchMedia('(hover: none), (pointer: coarse)').matches);
   var raf = w.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
   // scroll may happen on the window or on an inner scroll container (embeds, previews): listen to both
   var onScroll = function (fn) {
@@ -519,7 +520,9 @@
       var p = Math.max(0, Math.min(1, (H - r.top) / Math.max(1, H - (H * 0.5 - r.height / 2))));
       var e = 1 - Math.pow(1 - p, 3);
       fig.style.transformOrigin = '50% 0%';
-      fig.style.transform = 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
+      // touch screens: slide only (a changing 3D tilt/scale makes WebKit re-rasterise the whole scene every frame)
+      if (TOUCH) { var tz = ((1 - e) * 80).toFixed(1); if (tz !== fig._pwT) { fig._pwT = tz; fig.style.transform = 'translate3d(0,' + tz + 'px,0)'; } }
+      else fig.style.transform = 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
       fig.style.opacity = (0.25 + 0.75 * e).toFixed(3);
       if (!seen && (r.top + r.height / 2) < H * 0.62) { seen = true; if (introDone) release(); else finish(); }
     };

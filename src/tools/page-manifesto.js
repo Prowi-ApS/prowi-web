@@ -202,6 +202,15 @@
   Array.prototype.forEach.call(root.querySelectorAll('[data-mf-sec] h2'), function (h) {
     if (!h.closest('[data-mf-hero]') && secs.indexOf(h.closest('[data-mf-sec]')) !== secs.length - 1 && units.indexOf(h) < 0) units.push(h);
   });
+  // every other text block in the story sections (e.g. "It means:") follows the same line, so nothing is ink below blurred text
+  secs.forEach(function (sec, i) {
+    if (i === secs.length - 1 || sec.closest('[data-mf-hero]')) return;
+    Array.prototype.forEach.call(sec.querySelectorAll('p, h2, h3, h4, li, blockquote'), function (el) {
+      if (el.hasAttribute('data-mf-lit') || el.closest('[data-mf-lit]') || el.querySelector('[data-mf-lit]')) return;
+      if (units.some(function (u) { return u === el || u.contains(el) || el.contains(u); })) return;
+      units.push(el);
+    });
+  });
   revs = units.map(function (u) {
     u.setAttribute('data-mf-rv', '1');
     return { el: u, a: -1, tracks: u.matches('[data-mf-track]') ? [u] : Array.prototype.slice.call(u.querySelectorAll('[data-mf-track]')) };

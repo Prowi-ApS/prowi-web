@@ -77,7 +77,7 @@ class Component extends DCLogic {
   timers = [];
   componentDidMount() {
     const el = this.rootRef.current;
-    const measure = () => { const el2 = this.rootRef.current; const w = el2 ? el2.getBoundingClientRect().width : window.innerWidth; if (Math.abs(w - this.state.w) > 2) this.setState({ w }); };
+    const measure = () => { const el2 = this.rootRef.current; const w = el2 ? el2.offsetWidth : window.innerWidth; if (Math.abs(w - this.state.w) > 2) this.setState({ w }); };
     measure(); requestAnimationFrame(measure);
     if (el && window.ResizeObserver) { this.ro = new ResizeObserver(measure); this.ro.observe(el); }
     this.onWin = measure; window.addEventListener('resize', this.onWin);

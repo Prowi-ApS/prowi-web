@@ -195,7 +195,7 @@ class Component extends DCLogic {
   measure() {
     const el = this.rootRef.current;
     if (!el) { clearTimeout(this._mT); this._mT = setTimeout(() => this.measure(), 120); return; }
-    const w = el.getBoundingClientRect().width;
+    const w = el.offsetWidth; // layout px: the hero tilts/scales this figure, which would inflate a bounding-box width
     if (w && Math.abs(w - this.state.w) > 2) this.setState({ w });
     if (!this.ro && window.ResizeObserver) {
       this.ro = new ResizeObserver((es) => { const cw = es[0].contentRect.width; if (cw && Math.abs(cw - this.state.w) > 2) this.setState({ w: cw }); });
