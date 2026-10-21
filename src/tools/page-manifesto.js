@@ -41,8 +41,8 @@
       '[data-mf-root] .pw-mf__orb-a{filter:blur(26px);will-change:transform;animation:mfOrb 18s ' + SWAY + ' infinite}' +
       '[data-mf-root] .pw-mf__orb-b{filter:blur(18px);mix-blend-mode:screen;will-change:transform,opacity;animation:mfOrbB 13s ' + SWAY + ' infinite}' +
       '[data-mf-root] .pw-mf__orb-c{aspect-ratio:1;filter:blur(20px);will-change:transform,opacity;animation:mfGlow 9s ' + SWAY + ' infinite}' +
-      '[data-mf-root] [data-mf-track]{transition:letter-spacing 1100ms ' + EASE + ',opacity 700ms ease-out;will-change:letter-spacing,opacity}' +
-      '[data-mf-root] [data-mf-rv]{transition:opacity 700ms ease-out,transform 700ms ' + EASE + '}' +
+      '[data-mf-root] [data-mf-track]{transition:letter-spacing 160ms linear}' +
+      '[data-mf-root] [data-mf-rv]{transition:opacity 160ms linear,transform 160ms linear;will-change:opacity,transform}' +
       '[data-mf-root] .pw-mf__cta:focus-visible{outline:2px solid #FFFFFF;outline-offset:3px}' +
       '@media (prefers-reduced-motion: reduce){[data-mf-root] [data-mf-anim],[data-mf-root] .pw-mf__orb-a,[data-mf-root] .pw-mf__orb-b,[data-mf-root] .pw-mf__orb-c{animation:none!important}[data-mf-root] [data-mf-w],[data-mf-root] [data-mf-track],[data-mf-root] [data-mf-dot]{transition:none!important}}';
     d.head.appendChild(st);
@@ -98,7 +98,7 @@
   var dots = Array.prototype.map.call(root.querySelectorAll('[data-mf-dot]'), function (el) {
     return { el: el, r: +el.getAttribute('data-mf-r'), c: +el.getAttribute('data-mf-c'), f: el.hasAttribute('data-mf-f'), k: '' };
   });
-  var raf = 0, _cq = -1, _dotP = -1, _dotCur = -1, _dotDark = false, _dotTop = '', pendingHeads = [];
+  var raf = 0, _cq = -1, _dotP = -1, _dotCur = -1, _dotDark = false, _dotTop = '', revs = [], wide = (w.innerWidth || 1024) >= 720;
 
   // each word remembers its vertical centre relative to its paragraph, so a frame needs one rect per paragraph
   function measure() {
@@ -107,9 +107,9 @@
       p.words.forEach(function (x) { var r = x.el.getBoundingClientRect(); x.rel = r.top - pr.top + r.height / 2; x.a = -1; });
     });
   }
-  // one reading line at 58% of the viewport: above = ink, below = dim (22% + 4px blur), smoothstep ramp of ~2 lines
+  // one reading line at 72% of the viewport: above = ink, below = dim (22% + 4px blur), smoothstep ramp of ~2 lines
   function paint() {
-    var vh = w.innerHeight || 800, DIM = 0.22, focal = vh * 0.58, ramp = Math.max(90, vh * 0.17);
+    var vh = w.innerHeight || 800, DIM = 0.22, focal = vh * 0.72, ramp = Math.max(80, vh * 0.14);
     paras.forEach(function (p) {
       var pr = p.el.getBoundingClientRect();
       if (pr.bottom < -vh || pr.top > vh * 2) return;
@@ -137,9 +137,18 @@
     }
     _cq = cq;
     // reveal line = where the words above are half lit (reading line + half a ramp)
-    if (pendingHeads.length) pendingHeads = pendingHeads.filter(function (h) {
-      if (h.getBoundingClientRect().top < focal + ramp * 0.5) { show(h); return false; }
-      return true;
+    // reveals follow the same line as the words, both ways: a unit is ink only once the words above it are
+    revs.forEach(function (o) {
+      var r = o.el.getBoundingClientRect();
+      if (r.bottom < -vh || r.top > vh * 2) return;
+      var t = reduced ? 1 : (focal - (r.top + Math.min(r.height / 2, 28))) / ramp + 0.5;
+      t = t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+      var q = Math.round(t * 30) / 30;
+      if (q === o.a) return;
+      o.a = q;
+      o.el.style.opacity = q.toFixed(3);
+      o.el.style.transform = q >= 1 ? 'none' : 'translateY(' + ((1 - q) * 12).toFixed(1) + 'px)';
+      o.tracks.forEach(function (h) { h.style.letterSpacing = wide ? (0.09 - 0.1 * q).toFixed(3) + 'em' : '-0.01em'; });
     });
     paintDots(vh);
   }
@@ -171,28 +180,28 @@
   /* ---------- reveals: each principle (its [n] number, headline and line together) and each section headline fades in
      when it reaches the reading line, so nothing below the line is ink before the words above it. Principle headlines
      also settle their tracking (wide screens only). Static markup stays visible without the script. ---------- */
-  var wide = (w.innerWidth || 1024) >= 720;
-  var heads = Array.prototype.slice.call(root.querySelectorAll('[data-mf-track]'));
   var units = [];
-  heads.forEach(function (h) { var u = h.closest('.pw-mf__item') || h; if (units.indexOf(u) < 0) units.push(u); });
+  Array.prototype.forEach.call(root.querySelectorAll('[data-mf-track]'), function (h) { var u = h.closest('.pw-mf__item') || h; if (units.indexOf(u) < 0) units.push(u); });
   Array.prototype.forEach.call(root.querySelectorAll('[data-mf-sec] h2'), function (h) {
     if (!h.closest('[data-mf-hero]') && secs.indexOf(h.closest('[data-mf-sec]')) !== secs.length - 1 && units.indexOf(h) < 0) units.push(h);
   });
-  var show = function (u) {
-    u.style.opacity = '1'; u.style.transform = 'none';
-    Array.prototype.forEach.call(u.matches('[data-mf-track]') ? [u] : u.querySelectorAll('[data-mf-track]'), function (h) { h.style.letterSpacing = '-0.01em'; });
-  };
-  if (reduced) units.forEach(show);
-  else {
-    units.forEach(function (u) {
-      u.setAttribute('data-mf-rv', '1'); u.style.opacity = '0'; u.style.transform = 'translateY(10px)';
-      Array.prototype.forEach.call(u.matches('[data-mf-track]') ? [u] : u.querySelectorAll('[data-mf-track]'), function (h) { h.style.letterSpacing = wide ? '0.09em' : '-0.01em'; });
-    });
-    pendingHeads = units.slice();
-  }
+  revs = units.map(function (u) {
+    u.setAttribute('data-mf-rv', '1');
+    return { el: u, a: -1, tracks: u.matches('[data-mf-track]') ? [u] : Array.prototype.slice.call(u.querySelectorAll('[data-mf-track]')) };
+  });
 
   var rT = 0;
-  w.addEventListener('scroll', function () { if (raf) return; raf = w.requestAnimationFrame(function () { raf = 0; paint(); }); }, { passive: true, capture: true });
+  var rafAt = 0;
+  var onScroll = function () {
+    var now = Date.now();
+    if (raf && now - rafAt < 200) return;
+    if (raf) w.cancelAnimationFrame(raf);
+    rafAt = now; raf = w.requestAnimationFrame(function () { raf = 0; paint(); });
+  };
+  w.addEventListener('scroll', onScroll, { passive: true, capture: true });
+  w.addEventListener('load', function () { measure(); _cq = -1; _dotP = -1; paint(); });
+  w.addEventListener('pageshow', function () { _cq = -1; _dotP = -1; paint(); });
+  d.addEventListener('visibilitychange', function () { if (!d.hidden) { _cq = -1; paint(); } });
   w.addEventListener('resize', function () { clearTimeout(rT); rT = setTimeout(function () { _dotP = -1; measure(); paint(); }, 120); });
   measure();
   if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { measure(); paint(); });
