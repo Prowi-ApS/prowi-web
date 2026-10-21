@@ -76,3 +76,7 @@ body.pw-menu-open{overflow:hidden}
 /* Book a demo: cal.com calendar inline after submit ("Eller vælg et tidspunkt nu") */
 .pw-demo-modal.is-cal .pw-demo-modal__panel{max-width:960px}
 .pw-demo-modal__cal{width:100%;min-height:520px;margin-top:4px;overflow:auto;border-radius:16px}
+/* Search fields (FAQ, glossary, Insider, models, industries, integrations): one look, no native search chrome (Chrome's blue ×, Safari's rounded field) */
+.pw-root input[type="search"]{font-family:inherit;line-height:normal;padding:0;margin:0;-webkit-appearance:none;appearance:none;box-shadow:none;height:auto;outline:none}
+.pw-root input[type="search"]::-webkit-search-cancel-button,.pw-root input[type="search"]::-webkit-search-decoration,.pw-root input[type="search"]::-webkit-search-results-button,.pw-root input[type="search"]::-webkit-search-results-decoration{-webkit-appearance:none;appearance:none;display:none}
+.pw-root input[type="search"]::placeholder{color:#A1A0BD;opacity:1}
