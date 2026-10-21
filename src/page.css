@@ -188,10 +188,14 @@ body.pw-menu-open{overflow:hidden}
 /* iOS Safari tints the area around its floating toolbar with the body's background: match the page base (pw-root covers the body, so nothing else changes) */
 body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
 
-/* Home hero figure: scroll-driven tilt where the browser supports it (runs off the main thread; page.js falls back to JS) */
+/* Home hero figure: scroll-driven tilt, pure CSS (works from the first paint, before any script). The hero clips with
+   overflow:clip, which (unlike hidden) is not a scroll container, so view() follows the page scroll. Strong tilt on phones,
+   gentle from tablets up. Browsers without scroll timelines get the JS tilt in page.js. */
 @keyframes pwHeroTilt{from{transform:perspective(1100px) rotateX(34deg) translateY(160px) scale(.86);opacity:.25}to{transform:perspective(1100px) rotateX(0deg) translateY(0) scale(1);opacity:1}}
-.pw-hero-sda{transform-origin:50% 0;animation:pwHeroTilt linear both;animation-timing-function:cubic-bezier(.33,1,.68,1);animation-timeline:scroll(root block)}
-/* large screens: the figure is already half in view at load, so it starts from a gentler tilt */
-@keyframes pwHeroTiltLg{from{transform:perspective(1600px) rotateX(14deg) translateY(56px) scale(.95);opacity:.7}to{transform:perspective(1600px) rotateX(0deg) translateY(0) scale(1);opacity:1}}
-@media (min-width:992px){.pw-hero-sda{animation-name:pwHeroTiltLg}}
-@media (prefers-reduced-motion:reduce){.pw-hero-sda{animation:none}}
+@keyframes pwHeroTiltLg{from{transform:perspective(1800px) rotateX(10deg) translateY(48px) scale(.96);opacity:.75}to{transform:perspective(1800px) rotateX(0deg) translateY(0) scale(1);opacity:1}}
+@supports (overflow:clip){.pw-root .pw-hero{overflow:clip}}
+@supports (animation-timeline:view()) and (overflow:clip){
+.pw-hero .pw-hero__scene{transform-origin:50% 0;animation:pwHeroTilt linear both;animation-timing-function:cubic-bezier(.33,1,.68,1);animation-timeline:view();animation-range:entry 0% cover 50%}
+@media (min-width:768px){.pw-hero .pw-hero__scene{animation-name:pwHeroTiltLg}}
+@media (prefers-reduced-motion:reduce){.pw-hero .pw-hero__scene{animation:none}}
+}

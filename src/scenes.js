@@ -18,6 +18,7 @@
     window.__dcUpdate(name, 'js', s.js, false);
     registered[name] = true;
   }
+  var REDUCED_M = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   function propsFor(el, name) {
     var s = SCENES[name] || { defaults: {} };
     var p = Object.assign({}, s.defaults);
@@ -32,6 +33,8 @@
       if (t.indexOf('no') === 0 && (t.slice(2) in p)) { p[t.slice(2)] = false; return; }
       p[t] = true;
     });
+    // the home hero scene waits for page.js to release it (on scroll), even if it mounts before page.js has run
+    if (el.closest && el.closest('.pw-hero') && !REDUCED_M) p.hold = true;
     // JSON form set at runtime by page.js
     try {
       var raw = el.getAttribute('data-scene-props');

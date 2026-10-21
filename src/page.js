@@ -526,23 +526,16 @@
       var p = Math.max(0, Math.min(1, (H - r.top) / Math.max(1, H - (H * 0.5 - r.height / 2))));
       var e = 1 - Math.pow(1 - p, 3);
       fig.style.transformOrigin = '50% 0%';
-      var lg = w.innerWidth >= 992;
+      var lg = w.innerWidth >= 768;
       var tf = lg ? 'perspective(1600px) rotateX(' + ((1 - e) * 14).toFixed(2) + 'deg) translateY(' + ((1 - e) * 56).toFixed(1) + 'px) scale(' + (0.95 + 0.05 * e).toFixed(4) + ')'
         : 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
       if (tf !== fig._pwT) { fig._pwT = tf; fig.style.transform = tf; }
       fig.style.opacity = (lg ? 0.7 + 0.3 * e : 0.25 + 0.75 * e).toFixed(3);
       if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (scrolled) { if (!introDone) finish(); release(); } }
     };
-    var SDA = !!(fig && !REDUCED && w.CSS && CSS.supports && CSS.supports('animation-timeline: scroll(root block)') && CSS.supports('animation-range: 0px 100px'));
-    // the tilt runs on the page's own scroll: from the figure's top entering the screen to its centre reaching mid-screen
-    var sdaRange = function () {
-      if (!SDA) return;
-      // layout geometry (offsets ignore the tilt itself and any transformed ancestor)
-      var top = 0, el = fig, H = stableH(), hgt = fig.offsetHeight; while (el) { top += el.offsetTop; el = el.offsetParent; }
-      var a = Math.max(0, Math.round(top - H)), b = Math.max(a + 1, Math.round(top + hgt / 2 - H / 2));
-      fig.style.animationRange = a + 'px ' + b + 'px';
-    };
-    if (fig) { fig.style.willChange = 'transform, opacity'; if (SDA) { fig.classList.add('pw-hero-sda'); sdaRange(); w.addEventListener('load', sdaRange); w.addEventListener('resize', sdaRange); } }
+    // CSS runs the tilt where scroll timelines exist (page.css); this script only tilts in older browsers
+    var SDA = !!(fig && !REDUCED && w.CSS && CSS.supports && CSS.supports('animation-timeline: view()') && CSS.supports('overflow: clip'));
+    if (fig) fig.style.willChange = 'transform, opacity';
     var timers = [];
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
     var finish = function () {
