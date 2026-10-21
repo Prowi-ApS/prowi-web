@@ -46,7 +46,10 @@
     st.id = 'pw-insider-css';
     st.textContent = '@keyframes pwInsiderIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}' +
       '.pw-post__table-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}' +
-      '.pw-post__table-scroll > table{min-width:480px}';
+      '.pw-post__table-scroll > table{min-width:480px}' +
+      // the sticky contents column must never be a scroll anchor: when the active item changes weight and re-wraps,
+      // Chrome would otherwise shift the page to keep it still, which moves the reader into the previous section
+      '.pw-post__aside,.pw-post__aside *{overflow-anchor:none}';
     document.head.appendChild(st);
   }
 
@@ -169,7 +172,10 @@
         var a = norm(txt(first)), b = norm(txt(titleEl)), n = Math.min(24, a.length, b.length);
         if (n >= 8 && a.slice(0, n) === b.slice(0, n)) first.style.display = 'none';
       }
-      // 2. wide tables scroll inside the column instead of the page
+      // 2. load the article's images straight away: lazy images without a reserved height grow the page while the
+      //    reader scrolls back up after a contents jump, and Safari (no scroll anchoring) then shifts the text under them
+      each(body.querySelectorAll('img[loading="lazy"]'), function (im) { im.loading = 'eager'; });
+      // 3. wide tables scroll inside the column instead of the page
       each(body.querySelectorAll('table'), function (t) {
         if (t.parentNode.classList && t.parentNode.classList.contains('pw-post__table-scroll')) return;
         var w = document.createElement('div');
@@ -219,6 +225,19 @@
             e.preventDefault(); e.stopPropagation(); // keep Webflow's own anchor scrolling out of it
             var y = h.getBoundingClientRect().top + window.pageYOffset - topOffset();
             lockUntil = Date.now() + 900; setCur(i);
+            // images above the heading may still change the layout: re-aim once they have loaded, unless the reader moved
+            var aim = function () { return h.getBoundingClientRect().top + window.pageYOffset - topOffset(); };
+            var pend = Array.prototype.filter.call(body ? body.querySelectorAll('img') : [], function (im) { return !im.complete && im.getBoundingClientRect().top < h.getBoundingClientRect().top; });
+            if (pend.length) {
+              var left = pend.length, t0 = Date.now(), userMoved = false;
+              var mark = function () { userMoved = true; };
+              window.addEventListener('wheel', mark, { passive: true, once: true });
+              window.addEventListener('touchstart', mark, { passive: true, once: true });
+              pend.forEach(function (im) {
+                var done = function () { if (--left === 0 && !userMoved && Date.now() - t0 < 6000) window.scrollTo({ top: aim(), behavior: 'auto' }); };
+                im.addEventListener('load', done, { once: true }); im.addEventListener('error', done, { once: true });
+              });
+            }
             window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
             if (history.replaceState) history.replaceState(null, '', '#' + h.id);
           });
