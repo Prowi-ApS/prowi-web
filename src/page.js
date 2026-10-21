@@ -820,6 +820,12 @@
     if (chips.length < 2 || !does || !gets) return;
     var ROWS = { da: [["+2 % på flerårige kontrakter", "Beder om den treårige, ikke den etårige.", "Længere kontrakter. Kunder der bliver."], ["12 % over 100 % af mål", "Trækker næste deal ind i dette kvartal for at komme over stregen.", "Omsætning der lander nu, ikke næste periode."], ["Clawback ved churn inden 90 dage", "Kvalificerer hårdere. Oversælger mindre.", "Færre dårlige kunder i bøgerne."], ["SPIFF på den nye produktlinje", "Åbner med den i hver demo.", "En lancering der faktisk sælger."], ["Bonus ved betaling, ikke ved underskrift", "Følger op på fakturaen, ikke kun kontrakten.", "Penge i banken. Færre afskrivninger."]], en: [["+2% on multi-year contracts", "Ask for the three-year, not the one-year.", "Longer contracts. Customers that stay."], ["12% above 100% of target", "Pull the next deal into this quarter to cross the line.", "Revenue that lands now, not next period."], ["Clawback on churn within 90 days", "Qualify harder. Oversell less.", "Fewer bad-fit customers on the books."], ["SPIFF on the new product line", "Lead with it in every demo.", "A launch that actually sells."], ["Bonus on payment received, not signature", "Chase the invoice, not just the contract.", "Cash in the bank. Fewer write-offs."]] }[LANG];
     var ON = 'pw-results__rule--active', OFF = 'pw-results__rule';
+    // only the first chip carries the progress bar in Webflow: give every chip one, so each shows its timer when active
+    chips.forEach(function (c) {
+      var last = c.lastElementChild;
+      if (last && last.getAttribute('aria-hidden') === 'true') return;
+      var pr = d.createElement('span'); pr.className = 'pw-results__rule-progress--off'; pr.setAttribute('aria-hidden', 'true'); c.appendChild(pr);
+    });
     var sel = 0, manual = false, timer = null, auto = false;
     var setText = function (el, s) { var n = (function f(x) { if (x.nodeType === 3 && x.nodeValue.trim()) return x; for (var i = 0; i < x.childNodes.length; i++) { var r = f(x.childNodes[i]); if (r) return r; } return null; })(el); if (n) n.nodeValue = s; else el.textContent = s; };
     var paint = function () {
