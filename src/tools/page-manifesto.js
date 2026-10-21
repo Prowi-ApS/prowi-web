@@ -104,7 +104,7 @@
   }
 
   /* ---------- tiles: the transition into the close ---------- */
-  var tiles = null, tctx = null, tW = 0, tH = 0, tDpr = 1, noisePat = null;
+  var tiles = null, tctx = null, tW = 0, tH = 0, tDpr = 1;
   if (curtain && curtain.parentNode) {
     tiles = d.createElement('canvas'); tiles.setAttribute('data-mf-tiles', '1'); tiles.setAttribute('aria-hidden', 'true');
     curtain.parentNode.insertBefore(tiles, curtain.nextSibling);
@@ -112,45 +112,48 @@
   }
   var hash = function (i, j) { var x = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return x - Math.floor(x); };
   var lerp = function (a, b, t) { return Math.round(a + (b - a) * t); };
-  // rounded squares (all the same shape) sweep up from the bottom, violet and small first, growing and darkening; rows
-  // that are complete merge into a solid dark base, so the dark rises behind the fringe of squares
+  // rounded squares (all the same shape) sweep up from the bottom, violet and small first, growing and darkening. In each
+  // column the squares that have finished melt into a solid dark base from their middle down, so the dark rises as a
+  // ragged skyline of squares (no straight edge). Grain is baked into the dark fill (one pattern, no extra pass).
+  var darkPat = null;
+  function darkFill(c) {
+    if (darkPat) return darkPat;
+    var n = d.createElement('canvas'); n.width = n.height = 256; var nx = n.getContext('2d');
+    nx.fillStyle = 'rgb(17,6,99)'; nx.fillRect(0, 0, 256, 256);
+    var im = nx.getImageData(0, 0, 256, 256), a = im.data;
+    for (var k = 0; k < a.length; k += 4) { var rnd = Math.random(), g = rnd * rnd * rnd * 0.47; a[k] = Math.round(a[k] + (40 - a[k]) * g); a[k + 1] = Math.round(a[k + 1] + (20 - a[k + 1]) * g); a[k + 2] = Math.round(a[k + 2] + (255 - a[k + 2]) * g); }
+    nx.putImageData(im, 0, 0); darkPat = c.createPattern(n, 'repeat') || 'rgb(17,6,99)';
+    return darkPat;
+  }
   function drawTiles(P) {
     if (!tctx) return;
     if (P <= 0) { tiles.style.display = 'none'; return; }
     tiles.style.display = 'block';
     var cw = tiles.clientWidth, ch = tiles.clientHeight;
-    if (cw !== tW || ch !== tH) { tW = cw; tH = ch; tDpr = Math.min(2, w.devicePixelRatio || 1); tiles.width = Math.round(cw * tDpr); tiles.height = Math.round(ch * tDpr); }
+    if (cw !== tW || ch !== tH) { tW = cw; tH = ch; tDpr = Math.min(noBlur ? 1.5 : 2, w.devicePixelRatio || 1); tiles.width = Math.round(cw * tDpr); tiles.height = Math.round(ch * tDpr); }
     var c = tctx; c.setTransform(tDpr, 0, 0, tDpr, 0, 0); c.clearRect(0, 0, tW, tH);
+    var dark = darkFill(c);
+    if (P >= 1) { c.fillStyle = dark; c.fillRect(0, 0, tW, tH); return; }
     var T = Math.max(26, Math.min(44, Math.round(tW / 34))), GAP = Math.max(3, Math.round(T * 0.1)), cols = Math.ceil(tW / T) + 1, rows = Math.ceil(tH / T) + 1, WIN = 0.42;
-    var ox = (tW - (cols - 1) * T) / 2 - T / 2, oy = tH - rows * T;
-    var solidTop = tH;
-    if (P >= 1) solidTop = 0;
-    else { var ynFull = (P * (1 + WIN) - WIN - 0.22) / 0.78; if (ynFull > 0) solidTop = oy + Math.max(0, Math.ceil(rows * (1 - ynFull) - 0.5)) * T; }
-    c.fillStyle = 'rgb(17,6,99)';
-    if (solidTop < tH) c.fillRect(0, Math.max(0, solidTop), tW, tH);
-    var top = solidTop, rr = !!c.roundRect;
-    if (P < 1) for (var j = 0; j < rows; j++) {
-      var rowTop = oy + j * T; if (rowTop >= solidTop) break;
-      var yn = 1 - (j + 0.5) / rows; // 0 at the bottom row
-      for (var i = 0; i < cols; i++) {
-        var lp = (P * (1 + WIN) - Math.min(1, yn * 0.78 + hash(i, j) * 0.22)) / WIN; if (lp <= 0) continue; if (lp > 1) lp = 1;
+    var ox = (tW - (cols - 1) * T) / 2 - T / 2, oy = tH - rows * T, rr = !!c.roundRect, i, j;
+    var lpAt = function (i2, j2) { var yn = 1 - (j2 + 0.5) / rows; var v = (P * (1 + WIN) - Math.min(1, yn * 0.78 + hash(i2, j2) * 0.22)) / WIN; return v <= 0 ? 0 : v >= 1 ? 1 : v; };
+    // per column: the lowest run of finished squares becomes solid from the middle of its top square down
+    var base = [];
+    c.fillStyle = dark;
+    for (i = 0; i < cols; i++) {
+      var jb = rows; while (jb > 0 && lpAt(i, jb - 1) >= 1) jb--;
+      base[i] = jb;
+      if (jb < rows) { var y0 = oy + jb * T + T / 2; c.fillRect(ox + i * T - 0.5, y0, T + 1, tH - y0 + 1); }
+    }
+    for (j = 0; j < rows; j++) {
+      for (i = 0; i < cols; i++) {
+        if (j > base[i]) continue; // fully inside the solid base
+        var lp = lpAt(i, j); if (lp <= 0) continue;
         var e = 1 - Math.pow(1 - lp, 3), sz = (T - GAP) * (0.22 + 0.78 * e), r = sz * 0.26;
-        var x = ox + i * T + (T - sz) / 2, y = rowTop + (T - sz) / 2;
-        if (y < top) top = y;
-        c.fillStyle = 'rgb(' + lerp(117, 17, e) + ',' + lerp(88, 6, e) + ',' + lerp(224, 99, e) + ')';
+        var x = ox + i * T + (T - sz) / 2, y = oy + j * T + (T - sz) / 2;
+        c.fillStyle = e > 0.985 ? dark : 'rgb(' + lerp(117, 17, e) + ',' + lerp(88, 6, e) + ',' + lerp(224, 99, e) + ')';
         if (rr) { c.beginPath(); c.roundRect(x, y, sz, sz, r); c.fill(); } else c.fillRect(x, y, sz, sz);
       }
-    }
-    // film grain on everything painted (one device pixel per grain; averages to the dark close's rendered colour)
-    if (!noisePat) {
-      var n = d.createElement('canvas'); n.width = n.height = 256; var nx = n.getContext('2d'), im = nx.createImageData(256, 256), a = im.data;
-      for (var k = 0; k < a.length; k += 4) { var rnd = Math.random(); a[k] = 40; a[k + 1] = 20; a[k + 2] = 255; a[k + 3] = Math.round(rnd * rnd * rnd * 120); }
-      nx.putImageData(im, 0, 0); noisePat = c.createPattern(n, 'repeat');
-    }
-    if (noisePat) {
-      var gy = Math.max(0, Math.floor(top * tDpr));
-      c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-atop'; c.fillStyle = noisePat;
-      c.fillRect(0, gy, tiles.width, tiles.height - gy); c.globalCompositeOperation = 'source-over';
     }
   }
 
@@ -274,6 +277,105 @@
     u.setAttribute('data-mf-rv', '1');
     return { el: u, a: -1, tracks: u.matches('[data-mf-track]') ? [u] : Array.prototype.slice.call(u.querySelectorAll('[data-mf-track]')) };
   });
+
+  /* ---------- scroll-driven mode: where the browser supports scroll timelines, the words, reveals, the dot rail and
+     the fade of the last story section are CSS animations bound to the page scroll. The browser runs them without this
+     script on every frame; the script only measures (on load / resize / layout change) where each one starts and ends,
+     and per frame just draws the tile canvas and flips a few classes. ---------- */
+  var SDA = !reduced && !!(w.CSS && CSS.supports && CSS.supports('animation-timeline: scroll(root block)') && CSS.supports('animation-range: 0px 100px'));
+  if (SDA) {
+    root.setAttribute('data-mf-sda', '1');
+    var css2 = d.createElement('style'); css2.id = 'pw-mf-sda';
+    var TL = 'animation-timeline:scroll(root block);animation-fill-mode:both;animation-duration:1ms;animation-timing-function:';
+    css2.textContent =
+      '@keyframes mfW{from{color:rgba(17,6,99,0.22);filter:blur(4px)}to{color:rgb(17,6,99);filter:blur(0)}}' +
+      '@keyframes mfWn{from{color:rgba(17,6,99,0.22)}to{color:rgb(17,6,99)}}' +
+      '@keyframes mfWe{from{color:rgba(76,57,202,0.22);filter:blur(4px)}to{color:rgb(76,57,202);filter:blur(0)}}' +
+      '@keyframes mfWen{from{color:rgba(76,57,202,0.22)}to{color:rgb(76,57,202)}}' +
+      '@keyframes mfRv{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}' +
+      '@keyframes mfLs{from{letter-spacing:0.09em}to{letter-spacing:-0.01em}}' +
+      '@keyframes mfOut{from{opacity:1}to{opacity:0}}' +
+      '@keyframes mfRail{from{transform:translate3d(0,288px,0)}to{transform:translate3d(0,0,0)}}' +
+      '@keyframes mfDot{from{transform:translate3d(var(--x0),var(--y),0);opacity:var(--o0);filter:blur(0)}to{transform:translate3d(var(--x1),var(--y),0);opacity:var(--o1);filter:blur(var(--b1))}}' +
+      '[data-mf-sda] [data-mf-w]{transition:none;' + TL + 'ease-in-out;animation-name:' + (noBlur ? 'mfWn' : 'mfW') + '}' +
+      '[data-mf-sda] [data-mf-w][data-mf-em]{animation-name:' + (noBlur ? 'mfWen' : 'mfWe') + '}' +
+      '[data-mf-sda] [data-mf-rv]{transition:none;' + TL + 'ease-in-out;animation-name:mfRv}' +
+      '[data-mf-sda] [data-mf-track]{transition:none}' +
+      (wide ? '[data-mf-sda] [data-mf-track][data-mf-ls]{' + TL + 'ease-in-out;animation-name:mfLs}' : '') +
+      '[data-mf-sda] [data-mf-out]{' + TL + 'linear;animation-name:mfOut}' +
+      '[data-mf-sda] [data-mf-dots-sticky] > *{' + TL + 'ease-in-out;animation-name:mfRail}' +
+      '[data-mf-sda] [data-mf-dot]{' + TL + 'ease-in-out;animation-name:mfDot}';
+    d.head.appendChild(css2);
+  }
+  var docTop = function (el) { var t = 0; while (el) { t += el.offsetTop; el = el.offsetParent; } return t; };
+  var stH = 0, stW = 0; var stableVH = function () { if (!stH || w.innerWidth !== stW) { stW = w.innerWidth; stH = w.innerHeight || 800; } return stH; };
+  var rng = function (el, a, b) { a = Math.round(a); b = Math.max(a + 1, Math.round(b)); if (b <= 0) { el.style.animationRange = '0px 1px'; el.style.animationDelay = ''; return; } el.style.animationRange = Math.max(0, a) + 'px ' + b + 'px'; };
+  function measureSDA() {
+    var vh = stableVH(), focal = vh * 0.72, ramp = Math.max(80, vh * 0.14), sy = w.pageYOffset;
+    // words: lit while their centre crosses the reading line
+    paras.forEach(function (p) {
+      p.words.forEach(function (x) { var r = x.el.getBoundingClientRect(), y = r.top + sy + r.height / 2; rng(x.el, y - focal - ramp / 2, y - focal + ramp / 2); });
+    });
+    // reveal units (layout position, ignoring their own slide) and their tracking
+    revs.forEach(function (o) {
+      var y = docTop(o.el) + Math.min(o.el.offsetHeight / 2, 28);
+      rng(o.el, y - focal - ramp / 2, y - focal + ramp / 2);
+      o.tracks.forEach(function (h) { h.setAttribute('data-mf-ls', '1'); rng(h, y - focal - ramp / 2, y - focal + ramp / 2); });
+    });
+    // the story section before the close fades as the tiles take over (P 0.45 → 0.9)
+    var close = secs[secs.length - 1], mean = secs[secs.length - 2];
+    if (close && mean) { var cd = docTop(close); mean.setAttribute('data-mf-out', '1'); rng(mean, cd - vh * 1.05 + 0.45 * vh * 0.9, cd - vh * 1.05 + 0.9 * vh * 0.9); }
+    // dot rail: hero grid → 3-dot column while the hero scrolls its first 45% of a screen away
+    if (hero && dots.length) {
+      var h0 = docTop(hero), h1 = h0 + vh * 0.45, margin = dotsBox ? dotsBox.getBoundingClientRect().left : 0;
+      var room = margin >= 18, colX = margin >= 72 ? -Math.min(190, margin - 36) : -(margin - 4);
+      if (dotsSticky && dotsSticky.firstElementChild) rng(dotsSticky.firstElementChild, h0, h1);
+      dots.forEach(function (o) {
+        var keep = o.c === 0 && room, st = o.el.style;
+        st.setProperty('--x0', (o.c * 18) + 'px'); st.setProperty('--x1', (keep ? colX : o.c * 18) + 'px'); st.setProperty('--y', (o.r * 18) + 'px');
+        st.setProperty('--o0', '1'); st.setProperty('--o1', keep ? '1' : '0'); st.setProperty('--b1', keep || noBlur ? '0px' : '4px');
+        st.transform = ''; st.opacity = ''; st.filter = '';
+        rng(o.el, h0, h1);
+      });
+    }
+  }
+  // per frame in scroll-driven mode: the tile canvas, the dark page flag and the rail's active dot
+  var _cur = -1, _dk = null;
+  function paintSDA() {
+    var vh = w.innerHeight || 800, close = secs[secs.length - 1];
+    if (close && curtain) {
+      var ct = close.getBoundingClientRect().top, fr = footEl ? footEl.getBoundingClientRect() : null;
+      var P = (vh * 1.05 - ct) / (vh * 0.9); P = P <= 0 ? 0 : P >= 1 ? 1 : P;
+      if (fr && fr.height > 0 && fr.top < vh) P = 1;
+      P = Math.round(P * 400) / 400; _cq = P;
+      if (P !== _edge) {
+        _edge = P; drawTiles(P);
+        var dk = P > 0.6; if (dk !== _bodyDark) { _bodyDark = dk; d.body.classList.toggle('pw-mf-dark', dk); }
+        var run = P > 0; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
+      }
+    }
+    if (hero && dots.length) {
+      var past = hero.getBoundingClientRect().top < -vh * 0.225, cur = 0;
+      secs.forEach(function (s2, i) { if (s2.getBoundingClientRect().top <= vh * 0.5) cur = i; });
+      var dark = _cq > 0.5, key = cur + '|' + past + '|' + dark;
+      if (key !== _dk) {
+        _dk = key; var room = dotMargin >= 18;
+        dots.forEach(function (o) {
+          var keep = o.c === 0 && room, on = past && keep && o.r === cur;
+          o.el.style.background = dark ? (on ? '#FFFFFF' : 'transparent') : past ? (on ? '#110663' : '#FFFFFF') : (o.f ? 'rgba(17,6,99,0.14)' : '#FFFFFF');
+          o.el.style.borderColor = dark ? (on ? '#FFFFFF' : 'rgba(255,255,255,0.38)') : on ? '#110663' : 'rgba(17,6,99,0.22)';
+        });
+      }
+    }
+  }
+  if (SDA) {
+    // clear the inline states the JS mode would have set, then hand over to the browser
+    revs.forEach(function (o) { o.el.style.opacity = ''; o.el.style.transform = ''; o.tracks.forEach(function (h) { h.style.letterSpacing = ''; }); });
+    paras.forEach(function (p) { p.words.forEach(function (x) { x.el.style.color = ''; x.el.style.filter = ''; }); });
+    paint = function () { paintSDA(); };
+    var _m = measure; measure = function () { _m(); measureSDA(); };
+    if (w.ResizeObserver) { var roT = 0, lastH = 0; new ResizeObserver(function () { var hh = root.offsetHeight; if (Math.abs(hh - lastH) < 2) return; lastH = hh; clearTimeout(roT); roT = setTimeout(function () { measure(); _edge = -1; paint(); }, 150); }).observe(root); }
+  }
 
   var rT = 0;
   var rafAt = 0;
