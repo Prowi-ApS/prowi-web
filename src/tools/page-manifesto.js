@@ -35,7 +35,17 @@
       '[data-mf-root] [data-mf-w]{transition:color 120ms linear,filter 120ms linear}' +
       '[data-mf-root] [data-mf-dots-sticky]{top:calc(50svh + 264px)}' +
       '[data-mf-root] [data-mf-dot]{position:absolute;left:0;top:0;width:12px;height:12px;border-radius:3.5px;box-sizing:border-box;border:1px solid rgba(17,6,99,0.22);background:#FFFFFF;transition:background 260ms ease,border-color 260ms ease;will-change:transform,opacity,filter}' +
-      '[data-mf-root] [data-mf-curtain]{height:100lvh;will-change:opacity}' +
+      '[data-mf-root] [data-mf-curtain]{height:calc(100lvh + 200px);opacity:1;visibility:hidden;will-change:transform;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 200px);mask-image:linear-gradient(to bottom,transparent 0,#000 200px);transform:translate3d(0,100lvh,0)}' +
+      // the footer after the manifesto continues the dark close (it sits above the curtain)
+      '.pw-mf[data-mf-ready] ~ .pw-footer{z-index:3;background:#110663;box-shadow:0 0 0 100vmax #110663;clip-path:inset(0 -100vmax);color:rgba(255,255,255,0.72)}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__col-title,.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__ticker-word{color:#FFFFFF}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__link,.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__brand{color:rgba(255,255,255,0.72)}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__link:hover{color:#FFFFFF}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__bottom,.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__social-link{color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.14)}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__ticker-word::before{filter:invert(1) brightness(2)}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__wordmark-svg g[fill="#FFFFFF"],.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__wordmark-svg [fill="#FFFFFF"]{fill:rgba(255,255,255,0.07)}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer svg [fill="#110663"]{fill:#FFFFFF}' +
+      'body.pw-mf-dark{background-color:#110663}' +
       '[data-mf-root] [data-mf-curtain] svg{position:absolute;inset:0;width:100%;height:100%;opacity:0.85;mix-blend-mode:overlay;pointer-events:none}' +
       '[data-mf-root] .pw-mf__orb{translate:-50% -50%;aspect-ratio:1}' +
       '[data-mf-root] .pw-mf__orb-a{filter:blur(26px);will-change:transform;animation:mfOrb 18s ' + SWAY + ' infinite}' +
@@ -98,7 +108,7 @@
   var dots = Array.prototype.map.call(root.querySelectorAll('[data-mf-dot]'), function (el) {
     return { el: el, r: +el.getAttribute('data-mf-r'), c: +el.getAttribute('data-mf-c'), f: el.hasAttribute('data-mf-f'), k: '' };
   });
-  var raf = 0, _cq = -1, _dotP = -1, _dotCur = -1, _dotDark = false, _dotTop = '', revs = [], wide = (w.innerWidth || 1024) >= 720;
+  var raf = 0, _edge = -1, _bodyDark = null, _orbRun = null, orbs = Array.prototype.slice.call(root.querySelectorAll('.pw-mf__orb-a,.pw-mf__orb-b,.pw-mf__orb-c')), _cq = -1, _dotP = -1, _dotCur = -1, _dotDark = false, _dotTop = '', revs = [], wide = (w.innerWidth || 1024) >= 720;
 
   // each word remembers its vertical centre relative to its paragraph, so a frame needs one rect per paragraph
   function measure() {
@@ -124,15 +134,22 @@
         if (!noBlur) x.el.style.filter = q >= 1 ? 'none' : 'blur(' + ((1 - q) * 4).toFixed(2) + 'px)';
       });
     });
-    // curtain: the page turns dark purple while the close rises from the bottom to 25% of the viewport
+    // curtain: dark purple rises from the bottom with a soft top edge, a little ahead of the close section, until it
+    // fills the screen (transform only: no repaint of the grain while scrolling)
     var close = secs[secs.length - 1], cq = 0;
     if (close && curtain) {
-      var ct = close.getBoundingClientRect().top;
-      cq = Math.max(0, Math.min(1, (vh - ct) / (vh * 0.75))); cq = cq * cq * (3 - 2 * cq); cq = Math.round(cq * 100) / 100;
-      if (cq !== _cq) {
-        curtain.style.opacity = String(cq);
-        close.style.opacity = String(Math.min(1, cq * 1.25));
-        var mean = secs[secs.length - 2]; if (mean) mean.style.opacity = String(1 - cq);
+      var ct = close.getBoundingClientRect().top, lead = vh * 0.12;
+      var edge = Math.round(Math.max(0, Math.min(vh, ct - lead)));
+      var foot = root.nextElementSibling; if (foot && foot.getBoundingClientRect().top < vh) edge = 0;
+      cq = Math.round((1 - edge / vh) * 100) / 100;
+      if (edge !== _edge) {
+        _edge = edge;
+        curtain.style.visibility = edge >= vh ? 'hidden' : 'visible';
+        curtain.style.transform = 'translate3d(0,' + (edge - 200) + 'px,0)';
+        close.style.opacity = '1';
+        var mean = secs[secs.length - 2]; if (mean) { var mo = Math.max(0, Math.min(1, (edge - vh * 0.15) / (vh * 0.45))); mean.style.opacity = mo.toFixed(2); }
+        var dark = edge < vh * 0.5; if (dark !== _bodyDark) { _bodyDark = dark; d.body.classList.toggle('pw-mf-dark', dark); }
+        var run = edge < vh; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
       }
     }
     _cq = cq;
@@ -163,7 +180,7 @@
     if (p === _dotP && cur === _dotCur && dark === _dotDark) return;
     _dotP = p; _dotCur = cur; _dotDark = dark;
     var margin = dotsBox ? dotsBox.getBoundingClientRect().left : 0;
-    var room = margin >= 72, colX = room ? -Math.min(190, margin - 36) : 0, past = p > 0.5;
+    var room = margin >= 18, colX = margin >= 72 ? -Math.min(190, margin - 36) : -(margin - 4), past = p > 0.5;
     if (dotsSticky) { var topV = 'calc(50svh + ' + Math.round(264 - 288 * p) + 'px)'; if (topV !== _dotTop) { _dotTop = topV; dotsSticky.style.top = topV; } }
     dots.forEach(function (o) {
       var x = o.c * 18 * (1 - p) + colX * p, y = o.r * 18, keep = o.c === 0 && room, op = keep ? 1 : 1 - p, bl = keep ? 0 : p * 4, on = past && keep && o.r === cur;
@@ -199,9 +216,9 @@
     rafAt = now; raf = w.requestAnimationFrame(function () { raf = 0; paint(); });
   };
   w.addEventListener('scroll', onScroll, { passive: true, capture: true });
-  w.addEventListener('load', function () { measure(); _cq = -1; _dotP = -1; paint(); });
-  w.addEventListener('pageshow', function () { _cq = -1; _dotP = -1; paint(); });
-  d.addEventListener('visibilitychange', function () { if (!d.hidden) { _cq = -1; paint(); } });
+  w.addEventListener('load', function () { measure(); _cq = -1; _edge = -1; _dotP = -1; paint(); });
+  w.addEventListener('pageshow', function () { _cq = -1; _edge = -1; _dotP = -1; paint(); });
+  d.addEventListener('visibilitychange', function () { if (!d.hidden) { _edge = -1; paint(); } });
   w.addEventListener('resize', function () { clearTimeout(rT); rT = setTimeout(function () { _dotP = -1; measure(); paint(); }, 120); });
   measure();
   if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { measure(); paint(); });
