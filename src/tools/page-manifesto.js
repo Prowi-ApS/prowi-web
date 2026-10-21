@@ -35,7 +35,7 @@
       '[data-mf-root] [data-mf-w]{transition:color 120ms linear,filter 120ms linear}' +
       '[data-mf-root] [data-mf-dots-sticky]{top:calc(50svh + 264px)}' +
       '[data-mf-root] [data-mf-dot]{position:absolute;left:0;top:0;width:12px;height:12px;border-radius:3.5px;box-sizing:border-box;border:1px solid rgba(17,6,99,0.22);background:#FFFFFF;transition:background 260ms ease,border-color 260ms ease;will-change:transform,opacity,filter}' +
-      '[data-mf-root] [data-mf-curtain]{height:calc(100lvh + 200px);opacity:1;visibility:hidden;will-change:transform;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 200px);mask-image:linear-gradient(to bottom,transparent 0,#000 200px);transform:translate3d(0,100lvh,0)}' +
+      '[data-mf-root] [data-mf-curtain]{height:calc(100lvh + 200px);opacity:1;display:none;will-change:transform;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 200px);mask-image:linear-gradient(to bottom,transparent 0,#000 200px);transform:translate3d(0,100lvh,0)}' +
       // the footer after the manifesto continues the dark close (it sits above the curtain)
       '.pw-mf[data-mf-ready] ~ .pw-footer{z-index:3;background:#110663;box-shadow:0 0 0 100vmax #110663;clip-path:inset(0 -100vmax);color:rgba(255,255,255,0.72)}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__col-title,.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__ticker-word{color:#FFFFFF}' +
@@ -108,7 +108,7 @@
   var dots = Array.prototype.map.call(root.querySelectorAll('[data-mf-dot]'), function (el) {
     return { el: el, r: +el.getAttribute('data-mf-r'), c: +el.getAttribute('data-mf-c'), f: el.hasAttribute('data-mf-f'), k: '' };
   });
-  var raf = 0, _edge = -1, _bodyDark = null, _orbRun = null, orbs = Array.prototype.slice.call(root.querySelectorAll('.pw-mf__orb-a,.pw-mf__orb-b,.pw-mf__orb-c')), _cq = -1, _dotP = -1, _dotCur = -1, _dotDark = false, _dotTop = '', revs = [], wide = (w.innerWidth || 1024) >= 720;
+  var footEl = (root.parentNode && root.parentNode.querySelector('.pw-footer')) || d.querySelector('footer.pw-footer'), raf = 0, _edge = -1, _bodyDark = null, _orbRun = null, orbs = Array.prototype.slice.call(root.querySelectorAll('.pw-mf__orb-a,.pw-mf__orb-b,.pw-mf__orb-c')), _cq = -1, _dotP = -1, _dotCur = -1, _dotDark = false, _dotTop = '', revs = [], wide = (w.innerWidth || 1024) >= 720;
 
   // each word remembers its vertical centre relative to its paragraph, so a frame needs one rect per paragraph
   function measure() {
@@ -140,11 +140,11 @@
     if (close && curtain) {
       var ct = close.getBoundingClientRect().top, lead = vh * 0.12;
       var edge = Math.round(Math.max(0, Math.min(vh, ct - lead)));
-      var foot = root.nextElementSibling; if (foot && foot.getBoundingClientRect().top < vh) edge = 0;
+      if (footEl) { var fr = footEl.getBoundingClientRect(); if (fr.height > 0 && fr.top < vh) edge = 0; }
       cq = Math.round((1 - edge / vh) * 100) / 100;
       if (edge !== _edge) {
         _edge = edge;
-        curtain.style.visibility = edge >= vh ? 'hidden' : 'visible';
+        curtain.style.display = edge >= vh ? 'none' : 'block';
         curtain.style.transform = 'translate3d(0,' + (edge - 200) + 'px,0)';
         close.style.opacity = '1';
         var mean = secs[secs.length - 2]; if (mean) { var mo = Math.max(0, Math.min(1, (edge - vh * 0.15) / (vh * 0.45))); mean.style.opacity = mo.toFixed(2); }
