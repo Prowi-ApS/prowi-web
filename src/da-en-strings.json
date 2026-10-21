@@ -8,7 +8,7 @@
 "Eller se hvordan live provision driver den næste deal": "Or see how live commission powers the next win",
 "Læs historien": "Read the story",
 "Problemet": "The problem",
-"Det største håndtag, du har på momentum, kommer 6 uger for sent, i et regneark.": "But the biggest lever you have on momentum arrives 6 weeks late, in a spreadsheet.",
+"Det største håndtag, du har på momentum, kommer 6 uger for sent, i et regneark.": "The biggest lever you have on momentum arrives 6 weeks late, in a spreadsheet.",
 "Dealen vindes i dag, men provisionen dukker op på lønsedlen 6 uger senere. På det tidspunkt er din sælger tre deals videre, og belønningen har intet med dealen at gøre.": "The deal is won today but the commission shows up on the payslip 6 weeks later. By then your rep is three deals further on, and the reward has nothing to do with the win.",
 "provision_jan_v7_ENDELIG(2).xlsx": "commission_jan_v7_FINAL(2).xlsx",
 "=HVIS.FEJL(LOPSLAG(B14;Planer!A:F;5;0)*C14;\"\")": "=IFERROR(VLOOKUP(B14,Plans!A:F,5,0)*C14,\"\")",
