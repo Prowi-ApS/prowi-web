@@ -62,21 +62,65 @@ body.pw-menu-open{overflow:hidden}
 @media (max-width:749px){.pw-quarter__scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;border-radius:12px}.pw-quarter__scroll>.pw-quarter__plot{min-width:720px;margin-left:72px;overflow:visible}}
 /* the logo strip bleeds 32px past each side by design; keep it from making the page scroll sideways on phones */
 .pw-root{overflow-x:clip}
-/* Book a demo modal: opened by the bundle (.is-open); chips are created by the bundle */
+/* Book a demo modal: opened by the bundle (.is-open) */
 .pw-demo-modal.is-open{display:flex}
 .pw-demo-modal.is-open .pw-demo-modal__backdrop{animation:pwFadeIn 220ms ease-out both}
 .pw-demo-modal.is-open .pw-demo-modal__panel{animation:pwModalIn 360ms cubic-bezier(0.2,0.8,0.2,1) both}
-.pw-demo-modal__chip{flex:0 0 auto;min-height:36px;padding:0 14px;border:1px solid transparent;border-radius:999px;background:#F4F1FE;color:#34326C;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;transition:background 140ms,border-color 140ms,color 140ms}
-.pw-demo-modal__chip:hover{border-color:rgba(17,6,99,0.18)}
-.pw-demo-modal__chip[aria-checked="true"]{border-color:#110663;background:#110663;color:#fff}
-.pw-demo-modal__chip:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.pw-demo-modal.is-open .pw-demo-modal__backdrop,.pw-demo-modal.is-open .pw-demo-modal__panel{animation:none}}
+/* Book a demo pop-up (.pw-dm, DEMO-MODAL-HANDOVER.md): states set by the bundle on .pw-dm__step / .pw-demo-modal */
+@keyframes pwDmOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px)}}
+@keyframes pwDmFadeOut{from{opacity:1}to{opacity:0}}
+.pw-demo-modal.is-open.is-closing .pw-demo-modal__backdrop{animation:pwDmFadeOut 220ms ease-in both}
+.pw-demo-modal.is-open.is-closing .pw-demo-modal__panel{animation:pwDmOut 220ms ease-in both}
+@keyframes pwDmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pwDmQ{from{opacity:0;transform:translate3d(16px,0,0)}to{opacity:1;transform:none}}
+@keyframes pwDmTile{0%{opacity:0;transform:translate3d(0,18px,0) scale(0.72)}60%{opacity:1;transform:translate3d(0,-2px,0) scale(1.03)}100%{opacity:1;transform:none}}
+@keyframes pwDmUp{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+@keyframes pwDmShake{0%,100%{transform:translateX(0)}17%{transform:translateX(-6px)}33%{transform:translateX(6px)}50%{transform:translateX(-6px)}67%{transform:translateX(6px)}83%{transform:translateX(-6px)}}
+.pw-dm .w-form-done,.pw-dm .w-form-fail{display:none!important}
+.pw-dm form.pw-demo-modal__form{display:flex!important}
+.pw-dm__step .pw-dm__body{display:none}
+.pw-dm__step.is-active .pw-dm__body{display:flex;animation:pwDmIn 420ms cubic-bezier(0.2,0.8,0.2,1) both}
+.pw-dm__badge,.pw-dm__htitle{transition:background-color 300ms ease,color 300ms ease,box-shadow 300ms ease}
+.pw-dm__step.is-active .pw-dm__badge{background-color:#110663;color:#fff;box-shadow:none}
+.pw-dm__step.is-done .pw-dm__badge{background-color:#F4F1FE;color:#4C39CA;box-shadow:none}
+.pw-dm__step.is-active .pw-dm__htitle,.pw-dm__step.is-done .pw-dm__htitle{color:#110663}
+.pw-dm__check,.pw-dm__step.is-done .pw-dm__badge>span{display:none}
+.pw-dm__step.is-done .pw-dm__check{display:block}
+.pw-dm__mail{margin-left:.3em}
+.pw-dm__sum,.pw-dm__change{display:none}
+.pw-dm__step.is-done .pw-dm__sum{display:block}
+.pw-dm__step.is-done .pw-dm__change{display:inline-block}
+.pw-demo-modal a.pw-dm__change:hover,.pw-demo-modal a.pw-dm__skip:hover,.pw-demo-modal a.pw-dm__back:hover,.pw-demo-modal a.pw-dm__newtab:hover,.pw-demo-modal a.pw-dm__mail:hover{color:#110663}
+.pw-dm__q{display:none}
+.pw-dm__q.is-on{display:flex;animation:pwDmQ 380ms cubic-bezier(0.2,0.8,0.2,1) both}
+.pw-dm__bar-fill{transition:width 420ms cubic-bezier(0.2,0.8,0.2,1)}
+.pw-dm__opt{transition:background-color 160ms ease,color 160ms ease,box-shadow 160ms ease;-webkit-tap-highlight-color:transparent}
+.pw-demo-modal a.pw-dm__opt:hover{color:#110663;box-shadow:inset 0 0 0 1px #110663}
+.pw-demo-modal a.pw-dm__opt[aria-checked="true"],.pw-demo-modal a.pw-dm__opt[aria-checked="true"]:hover{background-color:#110663;border-color:#110663;color:#fff;box-shadow:none}
+.pw-dm a:focus-visible,.pw-dm input:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}
+.pw-dm .pw-demo-modal__input:focus-visible{outline:none}
+.pw-dm .pw-demo-modal__submit{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 20px center;background-size:16px 16px;-webkit-appearance:none;appearance:none}
+.pw-dm .pw-demo-modal__submit.is-off,.pw-dm .pw-demo-modal__submit.is-off:hover{background-color:rgba(17,6,99,0.22)}
+.pw-dm .pw-demo-modal__label.pw-dm-shake{animation:pwDmShake 360ms ease-in-out both}
+.pw-dm__calbox.is-ready .pw-dm__loading,.pw-dm__calbox.is-locked .pw-dm__loading,.pw-dm__calbox.is-locked .pw-dm__cal{display:none}
+.pw-dm__calbox.is-locked .pw-dm__locked{display:flex}
+.pw-dm__cal{animation:pwDmIn 420ms cubic-bezier(0.2,0.8,0.2,1) both}
+.pw-demo-modal a.pw-dm__hs:hover{color:#fff;opacity:.85}
+.pw-dm__mark{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 182.56 182.56'%3E%3Cdefs%3E%3ClinearGradient id='g' gradientUnits='userSpaceOnUse' x1='17.1975' y1='233.7138' x2='120.3834' y2='130.5284' gradientTransform='matrix(1 0 0 -1 0 295.8898)'%3E%3Cstop offset='0' stop-color='%23B68FF8'/%3E%3Cstop offset='1' stop-color='%232217B7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' d='M91.28,79.37H11.91C5.33,79.37,0,84.7,0,91.28v10.58c0,6.58,5.33,11.91,11.91,11.91h44.98c6.58,0,11.91,5.33,11.91,11.91v44.98c0,6.58,5.33,11.91,11.91,11.91h10.58c6.58,0,11.91-5.33,11.91-11.91V91.28C103.19,84.7,97.86,79.37,91.28,79.37z'/%3E%3Cpath fill='%23E0D5F8' d='M91.28,0H79.37C72.8,0,67.47,5.33,67.47,11.91v43.66c0,6.58,5.33,11.91,11.91,11.91h11.91c6.58,0,11.91-5.33,11.91-11.91V11.91C103.19,5.33,97.86,0,91.28,0z'/%3E%3Cpath fill='%2346D3F7' d='M170.65,79.37H127c-6.58,0-11.91,5.33-11.91,11.91v11.91c0,6.58,5.33,11.91,11.91,11.91h43.66c6.58,0,11.91-5.33,11.91-11.91V91.28C182.56,84.7,177.23,79.37,170.65,79.37z'/%3E%3C/svg%3E") center/contain no-repeat}
+.pw-demo-modal.is-booked .pw-dm__grid{display:none}
+.pw-demo-modal.is-booked .pw-dm__booked{display:flex}
+.pw-demo-modal.is-booked .pw-dm__tile{will-change:transform,opacity;animation:pwDmTile 820ms cubic-bezier(0.2,0.8,0.2,1) both}
+.pw-demo-modal.is-booked .pw-dm__bk-text{animation:pwDmUp 600ms cubic-bezier(0.2,0.8,0.2,1) 700ms both}
+.pw-demo-modal.is-booked .pw-dm__before{animation:pwDmUp 600ms cubic-bezier(0.2,0.8,0.2,1) 860ms both}
+.pw-demo-modal.is-booked .pw-dm__bk-back{animation:pwDmUp 600ms cubic-bezier(0.2,0.8,0.2,1) 1000ms both}
+.pw-demo-modal a.pw-dm__bk-back:hover{background-color:#F4F1FE;color:#110663}
+@media (max-width:899px){.pw-dm__grid{grid-template-columns:minmax(0,1fr)}.pw-dm__proof,.pw-dm__hs{display:none}.pw-dm__side{grid-row-gap:18px;padding:24px 22px}.pw-dm__steps{padding:8px 22px 20px}}
+@media (max-width:639px){.pw-demo-modal{padding:12px 0 0;align-items:flex-end}.pw-demo-modal__panel{height:100%;max-height:100%;border-radius:20px 20px 0 0}.pw-dm__side{padding:22px 20px;padding-right:64px}.pw-dm__steps{padding:4px 20px 24px}.pw-dm__calbox,.pw-dm__cal{min-height:460px}}
+@media (prefers-reduced-motion:reduce){.pw-dm *{animation:none!important;transition:none!important}}
 /* Pricing: the toggle thumb stays inside its track; the check glyph uses the system font like the design (Readex Pro has no U+2713) */
 .pw-pricing__billing{overflow:hidden}
 .pw-pricing__cell--yes{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-/* Book a demo: cal.com calendar inline after submit ("Eller vælg et tidspunkt nu") */
-.pw-demo-modal.is-cal .pw-demo-modal__panel{max-width:960px}
-.pw-demo-modal__cal{width:100%;min-height:520px;margin-top:4px;overflow:auto;border-radius:16px}
 /* Search fields (FAQ, glossary, Insider, models, industries, integrations): one look, no native search chrome (Chrome's blue ×, Safari's rounded field) */
 .pw-root input[type="search"]{font-family:inherit;line-height:normal;padding:0;margin:0;-webkit-appearance:none;appearance:none;box-shadow:none;height:auto;outline:none}
 .pw-root input[type="search"]::-webkit-search-cancel-button,.pw-root input[type="search"]::-webkit-search-decoration,.pw-root input[type="search"]::-webkit-search-results-button,.pw-root input[type="search"]::-webkit-search-results-decoration{-webkit-appearance:none;appearance:none;display:none}

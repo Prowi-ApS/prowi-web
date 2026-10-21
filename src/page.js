@@ -746,59 +746,48 @@
     });
   })();
 
-  /* ---------- Book a demo: the modal (form lives in the footer component, so every page has it) ----------
-     Any link to the demo page or to #demo-form opens it in place. Work email only (free-mail domains shake);
-     the native Webflow form carries the choices plus utm_*, referrer and the page URL. */
+  /* ---------- Book a demo: the pop-up (lives in the footer component, so every page has it) ----------
+     Design: DEMO-MODAL-HANDOVER.md ("Unlock calendar"). Three steps in one dialog:
+     1 name + work email (the native Webflow form "Book demo" is submitted here, so the Zapier flow gets every lead),
+     2 three one-at-a-time questions, 3 Anders' cal.com calendar inline (prefilled; answers + UTM in the notes),
+     then a booked state. Any link to the demo page, #demo-form or [data-demo-open] opens it in place. */
   (function demo() {
     var modal = q('.pw-demo-modal'); if (!modal) return;
+    var dm = q('.pw-dm', modal); if (!dm) return;
     // out of the footer: a transformed ancestor (section reveal) would otherwise pin the fixed layer to it
     if (modal.parentNode !== d.body) d.body.appendChild(modal);
-    var form = q('form', modal), email = q('input[type="email"]', modal), name = q('input[name="Name"]', modal), err = q('.pw-demo-modal__error', modal);
+    var form = q('form', dm), email = q('input[type="email"]', dm), name = q('input[name="Name"]', dm);
+    var err = q('.pw-demo-modal__error', dm), sub = form && q('input[type="submit"]', form);
     var closeBtn = q('.pw-demo-modal__close', modal), backdrop = q('.pw-demo-modal__backdrop', modal);
-    if (!form || !email) return;
+    if (!form || !email || !sub) return;
     var EN = {
-      title: 'Book a 30-minute call with Anders', name: 'Name', email: 'Work email', reps: 'Reps on commission', crm: 'CRM', src: 'How did you hear about Prowi?',
-      err: 'Please use your work email. Personal addresses (Gmail, Outlook, iCloud …) aren’t accepted.', submit: 'Request a demo', wait: 'Sending …',
-      done: 'Got it. Here is what happens next.', steps: ['Anders replies within one business day with a few times.', 'You bring one comp plan, as it is today.', 'On the call we run it on a real deal. You see the number land in the rep app.'],
-      cal: 'Or pick a time now', fail: 'Something went wrong. Try again, or email anders@prowi.io directly.', close: 'Close', dialog: 'Book a demo', ph: 'Your name'
+      role: 'Co-founder of Prowi', title: 'Book 30 minutes with Anders.', sub: 'Your plan, run live. Not a slideshow.', lang: 'English or Danish',
+      get: 'What you get', get1: 'Your plan, run live', get2: 'One closed deal, start to payslip', get3: 'A straight answer', hs: 'Official HubSpot app · Rated 5/5',
+      s1: 'Your work email', s2: 'About your team', s3: 'Pick a time', change: 'Change',
+      q1: 'How many reps are on commission?', q2: 'Which CRM do you sell from?', q3: 'How did you hear about Prowi?',
+      other: 'Other', partner: 'A partner', reco: 'Recommendation', ai: 'AI assistant', back: 'Back', skip: 'Skip',
+      loading: 'Loading the calendar…', lockh: 'Almost there', lockp: 'Add your work email above and the calendar opens right here.',
+      newtab: 'Open the calendar in a new tab', notime: 'No time that works?', mail: 'Email Anders',
+      bkh: 'You are booked.', before: 'Before the call', b1: 'Pick one comp plan to bring.', b2: 'Have one recent closed deal in mind.',
+      b3: 'Invite whoever runs payroll, if you like.', backsite: 'Back to the site'
     };
+    var TX = DA ? { name: 'Navn', email: 'Arbejdsmail', next: 'Fortsæt', wait: 'Fortsæt', reps: 'sælgere', of: 'af', err: 'Brug venligst din arbejdsmail. Private adresser (Gmail, Outlook, iCloud …) accepteres ikke.', close: 'Luk', dialog: 'Book demo', fail: 'Noget gik galt. Prøv igen, eller skriv direkte til anders@prowi.io.' }
+      : { name: 'Name', email: 'Work email', next: 'Continue', wait: 'Continue', reps: 'reps', of: 'of', err: 'Please use your work email. Personal addresses (Gmail, Outlook, iCloud …) aren’t accepted.', close: 'Close', dialog: 'Book a demo', fail: 'Something went wrong. Try again, or email anders@prowi.io directly.' };
     var setFirstText = function (el, s) { if (!el) return; for (var i = 0; i < el.childNodes.length; i++) { var n = el.childNodes[i]; if (n.nodeType === 3 && n.nodeValue.trim()) { n.nodeValue = s; return; } } };
-    var leaf = function (el) { var n = el; while (n && n.firstElementChild) n = n.firstElementChild; return n || el; };
-    var labels = qa('.pw-demo-modal__label', modal), groupLabels = qa('.pw-demo-modal__group-label', modal);
-    if (!DA) {
-      var tt = q('.pw-demo-modal__title', modal); if (tt) leaf(tt).textContent = EN.title;
-      setFirstText(labels[0], EN.name); setFirstText(labels[1], EN.email);
-      [EN.reps, EN.crm, EN.src].forEach(function (s, i) { if (groupLabels[i]) leaf(groupLabels[i]).textContent = s; });
-      if (err) leaf(err).textContent = EN.err;
-      var dt = q('.pw-demo-modal__done-title', modal); if (dt) leaf(dt).textContent = EN.done;
-      qa('.pw-demo-modal__step-text', modal).forEach(function (el, i) { if (EN.steps[i]) leaf(el).textContent = EN.steps[i]; });
-      var cal = q('.pw-cta-demo-cal .pw-cta__label', modal); if (cal) leaf(cal).textContent = EN.cal;
-      var ft = q('.pw-demo-modal__fail-text', modal); if (ft) leaf(ft).textContent = EN.fail;
-      modal.setAttribute('aria-label', EN.dialog); if (closeBtn) closeBtn.setAttribute('aria-label', EN.close);
-    }
-    var sub = q('input[type="submit"]', form);
-    if (sub) { sub.value = DA ? 'Book demo' : EN.submit; sub.setAttribute('data-wait', DA ? 'Sender …' : EN.wait); }
-    if (name) name.setAttribute('placeholder', DA ? 'Dit navn' : EN.ph);
-    email.setAttribute('placeholder', 'you@company.com');
-    // choice chips → hidden inputs (values stay English so submissions read the same from both locales)
-    var GROUPS = [
-      ['Reps on commission', [['1–10'], ['11–30'], ['31–100'], ['100+']]],
-      ['CRM', [['HubSpot'], ['Salesforce'], ['Pipedrive'], ['Attio'], ['Other', 'Andet']]],
-      ['Heard about Prowi', [['HubSpot Marketplace'], ['Google'], ['LinkedIn'], ['A partner', 'En partner'], ['Recommendation', 'Anbefaling'], ['AI assistant', 'AI-assistent'], ['Other', 'Andet']]]
-    ];
-    qa('.pw-demo-modal__chips', modal).forEach(function (box, gi) {
-      var g = GROUPS[gi]; if (!g) return;
-      var input = q('input[name="' + g[0] + '"]', form) || q('input[type="hidden"]', box.parentNode); if (!input) return;
-      box.setAttribute('role', 'radiogroup'); if (groupLabels[gi]) box.setAttribute('aria-label', groupLabels[gi].textContent.trim());
-      var chips = g[1].map(function (o) {
-        var b = d.createElement('button'); b.type = 'button'; b.className = 'pw-demo-modal__chip'; b.setAttribute('role', 'radio');
-        b.textContent = DA && o[1] ? o[1] : o[0]; b.setAttribute('data-value', o[0]);
-        b.addEventListener('click', function () { input.value = o[0]; paint(); });
-        box.appendChild(b); return b;
-      });
-      var paint = function () { chips.forEach(function (b) { b.setAttribute('aria-checked', b.getAttribute('data-value') === input.value ? 'true' : 'false'); }); };
-      paint();
-    });
+    if (!DA) qa('[data-dm-t]', dm).forEach(function (el) { var s = EN[el.getAttribute('data-dm-t')]; if (s) el.textContent = s; });
+    var labels = qa('.pw-demo-modal__label', dm); setFirstText(labels[0], TX.name); setFirstText(labels[1], TX.email);
+    if (err) err.textContent = TX.err;
+    var ft = q('.pw-demo-modal__fail-text', dm); if (ft) ft.textContent = TX.fail;
+    modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-label', TX.dialog);
+    if (closeBtn) { closeBtn.setAttribute('aria-label', TX.close); closeBtn.setAttribute('role', 'button'); }
+    sub.value = TX.next; sub.setAttribute('data-wait', TX.wait);
+    [name, email].forEach(function (el) { if (el) { el.removeAttribute('placeholder'); el.value = ''; } });
+    if (name) name.removeAttribute('required'); // only the work email gates step 1
+    var hid = function (n) { return q('input[name="' + n + '"]', form); };
+    ['Reps on commission', 'CRM', 'Heard about Prowi'].forEach(function (n) { var el = hid(n); if (el) el.value = ''; });
+
+    var track = function (ev, o) { try { w.dataLayer = w.dataLayer || []; var p = { event: ev }; for (var k in o) p[k] = o[k]; w.dataLayer.push(p); } catch (e) {} };
+
     // where the visitor came from: kept for the session so a later page still carries the landing UTMs
     var store = {}; try { store = JSON.parse(sessionStorage.getItem('pwAttribution') || '{}'); } catch (e) {}
     try {
@@ -807,81 +796,174 @@
       if (!store.referrer && d.referrer && d.referrer.indexOf(w.location.host) < 0) store.referrer = d.referrer;
       sessionStorage.setItem('pwAttribution', JSON.stringify(store));
     } catch (e) {}
+    var S = { step: 1, q: 0, reps: '', crm: '', src: '', source: '', booked: null };
     var fill = function () {
-      var set = function (n, v) { var el = q('input[name="' + n + '"]', form); if (el) el.value = v || ''; };
+      var set = function (n, v) { var el = hid(n); if (el) el.value = v || ''; };
       set('utm_source', store.utm_source); set('utm_medium', store.utm_medium); set('utm_campaign', store.utm_campaign);
-      set('Referrer', store.referrer || d.referrer); set('Page', w.location.href.split('#')[0]);
+      set('Referrer', store.referrer || d.referrer);
+      set('Page', w.location.href.split('#')[0] + (S.source ? ' · ' + S.source : ''));
+      set('Reps on commission', S.reps); set('CRM', S.crm); set('Heard about Prowi', S.src);
     };
+
     // work email check
     var FREE = ['gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.dk', 'yahoo.co.uk', 'hotmail.com', 'hotmail.dk', 'hotmail.co.uk', 'outlook.com', 'outlook.dk', 'live.com', 'live.dk', 'msn.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com', 'protonmail.com', 'proton.me', 'pm.me', 'gmx.com', 'gmx.de', 'mail.com', 'yandex.com', 'zoho.com', 'fastmail.com', 'tutanota.com', 'hey.com', 'mail.dk', 'jubii.dk', 'post.dk', 'ofir.dk', 'sol.dk', 'stofanet.dk', 'youmail.dk', 'tdcadsl.dk', 'webspeed.dk', 'it.dk', 'privat.dk'];
     var isWork = function (v) { var m = String(v || '').trim().toLowerCase().match(/^[^\s@]+@([^\s@]+\.[a-z]{2,})$/); if (!m) return false; return !FREE.some(function (f) { return m[1] === f || m[1].slice(-(f.length + 1)) === '.' + f; }); };
-    var bad = false;
     var showErr = function (on) {
-      bad = on; if (err) err.style.display = on ? 'block' : '';
+      if (err) err.style.display = on ? 'block' : '';
       email.style.borderColor = on ? '#B42318' : ''; email.setAttribute('aria-invalid', on ? 'true' : 'false');
-      if (on && !REDUCED) { var lab = email.parentNode; lab.style.animation = 'none'; void lab.offsetWidth; lab.style.animation = 'pwShakeX 480ms cubic-bezier(0.36,0.07,0.19,0.97) both'; }
+      if (on && !REDUCED) { var lab = email.parentNode; lab.classList.remove('pw-dm-shake'); void lab.offsetWidth; lab.classList.add('pw-dm-shake'); }
     };
-    email.addEventListener('blur', function () { if (email.value.trim()) showErr(!isWork(email.value)); });
-    email.addEventListener('input', function () { if (bad && isWork(email.value)) showErr(false); });
+    var paintBtn = function () { sub.classList.toggle('is-off', !isWork(email.value)); };
+    email.addEventListener('input', function () { paintBtn(); if (isWork(email.value)) showErr(false); });
+    email.addEventListener('blur', function () { if (email.value.trim() && !isWork(email.value)) showErr(true); });
+    paintBtn();
+
+    // the three steps
+    var steps = qa('.pw-dm__step', dm), Qs = qa('.pw-dm__q', dm), KEYS = ['reps', 'crm', 'src'];
+    var stepEl = function (n) { return steps.filter(function (s) { return s.getAttribute('data-step') === String(n); })[0]; };
+    var fillEl = q('.pw-dm__bar-fill', dm), countEl = q('.pw-dm__count', dm), backQ = q('.pw-dm__back', dm), skipQ = q('.pw-dm__skip', dm);
+    var label = function (key, v) { var o = q('.pw-dm__q[data-q="' + key + '"] .pw-dm__opt[data-opt="' + v + '"]', dm); return o ? o.textContent.trim() : v; };
+    var render = function () {
+      steps.forEach(function (s) {
+        var n = +s.getAttribute('data-step');
+        s.classList.toggle('is-active', n === S.step); s.classList.toggle('is-done', n < S.step); s.classList.toggle('is-todo', n > S.step);
+        var sum = q('.pw-dm__sum', s);
+        if (sum) sum.textContent = n === 1 ? [name && name.value.trim(), email.value.trim()].filter(Boolean).join(' · ')
+          : n === 2 ? [S.reps ? S.reps + ' ' + TX.reps : '', S.crm ? label('crm', S.crm) : ''].filter(Boolean).join(' · ') : '';
+      });
+      Qs.forEach(function (el, i) { el.classList.toggle('is-on', i === S.q); });
+      if (fillEl) fillEl.style.width = ((S.q + 1) / 3 * 100) + '%';
+      if (countEl) countEl.textContent = (S.q + 1) + ' ' + TX.of + ' 3';
+      if (backQ) backQ.style.visibility = S.q > 0 ? '' : 'hidden';
+      if (skipQ) skipQ.style.display = S.q === 2 ? '' : 'none';
+      qa('.pw-dm__opt', dm).forEach(function (o) { var key = o.closest('.pw-dm__q').getAttribute('data-q'); o.setAttribute('aria-checked', S[key] === o.getAttribute('data-opt') ? 'true' : 'false'); });
+      modal.classList.toggle('is-booked', !!S.booked);
+      if (S.step === 3) mountCal();
+    };
+    var focusStep = function () {
+      setTimeout(function () {
+        var t = S.booked ? q('.pw-dm__bk-back', dm) : S.step === 1 ? ((name && !name.value) ? name : email) : S.step === 2 ? q('.pw-dm__q.is-on .pw-dm__opt', dm) : q('.pw-dm__newtab', dm);
+        if (t) try { t.focus({ preventScroll: true }); } catch (e) { t.focus(); }
+      }, 80);
+    };
+    var go = function (n) { S.step = n; if (n === 2) S.q = 0; render(); focusStep(); };
+    // step 1: the native form is submitted (Webflow sends it), and the visitor moves on without waiting
+    form.setAttribute('novalidate', '');
     form.addEventListener('submit', function (e) {
       if (!isWork(email.value)) { e.preventDefault(); e.stopImmediatePropagation(); showErr(true); email.focus(); return; }
-      fill();
+      fill(); track('demo_step1_done', {});
+      if (!w.Webflow || !w.jQuery) e.preventDefault(); // no Webflow form handler (preview/tests): never reload the page
+      setTimeout(function () { go(2); }, 0);
     }, true);
+    // step 2: one question at a time, auto-advance
+    var adv = null;
+    var pick = function (key, v) {
+      S[key] = v; fill(); render(); track('demo_q_answered', { q: key, value: v });
+      clearTimeout(adv); adv = setTimeout(function () { if (S.q < 2) { S.q++; render(); focusStep(); } else go(3); }, 280);
+    };
+    qa('.pw-dm__opt', dm).forEach(function (o) {
+      o.addEventListener('click', function (e) { e.preventDefault(); pick(o.closest('.pw-dm__q').getAttribute('data-q'), o.getAttribute('data-opt')); });
+    });
+    if (backQ) backQ.addEventListener('click', function (e) { e.preventDefault(); if (S.q > 0) { S.q--; render(); focusStep(); } });
+    if (skipQ) skipQ.addEventListener('click', function (e) { e.preventDefault(); go(3); });
+    qa('.pw-dm__change', dm).forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); go(+a.closest('.pw-dm__step').getAttribute('data-step')); });
+    });
+    // step 3: cal.com inline, loaded on first open, mounted on entering the step (again if name or email changed)
+    var CAL = 'anders-goosmann/30min', calBox = q('.pw-dm__calbox', dm), calKey = null;
+    var loadCal = function () {
+      (function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var dd = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; dd.head.appendChild(dd.createElement('script')).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(w, 'https://app.cal.com/embed/embed.js', 'init');
+      if (w.__pwCalInit) return; w.__pwCalInit = true;
+      w.Cal('init', '30min', { origin: 'https://app.cal.com' });
+      w.Cal.config = w.Cal.config || {}; w.Cal.config.forwardQueryParams = true;
+      var ns = w.Cal.ns['30min'];
+      ns('on', { action: 'linkReady', callback: function () { if (calBox) calBox.classList.add('is-ready'); track('demo_cal_ready', {}); } });
+      ns('on', { action: 'bookingSuccessfulV2', callback: booked });
+      ns('on', { action: 'bookingSuccessful', callback: booked });
+      ns('ui', { hideEventTypeDetails: false, layout: 'month_view', theme: 'light', cssVarsPerTheme: { light: { 'cal-brand': '#4C39CA' } } });
+    };
+    var notes = function () {
+      var p = [];
+      if (S.reps) p.push('Reps on commission: ' + S.reps); if (S.crm) p.push('CRM: ' + S.crm); if (S.src) p.push('Heard via: ' + S.src);
+      var u = [store.utm_source, store.utm_medium, store.utm_campaign].filter(Boolean).join(' / '); if (u) p.push('utm: ' + u);
+      if (S.source) p.push('From: ' + S.source);
+      return p.join(' · ');
+    };
+    var mountCal = function () {
+      if (!calBox) return;
+      var ok = isWork(email.value);
+      calBox.classList.toggle('is-locked', !ok); if (!ok) return;
+      var nm = name ? name.value.trim() : '', em = email.value.trim(), key = nm + '|' + em + '|' + notes();
+      if (key === calKey) return; calKey = key;
+      loadCal(); calBox.classList.remove('is-ready');
+      var old = q('.pw-dm__cal', calBox), box = d.createElement('div');
+      box.className = 'pw-dm__cal'; box.id = 'my-cal-inline-30min';
+      if (old) old.parentNode.replaceChild(box, old); else calBox.appendChild(box);
+      var cfg = { layout: 'month_view', useSlotsViewOnSmallScreen: 'true', theme: 'light', email: em };
+      if (nm) cfg.name = nm; var nt = notes(); if (nt) cfg.notes = nt;
+      w.Cal.ns['30min']('inline', { elementOrSelector: '#my-cal-inline-30min', calLink: CAL, config: cfg });
+    };
+    // booked
+    var bkP = q('.pw-dm__bk-p', dm);
+    var booked = function (e) {
+      var x = (e && e.detail && e.detail.data) || {}, b = x.booking || x;
+      var t = b.startTime || b.start || b.date || x.startTime || x.start || x.date;
+      var when = '';
+      if (t) try { var dt = new Date(t); if (!isNaN(dt)) when = dt.toLocaleDateString(DA ? 'da-DK' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + (DA ? ' kl. ' : ' at ') + dt.toLocaleTimeString(DA ? 'da-DK' : 'en-GB', { hour: '2-digit', minute: '2-digit' }); } catch (er) {}
+      when = when ? when.charAt(0).toUpperCase() + when.slice(1) : (DA ? 'Dit møde' : 'Your call');
+      var em = email.value.trim() || (DA ? 'din indbakke' : 'your inbox');
+      if (bkP) bkP.textContent = DA ? when + ' med Anders. Invitationen er på vej til ' + em + '.' : when + ' with Anders. The invite is on its way to ' + em + '.';
+      S.booked = x; w.__prowiBooked = x; render(); focusStep(); track('demo_booked', {});
+    };
+    var bkBack = q('.pw-dm__bk-back', dm);
     // open / close
     var opener = null;
-    var open = function () {
+    var open = function (src, named) {
+      if (closing) { clearTimeout(closing); closing = null; modal.classList.remove('is-closing'); }
       if (modal.classList.contains('is-open')) return;
-      opener = d.activeElement; fill();
-      modal.classList.add('is-open'); d.body.style.overflow = 'hidden';
-      setTimeout(function () { var f = (name && !name.value) ? name : email; try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } }, 60);
+      opener = d.activeElement; if (named) S.source = src; // a CTA that names its source (data-demo-source) reaches the form and the booking notes
+      fill(); modal.classList.add('is-open'); d.body.style.overflow = 'hidden';
+      loadCal(); render(); focusStep();
+      track('demo_open', { source_cta: src || 'link' });
     };
+    var closing = null;
     var close = function () {
-      if (!modal.classList.contains('is-open')) return;
-      modal.classList.remove('is-open'); d.body.style.overflow = '';
+      if (!modal.classList.contains('is-open') || closing) return;
+      modal.classList.add('is-closing');
+      closing = setTimeout(function () { closing = null; modal.classList.remove('is-open', 'is-closing'); }, REDUCED ? 0 : 220);
+      d.body.style.overflow = '';
       if (opener && opener.focus) try { opener.focus({ preventScroll: true }); } catch (e) {}
     };
-    if (closeBtn) { closeBtn.setAttribute('role', 'button'); closeBtn.addEventListener('click', function (e) { e.preventDefault(); close(); }); }
+    if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); close(); });
     if (backdrop) backdrop.addEventListener('click', close);
+    if (bkBack) bkBack.addEventListener('click', function (e) { e.preventDefault(); close(); });
     d.addEventListener('keydown', function (e) {
       if (!modal.classList.contains('is-open')) return;
       if (e.key === 'Escape') { close(); return; }
+      if (S.step === 2 && !S.booked && /^[1-7]$/.test(e.key) && !(e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) {
+        var opts = qa('.pw-dm__q.is-on .pw-dm__opt', dm), o = opts[+e.key - 1];
+        if (o) { e.preventDefault(); o.click(); } return;
+      }
       if (e.key === 'Tab') { // keep focus inside the dialog
-        var f = qa('a[href], button, input:not([type="hidden"]), [tabindex]:not([tabindex="-1"])', modal).filter(function (el) { return el.offsetParent !== null; });
+        var f = qa('a[href], button, input:not([type="hidden"]), iframe, [tabindex]:not([tabindex="-1"])', modal).filter(function (el) { return el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden'; });
         if (!f.length) return; var first = f[0], last = f[f.length - 1];
         if (e.shiftKey && d.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && d.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     });
-    // "Or pick a time now": Anders' cal.com calendar opens inline in the pop-up (vanilla embed, loaded on demand),
-    // with name and email carried over from the form
-    var CAL = 'anders-goosmann/30min', calBtn = q('.pw-cta-demo-cal', modal);
-    var showCal = function () {
-      var inner = q('.pw-demo-modal__done-inner', modal); if (!inner) return;
-      var box = q('.pw-demo-modal__cal', modal);
-      if (!box) { box = d.createElement('div'); box.className = 'pw-demo-modal__cal'; box.id = 'pw-cal-inline'; inner.appendChild(box); }
-      if (calBtn) calBtn.style.display = 'none';
-      modal.classList.add('is-cal');
-      (function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var dd = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; dd.head.appendChild(dd.createElement('script')).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(w, 'https://app.cal.com/embed/embed.js', 'init');
-      if (box.__pwCal) return; box.__pwCal = true;
-      w.Cal('init', '30min', { origin: 'https://app.cal.com' });
-      w.Cal.config = w.Cal.config || {}; w.Cal.config.forwardQueryParams = true;
-      var cfg = { layout: 'month_view', useSlotsViewOnSmallScreen: 'true' };
-      if (name && name.value.trim()) cfg.name = name.value.trim();
-      if (email.value.trim()) cfg.email = email.value.trim();
-      w.Cal.ns['30min']('inline', { elementOrSelector: '#pw-cal-inline', config: cfg, calLink: CAL });
-      w.Cal.ns['30min']('ui', { hideEventTypeDetails: false, layout: 'month_view', cssVarsPerTheme: { light: { 'cal-brand': '#4C39CA' } } });
-    };
-    if (calBtn) {
-      calBtn.setAttribute('href', 'https://cal.com/' + CAL);
-      calBtn.addEventListener('click', function (e) { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); showCal(); });
-    }
     var DEMO = /^(?:https?:\/\/[^\/]+)?\/(?:en\/)?(?:demo|book-demo)(?:-2026)?\/?(?:[?#].*)?$/;
     d.addEventListener('click', function (e) {
-      var a = e.target.closest && e.target.closest('a'); if (!a || modal.contains(a) || e.defaultPrevented) return;
+      var a = e.target.closest && e.target.closest('a,button'); if (!a || modal.contains(a) || e.defaultPrevented) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
       var h = a.getAttribute('href') || '';
-      if (h === '#demo-form' || DEMO.test(h)) { e.preventDefault(); open(); }
+      if (a.hasAttribute('data-demo-open') || h === '#demo-form' || DEMO.test(h)) {
+        e.preventDefault();
+        var cls = (a.className && typeof a.className === 'string' ? a.className.split(/\s+/)[0] : '') || 'link';
+        var named = a.getAttribute('data-demo-source');
+        open(named || cls, !!named);
+      }
     });
-    if (w.location.hash === '#demo-form') setTimeout(open, 400);
+    if (w.location.hash === '#demo-form') setTimeout(function () { open('hash'); }, 400);
+    render();
   })();
 
   /* ---------- Footer: copyright year ---------- */
