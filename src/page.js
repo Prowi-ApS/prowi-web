@@ -708,8 +708,8 @@
         if (railEl && railEl.offsetWidth > 0) { var dx = railEl.getBoundingClientRect().left - list.getBoundingClientRect().left - 0.5; marker.style.left = (Math.round(dx * 2) / 2) + 'px'; }
       }
       var narrow = vw() < 1024;
-      // panels you're not on: dimmed and blurred (all widths); their animations pause meanwhile so the blur stays cheap
-      panels.forEach(function (p, i) { var inner = p.firstElementChild || p, on = i === active; inner.style.transition = 'opacity 500ms ' + EASE + ', filter 500ms ' + EASE; inner.style.opacity = on ? '1' : (narrow ? '0.4' : '0.32'); inner.style.filter = on ? '' : 'blur(3px)'; inner.classList.toggle('pw-dim', !on); });
+      // desktop: panels you're not on are dimmed and blurred, their animations paused; below 1024px every panel stays sharp
+      panels.forEach(function (p, i) { var inner = p.firstElementChild || p, on = narrow || i === active; inner.style.transition = 'opacity 500ms ' + EASE + ', filter 500ms ' + EASE; inner.style.opacity = on ? '1' : '0.32'; inner.style.filter = on ? '' : 'blur(3px)'; inner.classList.toggle('pw-dim', !on); });
     };
     var scan = function () {
       var H = vh(), best = -1, bestD = Infinity;
@@ -759,8 +759,8 @@
     // fade the edge(s) where more tabs are hidden
     var edges = function () {
       var max = track.scrollWidth - track.clientWidth;
-      track.classList.toggle('pw-ptabs--l', track.scrollLeft > 4);
-      track.classList.toggle('pw-ptabs--r', track.scrollLeft < max - 4);
+      tabs.classList.toggle('pw-ptabs--l', track.scrollLeft > 4);
+      tabs.classList.toggle('pw-ptabs--r', track.scrollLeft < max - 4);
     };
     track.addEventListener('scroll', edges, { passive: true });
     w.addEventListener('resize', edges);
