@@ -508,23 +508,28 @@
     var fig = q('.pw-hero__scene', sec) || q('.pw-hero__visual', sec);
     var scene = q('.pw-embed[data-component="LiveMoment"]', sec);
     var seen = false, introDone = false, introOver = false;
+    var _sH = 0, _sW = 0; var stableH = function () { var ww = w.innerWidth; if (!_sH || ww !== _sW) { _sW = ww; _sH = vh(); } return _sH; };
     // the pipeline scene starts when the intro (title, sentences, CTA) has finished AND either the figure is scrolled
     // into view or 3 s have passed since the intro ended - whichever comes first
     var released = false, AUTO_MS = 3000;
     var release = function (force) { if (released || !introOver || !(seen || force)) return; released = true; sceneProps(scene, { hold: false }); };
-    var introEnded = function () { if (introOver) return; introOver = true; release(); setTimeout(function () { release(true); }, AUTO_MS); };
+    var introEnded = function () {
+      if (introOver) return; introOver = true;
+      // already mostly on screen when the intro ends (wide screens): start now; otherwise wait for the scroll
+      if (fig && !seen) { var r0 = fig.getBoundingClientRect(), H0 = stableH(); if (r0.top + Math.min(r0.height, H0) * 0.6 < H0) seen = true; }
+      release();
+    };
     // figure parallax: tilts in as it scrolls up; 0 at bottom edge → 1 when its centre reaches 50% of the viewport
     var reveal = function () {
       if (!fig || REDUCED) return;
-      var r = fig.getBoundingClientRect(), H = vh();
+      var r = fig.getBoundingClientRect(), H = stableH();
       var p = Math.max(0, Math.min(1, (H - r.top) / Math.max(1, H - (H * 0.5 - r.height / 2))));
       var e = 1 - Math.pow(1 - p, 3);
       fig.style.transformOrigin = '50% 0%';
-      // touch screens: slide only (a changing 3D tilt/scale makes WebKit re-rasterise the whole scene every frame)
-      if (TOUCH) { var tz = ((1 - e) * 80).toFixed(1); if (tz !== fig._pwT) { fig._pwT = tz; fig.style.transform = 'translate3d(0,' + tz + 'px,0)'; } }
-      else fig.style.transform = 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
+      var tf = 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
+      if (tf !== fig._pwT) { fig._pwT = tf; fig.style.transform = tf; }
       fig.style.opacity = (0.25 + 0.75 * e).toFixed(3);
-      if (!seen && (r.top + r.height / 2) < H * 0.62) { seen = true; if (introDone) release(); else finish(); }
+      if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (introDone) release(); else finish(); }
     };
     if (fig) { fig.style.willChange = 'transform, opacity'; }
     var timers = [];
