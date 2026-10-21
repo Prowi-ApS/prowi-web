@@ -217,3 +217,6 @@ body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
 .pw-ptabs__tab:first-child{padding-left:max(18px,env(safe-area-inset-left))}
 .pw-ptabs__tab--on{background:rgba(76,57,202,.08);color:var(--_prowi---pw-dark-purple,#110663);font-weight:500}
 }
+
+/* platform panels out of focus (page.js rail): their animations pause */
+.pw-dim .pw-embed,.pw-dim .pw-embed *,.pw-dim [class*="pw-platform__chip"]{animation-play-state:paused!important}
