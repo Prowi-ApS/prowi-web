@@ -448,6 +448,9 @@
           ['customers', 'pricing', 'about', 'careers'].map(one).join('');
         menu.innerHTML = '<div class="pw-menu__top"><span class="pw-menu__logo">' + logoHtml + '</span><button type="button" class="pw-menu__close">' + T.close + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div><nav class="pw-menu__nav">' + links + '</nav><div class="pw-menu__foot"><a class="is-cta" href="' + R.demo + '">' + T.cta + '</a><a href="' + R.login + '">' + T.login + '</a></div>';
         d.body.appendChild(menu); d.body.classList.add('pw-menu-open');
+        // menu logo = same size as the bar's logo
+        var mSvg = q('.pw-menu__logo svg', menu), lr = logoSvg && logoSvg.getBoundingClientRect();
+        if (mSvg && lr && lr.height > 8) { mSvg.style.height = lr.height + 'px'; mSvg.style.width = lr.width + 'px'; }
         q('.pw-menu__close', menu).addEventListener('click', closeMenu);
         qa('a', menu).forEach(function (a) { a.addEventListener('click', closeMenu); });
         qa('.pw-menu__toggle', menu).forEach(function (b) {
