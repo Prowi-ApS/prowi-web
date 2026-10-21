@@ -278,7 +278,9 @@
       var ref = (base && base.href.split('#')[0] !== here) ? 'url("' + here + '#' + id + '")' : 'url(#' + id + ')';
       var p = q('path', pieces[0]); if (p) p.setAttribute('fill', ref + ' #4C39CA'); // solid fallback if the reference ever fails
     }
-    if (pieces.length < 3 || REDUCED) return;
+    // hover turn only where there is a real hover: on touch screens a tap fires mouseenter, the turn starts and the
+    // page navigates away mid-animation
+    if (pieces.length < 3 || REDUCED || !(w.matchMedia && w.matchMedia('(hover: hover) and (pointer: fine)').matches)) return;
     var moves = [[79.37, -79.37], [11.9, 115.08], [-115.1, -11.5]];
     var busy = false, t;
     var set = function (on) {
