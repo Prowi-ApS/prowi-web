@@ -61,6 +61,15 @@
     if (io) io.observe(el); else { el.__pwNear = true; }
     if (!io) mountAll();
   }
+  // scenes off screen pause their CSS animations (blurred blobs, glows), so they cost nothing while you scroll elsewhere
+  var vis = window.IntersectionObserver ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { e.target.classList.toggle('pw-off', !e.isIntersecting); });
+  }, { rootMargin: '120px 0px' }) : null;
+  if (!document.getElementById('pw-off-css')) {
+    var st = document.createElement('style'); st.id = 'pw-off-css';
+    st.textContent = '.pw-off,.pw-off *{animation-play-state:paused!important}';
+    document.head.appendChild(st);
+  }
   function mountAll() {
     var els = document.querySelectorAll('.pw-embed[data-component]');
     for (var i = 0; i < els.length; i++) {
@@ -72,6 +81,7 @@
       register(name);
       el.__pwMounted = true;
       el.classList.add('pw-embed--live');
+      if (vis) vis.observe(el);
       var root = window.ReactDOM.createRoot(el);
       var m = { el: el, name: name, props: propsFor(el, name), root: root };
       mounted.push(m);

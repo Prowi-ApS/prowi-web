@@ -523,6 +523,7 @@
     var reveal = function () {
       if (!fig || REDUCED) return;
       var r = fig.getBoundingClientRect(), H = stableH();
+      if (SDA) { if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (introDone) release(); else finish(); } return; }
       var p = Math.max(0, Math.min(1, (H - r.top) / Math.max(1, H - (H * 0.5 - r.height / 2))));
       var e = 1 - Math.pow(1 - p, 3);
       fig.style.transformOrigin = '50% 0%';
@@ -531,7 +532,8 @@
       fig.style.opacity = (0.25 + 0.75 * e).toFixed(3);
       if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (introDone) release(); else finish(); }
     };
-    if (fig) { fig.style.willChange = 'transform, opacity'; }
+    var SDA = !!(fig && !REDUCED && w.CSS && CSS.supports && CSS.supports('animation-timeline: view()') && CSS.supports('animation-range: entry 0% cover 50%'));
+    if (fig) { fig.style.willChange = 'transform, opacity'; if (SDA) fig.classList.add('pw-hero-sda'); }
     var timers = [];
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
     var finish = function () {
