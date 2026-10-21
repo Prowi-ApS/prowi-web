@@ -181,7 +181,13 @@
     prep();
 
     // 3. table of contents from the visible h2s (design: 01, 02 ... with the active section marked)
-    var offTplKeep = null;
+    var offTplKeep = null, lockUntil = 0;
+    // space under the sticky nav bar (its real height, so headings never land underneath it)
+    function topOffset() {
+      var n = document.querySelector('.pw-nav');
+      var hgt = n ? n.getBoundingClientRect().height : 0;
+      return Math.max(hgt, 64) + 28;
+    }
     function buildToc() {
     var nav = postRoot.querySelector('[data-insider-toc]');
     var label = postRoot.querySelector('[data-insider-toc-label]');
@@ -202,6 +208,7 @@
         nav.innerHTML = '';
         heads.forEach(function (h, i) {
           if (!h.id) h.id = 'art-sec-' + (i + 1);
+          h.style.scrollMarginTop = topOffset() + 'px';
           var a = offTpl.cloneNode(true);
           var num = a.querySelector('.pw-post__toc-num, .pw-post__toc-num--on');
           var txtEl = a.querySelector('.pw-post__toc-text');
@@ -209,8 +216,9 @@
           if (txtEl) (txtEl.querySelector('span') || txtEl).textContent = txt(h);
           a.setAttribute('href', '#' + h.id);
           a.addEventListener('click', function (e) {
-            e.preventDefault();
-            var y = h.getBoundingClientRect().top + window.pageYOffset - 96;
+            e.preventDefault(); e.stopPropagation(); // keep Webflow's own anchor scrolling out of it
+            var y = h.getBoundingClientRect().top + window.pageYOffset - topOffset();
+            lockUntil = Date.now() + 900; setCur(i);
             window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
             if (history.replaceState) history.replaceState(null, '', '#' + h.id);
           });
@@ -231,7 +239,11 @@
         var spy = function () {
           ticking = false;
           var i = 0;
-          for (var k = 0; k < heads.length; k++) if (heads[k].getBoundingClientRect().top - 120 <= 0) i = k;
+          if (Date.now() < lockUntil) return;
+          // a section stays current until the next heading passes a line just under halfway down the viewport,
+          // so scrolling back up a little doesn't jump to the previous section
+          var line = Math.max(topOffset() + 40, window.innerHeight * 0.45);
+          for (var k = 0; k < heads.length; k++) if (heads[k].getBoundingClientRect().top <= line) i = k;
           setCur(i);
         };
         window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(spy); } }, { passive: true });
