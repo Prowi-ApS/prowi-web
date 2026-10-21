@@ -91,6 +91,7 @@ TOOL_ROOTS={
  'page-build':['[data-build="page"]'],
  'page-careers':['form.pw-careers__form'],
  'page-faq':['[data-faq="page"]'],
+ 'page-manifesto':['[data-mf-root]'],
 }
 for _f in sorted(_glob.glob('src/tools/*.js')):
     k=os.path.basename(_f)[:-3]
