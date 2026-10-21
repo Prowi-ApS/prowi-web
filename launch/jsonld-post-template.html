@@ -1,0 +1,55 @@
+<!-- 2026 structured data (CMS bindings) -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Article",
+   "@id": "https://prowi.io/post/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#article",
+   "headline": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+   "description": "{{wf {&quot;path&quot;:&quot;post-summary&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+   "datePublished": "{{wf {&quot;path&quot;:&quot;published-on&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+   "dateModified": "{{wf {&quot;path&quot;:&quot;opdateret&quot;,&quot;type&quot;:&quot;Date&quot;\} }}",
+   "author": {
+    "@type": "Organization",
+    "name": "Prowi",
+    "url": "https://prowi.io/"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Prowi",
+    "url": "https://prowi.io/",
+    "logo": {
+     "@type": "ImageObject",
+     "url": "https://cdn.prod.website-files.com/6853f29490f75918cfe11ed3/68dce0750b088edbbe4fb662_Webclip.png"
+    }
+   },
+   "mainEntityOfPage": "https://prowi.io/post/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+  },
+  {
+   "@type": "BreadcrumbList",
+   "@id": "https://prowi.io/post/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}#breadcrumb",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Prowi",
+     "item": "https://prowi.io/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Prowi Insider",
+     "item": "https://prowi.io/prowi-insider"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "{{wf {&quot;path&quot;:&quot;name&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}",
+     "item": "https://prowi.io/post/{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"
+    }
+   ]
+  }
+ ]
+}
+</script>
