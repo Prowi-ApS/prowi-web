@@ -64,6 +64,15 @@
     if (io) io.observe(el); else { el.__pwNear = true; }
     if (!io) mountAll();
   }
+  // every scene outside the home hero mounts (and so starts its animation) only when it scrolls onto the screen;
+  // mounted earlier, its timers ran while it was still below the fold and the animation was over before anyone saw it
+  var onScreen = window.IntersectionObserver ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.__pwSeen = true; onScreen.unobserve(e.target); mountAll(); } });
+  }, { rootMargin: '0px' }) : null;
+  function waitSeen(el) {
+    if (el.__pwSeenWatched) return; el.__pwSeenWatched = true;
+    if (onScreen) onScreen.observe(el); else el.__pwSeen = true;
+  }
   // scenes off screen pause their CSS animations (blurred blobs, glows), so they cost nothing while you scroll elsewhere
   var vis = window.IntersectionObserver ? new IntersectionObserver(function (es) {
     es.forEach(function (e) { e.target.classList.toggle('pw-off', !e.isIntersecting); });
@@ -81,6 +90,7 @@
       var name = el.getAttribute('data-component');
       if (!SCENES[name]) { want(el, name); continue; }
       if (LAZY[name] && !el.__pwNear) { watch(el); continue; }
+      if (!el.__pwSeen && !(el.closest && el.closest('.pw-hero'))) { waitSeen(el); if (!el.__pwSeen) continue; }
       register(name);
       el.__pwMounted = true;
       el.classList.add('pw-embed--live');

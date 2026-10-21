@@ -52,6 +52,19 @@
     io.observe(el);
   };
 
+  // fires once the element is really on screen: half of it visible, or it fills 40% of the screen, above the bottom 12%
+  // (sections are tall, so "30% of the section" used to fire while the animated part was still below the fold)
+  var seen = function (el, cb) {
+    if (!el) return;
+    if (!w.IntersectionObserver) { cb(); return; }
+    var io = new IntersectionObserver(function (es) {
+      var e = es[es.length - 1], H = e.rootBounds ? e.rootBounds.height : vh() * 0.88;
+      if (e.isIntersecting && (e.intersectionRatio >= 0.5 || e.intersectionRect.height >= H * 0.4)) { io.disconnect(); cb(); }
+    }, { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1], rootMargin: '0px 0px -12% 0px' });
+    io.observe(el);
+  };
+  var common = function (a, b) { for (var x = a; x && x !== d; x = x.parentNode) if (x.contains(b)) return x; return a; };
+
   /* ---------- CSS the page behaviour needs (src/page.css) ----------
      The live page carries the same CSS in the page head (<style id="pw-css">) so it applies at first paint;
      the bundle only injects it where that tag is missing (preview, other pages). */
@@ -736,7 +749,7 @@
     if (nextSub) { nextSub.style.opacity = '1'; nextSub.style.transition = 'opacity 600ms ease 900ms'; }
     slip.forEach(function (c, i) { if (!c) return; c.style.left = from[i] + '%'; c.style.opacity = '0.6'; c.style.boxShadow = 'inset 0 0 0 1px rgba(17,6,99,0.14)'; c.style.transition = 'left 1100ms ' + EM + ' ' + (i * 650) + 'ms, opacity 500ms ease ' + (i * 650 + 500) + 'ms, box-shadow 500ms ease ' + (i * 650 + 500) + 'ms'; });
     if (REDUCED) { go(0); return; }
-    once(sec, function () { setTimeout(function () { go(1); }, 600); }, 0.3);
+    seen(common(amt, q('.pw-quarter__plot', sec) || bar), function () { setTimeout(function () { go(1); }, 250); });
     function go(anim) {
       slip.forEach(function (c, i) { if (!c) return; c.style.left = to[i] + '%'; c.style.opacity = '1'; c.style.boxShadow = '0 1px 2px rgba(17,6,99,0.06), 0 4px 10px -4px rgba(17,6,99,0.18), inset 0 0 0 1px rgba(17,6,99,0.08)'; });
       if (delta) { delta.style.opacity = '1'; delta.style.transform = 'none'; }
@@ -786,7 +799,7 @@
       c.addEventListener('click', function (e) { e.preventDefault(); manual = true; clearInterval(timer); sel = i; paint(); });
     });
     var start = function () { if (manual || REDUCED) return; auto = true; paint(); timer = setInterval(function () { sel = (sel + 1) % ROWS.length; paint(); }, 3500); };
-    once(sec, function () { setTimeout(start, 600); }, 0.3);
+    seen(common(chips[0], gets), function () { setTimeout(start, 400); });
   })();
 
   /* ---------- Top performers: Jordan fills to 108% and takes first place ---------- */
@@ -802,7 +815,7 @@
     if (jFill) jFill.style.width = '78%'; if (jPct) jPct.textContent = '78%';
     var list = rows[0].parentNode;
     list.insertBefore(jordan, amara.nextSibling); // order: Marie, Amara, Jordan
-    once(panel, function () {
+    seen(list.parentNode || list, function () {
       setTimeout(function () {
         if (jFill) jFill.style.width = '100%';
         tween(1200, function (e) { if (jPct) jPct.textContent = Math.round(78 + 30 * e) + '%'; }, easeInOut);
@@ -815,14 +828,14 @@
           raf(function () { rows.forEach(function (r) { r.style.transition = 'transform 600ms ' + EASE; r.style.transform = 'none'; }); });
         }, 1200 + 300);
       }, 250);
-    }, 0.35);
+    });
   })();
 
   /* ---------- Getting started: cards land one after another ---------- */
   (function timeline() {
     var grid = q('.pw-start__grid'); if (!grid || REDUCED) return;
     var cards = qa(':scope > *', grid); cards.forEach(function (c) { c.style.opacity = '0'; });
-    once(grid, function () { cards.forEach(function (c, i) { setTimeout(function () { c.style.animation = 'pwRiseA 600ms ' + EM + ' both'; c.style.opacity = ''; }, 400 + i * 700); }); }, 0.4);
+    seen(grid, function () { cards.forEach(function (c, i) { setTimeout(function () { c.style.animation = 'pwRiseA 600ms ' + EM + ' both'; c.style.opacity = ''; }, 200 + i * 700); }); });
   })();
 
   /* ---------- Pricing: annual / monthly toggle ----------
