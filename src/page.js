@@ -532,8 +532,16 @@
       fig.style.opacity = (0.25 + 0.75 * e).toFixed(3);
       if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (introDone) release(); else finish(); }
     };
-    var SDA = !!(fig && !REDUCED && w.CSS && CSS.supports && CSS.supports('animation-timeline: view()') && CSS.supports('animation-range: entry 0% cover 50%'));
-    if (fig) { fig.style.willChange = 'transform, opacity'; if (SDA) fig.classList.add('pw-hero-sda'); }
+    var SDA = !!(fig && !REDUCED && w.CSS && CSS.supports && CSS.supports('animation-timeline: scroll(root block)') && CSS.supports('animation-range: 0px 100px'));
+    // the tilt runs on the page's own scroll: from the figure's top entering the screen to its centre reaching mid-screen
+    var sdaRange = function () {
+      if (!SDA) return;
+      // layout geometry (offsets ignore the tilt itself and any transformed ancestor)
+      var top = 0, el = fig, H = stableH(), hgt = fig.offsetHeight; while (el) { top += el.offsetTop; el = el.offsetParent; }
+      var a = Math.max(0, Math.round(top - H)), b = Math.max(a + 1, Math.round(top + hgt / 2 - H / 2));
+      fig.style.animationRange = a + 'px ' + b + 'px';
+    };
+    if (fig) { fig.style.willChange = 'transform, opacity'; if (SDA) { fig.classList.add('pw-hero-sda'); sdaRange(); w.addEventListener('load', sdaRange); w.addEventListener('resize', sdaRange); } }
     var timers = [];
     var at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
     var finish = function () {

@@ -190,5 +190,5 @@ body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
 
 /* Home hero figure: scroll-driven tilt where the browser supports it (runs off the main thread; page.js falls back to JS) */
 @keyframes pwHeroTilt{from{transform:perspective(1100px) rotateX(34deg) translateY(160px) scale(.86);opacity:.25}to{transform:perspective(1100px) rotateX(0deg) translateY(0) scale(1);opacity:1}}
-.pw-hero-sda{transform-origin:50% 0;animation:pwHeroTilt linear both;animation-timing-function:cubic-bezier(.33,1,.68,1);animation-timeline:view();animation-range:entry 0% cover 50%}
+.pw-hero-sda{transform-origin:50% 0;animation:pwHeroTilt linear both;animation-timing-function:cubic-bezier(.33,1,.68,1);animation-timeline:scroll(root block)}
 @media (prefers-reduced-motion:reduce){.pw-hero-sda{animation:none}}
