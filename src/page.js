@@ -437,7 +437,8 @@
     var blocks = [];
     var skip = function (el) {
       return el.classList.contains('pw-rail') || !!el.querySelector(':scope > .pw-rail:only-child') || el.tagName === 'FOOTER' ||
-        el.matches('.pw-footer, .pw-foot-wrap, .pw-nav, nav, script, style, .w-embed:empty') || !el.getClientRects().length;
+        el.matches('.pw-footer, .pw-foot-wrap, .pw-nav, nav, script, style, .w-embed:empty') || !el.getClientRects().length ||
+        /^(absolute|fixed)$/.test(w.getComputedStyle(el).position); // decorative layers (hero watermark, glows) never fade in
     };
     var kidsOf = function (el) { return qa(':scope > *', el).filter(function (c) { return !skip(c); }); };
     // open single-child wrappers (containers, column stacks) until a level with several blocks

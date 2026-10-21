@@ -39,8 +39,9 @@
 @media (max-width:767px){.pw-hero__badge-stars{width:66px;height:12px}.pw-hero__badge{flex-wrap:nowrap;justify-content:center;white-space:nowrap;gap:10px;padding-left:10px;padding-right:10px;margin-left:-10px;margin-right:-10px}.pw-hero__badge-app-text,.pw-hero__badge-rating-text{font-size:12px}.pw-hero__badge-app{gap:8px}.pw-hero__badge-rating{gap:6px}}
 .pw-embed--live[class*="pw-poster--"]{background-image:none!important}
 .pw-embed--live{display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;border-color:transparent;color:inherit;font-size:inherit}
-.pw-js [data-pw-rv]{opacity:0;transform:translateY(14px)}
-.pw-js [data-pw-rv].is-in{opacity:1;transform:none;transition-property:opacity,transform;transition-duration:650ms;transition-timing-function:cubic-bezier(0.2,0.6,0.2,1)}
+/* hidden state only; once .is-in the element falls back to its own opacity/transform (a faint watermark stays faint) */
+.pw-js [data-pw-rv]:not(.is-in){opacity:0;transform:translateY(14px)}
+.pw-js [data-pw-rv].is-in{transition-property:opacity,transform;transition-duration:650ms;transition-timing-function:cubic-bezier(0.2,0.6,0.2,1)}
 .pw-js .pw-platform__chip--earned{animation:pwBob 4.2s ease-in-out infinite}
 .pw-js .pw-platform__chip--accelerator{animation:pwBob 4.8s ease-in-out 0.9s infinite}
 .pw-js .pw-platform__chip--trophy{animation:pwBob 3.9s ease-in-out 1.7s infinite}
@@ -57,7 +58,7 @@
 .pw-menu__foot a.is-cta{background:#fff;color:#110663;border-color:#fff}
 .pw-menu__logo svg{height:28px;width:auto;display:block}
 body.pw-menu-open{overflow:hidden}
-@media (prefers-reduced-motion:reduce){.pw-js [data-pw-rv]{opacity:1;transform:none;transition:none!important}.pw-js .pw-platform__chip--earned,.pw-js .pw-platform__chip--accelerator,.pw-js .pw-platform__chip--trophy{animation:none}}
+@media (prefers-reduced-motion:reduce){.pw-js [data-pw-rv]:not(.is-in){opacity:inherit;transform:none}.pw-js [data-pw-rv]{transition:none!important}.pw-js .pw-platform__chip--earned,.pw-js .pw-platform__chip--accelerator,.pw-js .pw-platform__chip--trophy{animation:none}}
 @media (max-width:749px){.pw-quarter__scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;border-radius:12px}.pw-quarter__scroll>.pw-quarter__plot{min-width:720px;margin-left:72px;overflow:visible}}
 /* the logo strip bleeds 32px past each side by design; keep it from making the page scroll sideways on phones */
 .pw-root{overflow-x:clip}
