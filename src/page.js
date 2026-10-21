@@ -604,10 +604,12 @@
     }
     // the first real scroll ends the intro at once (CTAs shown) and lets the deal move once the figure is in view
     var onFirstScroll = function () {
-      if (scrolled || (w.pageYOffset || 0) < 8) return;
+      var y = w.pageYOffset || 0;
+      if (y >= 8 && !introDone) finish();
+      // the deal waits for a real scroll: a fifth of a screen
+      if (scrolled || y < stableH() * 0.2) return;
       scrolled = true;
-      if (!introDone) finish();
-      if (fig && !seen) { var r1 = fig.getBoundingClientRect(), H1 = stableH(); if (r1.top < H1 * 0.85) seen = true; }
+      if (fig && !seen) { var r1 = fig.getBoundingClientRect(), H1 = stableH(); if (r1.top < H1 * 0.7) seen = true; }
       release();
     };
     onScroll(onFirstScroll);
