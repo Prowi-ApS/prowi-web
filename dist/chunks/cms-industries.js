@@ -1,2 +1,142 @@
-(function(){var o=document.querySelector('[data-types="hub"]'),d=document.querySelector('[data-types="item"]');if(!o&&!d)return;var S=o||d;if(S.__pwTypes)return;S.__pwTypes=1;var E=/^en/i.test(document.documentElement.lang||""),O=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches),C={Tech:"Tech",Salg:"Sales",Retail:"Retail",Services:"Services",Finans:"Finance",Ejendom:"Real estate",Sundhed:"Healthcare",Logistik:"Logistics"},u=E?{ph:"Search industries, e.g. SaaS, insurance, recruitment",aria:"Search business types",of:" of ",none:function(e){return"Nothing matches “"+e+"”"},hint:"Try the category instead, or book a demo and tell us your setup."}:{ph:"Søg i brancher, fx SaaS, forsikring, rekruttering",aria:"Søg i brancher",of:" af ",none:function(e){return"Intet matcher “"+e+"”"},hint:"Prøv kategorien i stedet, eller book en demo og fortæl os om jeres opsætning."};if(!document.getElementById("pw-types-css")){var h=document.createElement("style");h.id="pw-types-css",h.textContent="@keyframes pwTypesIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}input.pw-types__search-input{font-family:inherit;line-height:normal;padding:0;margin:0;-webkit-appearance:none;appearance:none;box-shadow:none;height:auto}input.pw-types__search-input::placeholder{color:#A1A0BD;opacity:1}input.pw-types__search-input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}.pw-types__chip--empty{color:#C4C2D8}.pw-types__empty{padding:48px 24px;text-align:center;border:1px solid rgba(17,6,99,.10);display:flex;flex-direction:column;gap:8px;align-items:center}.pw-types__empty-title{font-size:18px;font-weight:400;color:#110663}.pw-types__empty-text{font-size:14px;color:#5E5B98}",document.head.appendChild(h)}function q(e){var n=e.parentElement;return n&&n.classList.contains("w-dyn-item")?n:e}function A(e){return e.querySelector(".pw-label")}function k(e){var n=A(e);return n?(n.getAttribute("data-cat-da")||n.textContent).trim():""}function N(e){e.forEach(function(n){var t=A(n);if(t){var r=t.textContent.trim();if(t.setAttribute("data-cat-da",r),E&&C[r]){var y=t.querySelector("span")||t;y.textContent=C[r]}}})}if(d){var L=[].slice.call(d.querySelectorAll(".pw-type__more-card"));N(L);var R=location.pathname.replace(/\/+$/,"").split("/").pop(),T=0;L.forEach(function(e){var n=(e.getAttribute("href")||"").split(/[?#]/)[0].replace(/\/+$/,"").split("/").pop(),t=!!n&&n===R,r=t||T>=3;q(e).style.display=r?"none":"",r||T++})}if(!o)return;var B=[].slice.call(o.querySelectorAll(".pw-types__card"));N(B);var v=B.map(function(e){var n=[].slice.call(e.children).filter(function(t){return t.tagName!=="svg"&&t.tagName!=="SVG"}).map(function(t){return t.textContent}).join(" ");return{a:e,cell:q(e),cat:k(e),text:(k(e)+" "+n).toLowerCase()}}),j=v.length,g=o.querySelector(".pw-types__grid"),s=g&&g.closest(".w-dyn-list")||g,_=o.querySelector(".pw-types__count"),D=[].slice.call(o.querySelectorAll("[data-cat]")),c={q:"",cat:""},f=o.querySelector('[data-input="iq"]'),i=null;f&&(i=document.createElement("input"),i.type="search",i.className=f.className,i.placeholder=u.ph,i.setAttribute("aria-label",u.aria),i.autocomplete="off",f.parentNode.replaceChild(i,f),i.addEventListener("input",function(){c.q=i.value,x(!0)}));var p=document.createElement("div");p.className="pw-types__empty",p.style.display="none";var w=document.createElement("span");w.className="pw-types__empty-title";var b=document.createElement("span");b.className="pw-types__empty-text",b.textContent=u.hint,p.appendChild(w),p.appendChild(b),s&&s.parentNode&&s.parentNode.insertBefore(p,s.nextSibling),D.forEach(function(e){e.setAttribute("role","button"),e.setAttribute("tabindex","0");function n(t){t&&t.preventDefault();var r=e.getAttribute("data-cat");c.cat=c.cat===r?"":r,x(!0)}e.addEventListener("click",n),e.addEventListener("keydown",function(t){(t.key==="Enter"||t.key===" ")&&n(t)})});function x(e){var n=c.q.trim().toLowerCase(),t=v.filter(function(a){return!n||a.text.indexOf(n)!==-1}),r=t.filter(function(a){return!c.cat||a.cat===c.cat}),y=0;if(v.forEach(function(a){var l=r.indexOf(a)!==-1;a.cell.style.display=l?"":"none",l&&e&&!O&&(a.a.style.animation="none",a.a.offsetWidth,a.a.style.animation="pwTypesIn 420ms cubic-bezier(0.2,0.6,0.2,1) "+Math.min(y,11)*35+"ms both"),l&&y++}),D.forEach(function(a){var l=a.getAttribute("data-cat"),m=c.cat===l,M=l?t.filter(function(F){return F.cat===l}).length:t.length;a.classList.toggle("pw-types__chip--on",m),a.classList.toggle("pw-types__chip",!m),a.classList.toggle("pw-types__chip--empty",!m&&!M),a.setAttribute("aria-pressed",m?"true":"false")}),_){var z=_.querySelector("span")||_;z.textContent=r.length+u.of+j}var I=!r.length;p.style.display=I?"":"none",s&&(s.style.display=I?"none":""),w.textContent=u.none(c.q.trim())}x(!1)})();
+/* Business types (CMS "Virksomhedstyper"): hub search + category chips, and the "Other business types" list on the item page.
+   Hub root: [data-types="hub"] (/virksomhedstyper-oversigt, /en/business-types). Item root: [data-types="item"] (/virksomhedstype/<slug>).
+   Ported from the INDUSTRIES / INDUSTRY DETAIL blocks of "Prowi Pages.dc.html":
+   - search matches category + name + summary (case-insensitive substring), chips filter by category, "n of N" count,
+     chips with no hits under the current search turn pale, cards re-enter with the listIn stagger, empty state below the grid;
+   - the kategori option holds Danish names (Tech, Salg, Finans, ...); on English pages they are shown in English;
+   - item page: the collection list loads 4 items (sorted like the hub), the current item is hidden and 3 remain. */
+(function () {
+  var hub = document.querySelector('[data-types="hub"]');
+  var item = document.querySelector('[data-types="item"]');
+  if (!hub && !item) return;
+  var root = hub || item;
+  if (root.__pwTypes) return;
+  root.__pwTypes = 1;
+  var EN = /^en/i.test(document.documentElement.lang || '');
+  var REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var CAT_EN = { 'Tech': 'Tech', 'Salg': 'Sales', 'Retail': 'Retail', 'Services': 'Services', 'Finans': 'Finance', 'Ejendom': 'Real estate', 'Sundhed': 'Healthcare', 'Logistik': 'Logistics' };
+  var T = EN ? {
+    ph: 'Search industries, e.g. SaaS, insurance, recruitment', aria: 'Search business types', of: ' of ',
+    none: function (q) { return 'Nothing matches “' + q + '”'; }, hint: 'Try the category instead, or book a demo and tell us your setup.'
+  } : {
+    ph: 'Søg i brancher, fx SaaS, forsikring, rekruttering', aria: 'Søg i brancher', of: ' af ',
+    none: function (q) { return 'Intet matcher “' + q + '”'; }, hint: 'Prøv kategorien i stedet, eller book en demo og fortæl os om jeres opsætning.'
+  };
+
+  if (!document.getElementById('pw-types-css')) {
+    var st = document.createElement('style');
+    st.id = 'pw-types-css';
+    st.textContent = '@keyframes pwTypesIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}' +
+      'input.pw-types__search-input{font-family:inherit;line-height:normal;padding:0;margin:0;-webkit-appearance:none;appearance:none;box-shadow:none;height:auto}' +
+      'input.pw-types__search-input::placeholder{color:#A1A0BD;opacity:1}' +
+      'input.pw-types__search-input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}' +
+      '.pw-types__chip--empty{color:#C4C2D8}' +
+      '.pw-types__empty{padding:48px 24px;text-align:center;border:1px solid rgba(17,6,99,.10);display:flex;flex-direction:column;gap:8px;align-items:center}' +
+      '.pw-types__empty-title{font-size:18px;font-weight:400;color:#110663}' +
+      '.pw-types__empty-text{font-size:14px;color:#5E5B98}';
+    document.head.appendChild(st);
+  }
+
+  // a card is the <a>; in a Webflow collection list it sits in a .w-dyn-item cell, which is what we hide
+  function cellOf(a) { var p = a.parentElement; return p && p.classList.contains('w-dyn-item') ? p : a; }
+  function catEl(a) { return a.querySelector('.pw-label'); }
+  function catOf(a) { var c = catEl(a); return c ? (c.getAttribute('data-cat-da') || c.textContent).trim() : ''; }
+  function localiseCats(cards) {
+    cards.forEach(function (a) {
+      var c = catEl(a); if (!c) return;
+      var da = c.textContent.trim();
+      c.setAttribute('data-cat-da', da);
+      if (EN && CAT_EN[da]) { var leaf = c.querySelector('span') || c; leaf.textContent = CAT_EN[da]; }
+    });
+  }
+
+  if (item) {
+    var more = [].slice.call(item.querySelectorAll('.pw-type__more-card'));
+    localiseCats(more);
+    var here = location.pathname.replace(/\/+$/, '').split('/').pop();
+    var shown = 0;
+    more.forEach(function (a) {
+      var slug = (a.getAttribute('href') || '').split(/[?#]/)[0].replace(/\/+$/, '').split('/').pop();
+      var mine = !!slug && slug === here;
+      var hide = mine || shown >= 3;
+      cellOf(a).style.display = hide ? 'none' : '';
+      if (!hide) shown++;
+    });
+  }
+
+  if (!hub) return;
+  var cards = [].slice.call(hub.querySelectorAll('.pw-types__card'));
+  localiseCats(cards);
+  var data = cards.map(function (a) {
+    var txt = [].slice.call(a.children).filter(function (el) { return el.tagName !== 'svg' && el.tagName !== 'SVG'; }).map(function (el) { return el.textContent; }).join(' ');
+    return { a: a, cell: cellOf(a), cat: catOf(a), text: (catOf(a) + ' ' + txt).toLowerCase() };
+  });
+  var total = data.length;
+  var grid = hub.querySelector('.pw-types__grid');
+  var gridBox = grid && grid.closest('.w-dyn-list') || grid;
+  var countEl = hub.querySelector('.pw-types__count');
+  var chips = [].slice.call(hub.querySelectorAll('[data-cat]'));
+  var state = { q: '', cat: '' };
+
+  // the search field: the markup holds a placeholder div (Webflow has no free <input>); swap in a real input
+  var ph = hub.querySelector('[data-input="iq"]');
+  var input = null;
+  if (ph) {
+    input = document.createElement('input');
+    input.type = 'search';
+    input.className = ph.className;
+    input.placeholder = T.ph;
+    input.setAttribute('aria-label', T.aria);
+    input.autocomplete = 'off';
+    ph.parentNode.replaceChild(input, ph);
+    input.addEventListener('input', function () { state.q = input.value; render(true); });
+  }
+  var empty = document.createElement('div');
+  empty.className = 'pw-types__empty';
+  empty.style.display = 'none';
+  var emptyTitle = document.createElement('span'); emptyTitle.className = 'pw-types__empty-title';
+  var emptyText = document.createElement('span'); emptyText.className = 'pw-types__empty-text'; emptyText.textContent = T.hint;
+  empty.appendChild(emptyTitle); empty.appendChild(emptyText);
+  if (gridBox && gridBox.parentNode) gridBox.parentNode.insertBefore(empty, gridBox.nextSibling);
+
+  chips.forEach(function (ch) {
+    ch.setAttribute('role', 'button');
+    ch.setAttribute('tabindex', '0');
+    function go(e) { if (e) e.preventDefault(); var c = ch.getAttribute('data-cat'); state.cat = state.cat === c ? '' : c; render(true); }
+    ch.addEventListener('click', go);
+    ch.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') go(e); });
+  });
+
+  function render(animate) {
+    var q = state.q.trim().toLowerCase();
+    var hits = data.filter(function (d) { return !q || d.text.indexOf(q) !== -1; });
+    var shown = hits.filter(function (d) { return !state.cat || d.cat === state.cat; });
+    var n = 0;
+    data.forEach(function (d) {
+      var on = shown.indexOf(d) !== -1;
+      d.cell.style.display = on ? '' : 'none';
+      if (on && animate && !REDUCED) {
+        d.a.style.animation = 'none';
+        void d.a.offsetWidth;
+        d.a.style.animation = 'pwTypesIn 420ms cubic-bezier(0.2,0.6,0.2,1) ' + Math.min(n, 11) * 35 + 'ms both';
+      }
+      if (on) n++;
+    });
+    chips.forEach(function (ch) {
+      var c = ch.getAttribute('data-cat');
+      var sel = state.cat === c;
+      var cnt = c ? hits.filter(function (d) { return d.cat === c; }).length : hits.length;
+      ch.classList.toggle('pw-types__chip--on', sel);
+      ch.classList.toggle('pw-types__chip', !sel);
+      ch.classList.toggle('pw-types__chip--empty', !sel && !cnt);
+      ch.setAttribute('aria-pressed', sel ? 'true' : 'false');
+    });
+    if (countEl) { var leaf = countEl.querySelector('span') || countEl; leaf.textContent = shown.length + T.of + total; }
+    var none = !shown.length;
+    empty.style.display = none ? '' : 'none';
+    if (gridBox) gridBox.style.display = none ? 'none' : '';
+    emptyTitle.textContent = T.none(state.q.trim());
+  }
+  render(false);
+})();
 

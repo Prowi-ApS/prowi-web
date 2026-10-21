@@ -103,6 +103,77 @@
   /* Everything below runs after the English strings are in place (hero intro, reveals and the tool modules read the text). */
   function main() {
 
+  /* ---------- Hero headlines: break only between phrases ----------
+     Each known H1 is a list of phrases; spaces inside a phrase become no-break spaces, so text-wrap:balance can only
+     break where a reader would pause ("Hver deal belonnet | i det sekund, | den lukker."). Matched on the full text
+     (DA or EN, after translation). Unknown headlines are left alone. */
+  (function lockH1() {
+    var P = [
+  // Danish
+  ['Hver deal belønnet', 'i det sekund,', 'den lukker.'],
+  ['Når en deal', 'ændrer sig', 'efter lønningsdag,', 'finder forskellen', 'selv hjem.'],
+  ['En godkendt fil', 'pr. periode.', 'Pr. lønart.'],
+  ['Sælgeren', 'underskriver først.', 'Økonomi', 'underskriver sidst.'],
+  ['Mål, stillinger', 'og konkurrencer.', 'Live.'],
+  ['Rul planen ud.', 'Lad den så køre.'],
+  ['Byg det,', 'kør det,', 'se det hele.'],
+  ['Test enhver plan,', 'før en eneste', 'sælger ser den.'],
+  ['Din provisionsplan', 'er rigtig.', 'Ingen kan se den,', 'mens de sælger.'],
+  ['Du udbetaler', 'korrekt.', 'Du bruger den', 'første uge', 'af hver måned', 'på at bevise det.'],
+  ['Din provisionsplan', 'er det dyreste', 'værktøj, du ejer.', 'Få den til', 'at gøre noget.'],
+  ['Sælgerne', 'lukker i dag.', 'De får at vide,', 'hvad det gav,', '6 uger senere.'],
+  ['Provisionssoftwaretil salgsteams', 'i HubSpot.'],
+  ['Jeres CRM ind.', 'Jeres løn ud.', 'Intet imellem.'],
+  ['Hjælp hver', 'lukket deal', 'med at få', 'sit øjeblik.'],
+  ['Er jeres lønmix', 'på niveau', 'med markedet?'],
+  ['Dem, der satte', 'jeres HubSpot op,', 'kan også sætte', 'jeres provision op.'],
+  ['Hvad provision', 'koster jer i dag,', 'og hvad det koster', 'med Prowi.'],
+  ['Praktiske guides', 'til dem,', 'der udbetaler', 'provision.'],
+  ['Hvert', 'provisionsbegreb,', 'forklaret ligeud.'],
+  ['Andre administrerer', 'provision.', 'Prowi motiverer dem,', 'der tjener den.'],
+  ['Se om der', 'er et match.'],
+  // English
+  ['Every deal', 'rewarded', 'the second', 'it closes.'],
+  ['When a deal', 'changes', 'after payday,', 'the difference', 'finds its own', 'way home.'],
+  ['One approved file', 'per period.', 'By wage code.'],
+  ['The rep signs first.', 'Finance signs last.'],
+  ['Targets, standings', 'and competitions.', 'Live.'],
+  ['Roll the plan out.', 'Then let it run.'],
+  ['Build it,', 'run it,', 'see all of it.'],
+  ['Test any plan', 'before a single', 'rep sees it.'],
+  ['Your comp plan', 'is right.', 'Nobody can see it', 'while they sell.'],
+  ['You pay correctly.', 'You spend', 'the first week', 'of every month', 'proving it.'],
+  ['Your comp plan', 'is the most', 'expensive', 'tool you own.', 'Make it do', 'something.'],
+  ['Reps close today.', 'They learn', 'what it paid', 'six weeks later.'],
+  ['Sales commission', 'softwarefor sales teams', 'on HubSpot.'],
+  ['Your CRM in.', 'Your payroll out.', 'Nothing in between.'],
+  ['Is your pay mix', 'in line with', 'the market?'],
+  ['Help every', 'closed deal', 'get its moment.'],
+  ['The people who', 'set up your HubSpot', 'can set up', 'your commission too.'],
+  ['What commission', 'costs you today,', 'and what it costs', 'with Prowi.'],
+  ['Practical guides', 'for people', 'who pay commission.'],
+  ['Every', 'commission term,', 'explained plainly.'],
+  ['Sales, finance,', 'leadership:', 'same conclusion.'],
+  ['Others manage', 'commission.', 'Prowi motivates', 'the people earning it.']
+];
+    var norm = function (s) { return s.replace(/[\s\u00A0]+/g, ' ').trim(); };
+    var MAP = {}; P.forEach(function (p) { MAP[p.join(' ')] = p; });
+    qa('h1').forEach(function (h) {
+      var p = MAP[norm(h.textContent)]; if (!p) return;
+      var ok = {}, pos = 0; p.forEach(function (seg, i) { pos += seg.length; if (i < p.length - 1) { ok[pos] = true; pos += 1; } });
+      var tw = d.createTreeWalker(h, 4), n, idx = 0, started = false, prevSpace = false;
+      while ((n = tw.nextNode())) {
+        var v = n.nodeValue, out = '';
+        for (var i = 0; i < v.length; i++) {
+          var c = v.charAt(i), sp = /[\s\u00A0]/.test(c);
+          if (sp) { if (!started || prevSpace) { out += c; continue; } out += ok[idx] ? ' ' : '\u00A0'; idx++; prevSpace = true; }
+          else { out += c; idx++; started = true; prevSpace = false; }
+        }
+        if (out !== v) n.nodeValue = out;
+      }
+    });
+  })();
+
   /* ---------- Customer stories: locale links + hide the current story in "More stories" ----------
      Story links are plain URLs (/kunder/<slug>) because rich text and collection links cannot be page links;
      on the English site they get the /en prefix (the collection path is not localised yet; see the launch list). */
