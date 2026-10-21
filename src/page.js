@@ -1137,6 +1137,30 @@
   qa('footer span, footer div', root).forEach(function (el) {
     if (el.children.length === 0 && /©\s*\d{4}/.test(el.textContent)) el.textContent = el.textContent.replace(/©\s*\d{4}/, '© ' + new Date().getFullYear());
   });
+
+  /* ---------- Page canvas behind the browser bars (iOS Safari paints the page background under its bottom toolbar
+     and in the bounce area): the footer's colour near the bottom of the page, the page's own colour near the top. ---------- */
+  (function canvasColour() {
+    var clear = function (c) { return !c || c === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(c); };
+    var colourOf = function (el) {
+      for (; el && el !== d.documentElement; el = el.parentElement) {
+        var cs = getComputedStyle(el);
+        if (!clear(cs.backgroundColor)) return cs.backgroundColor;
+        if (/gradient/.test(cs.backgroundImage)) { var m = cs.backgroundImage.match(/rgba?\([^)]*\)/g); if (m && !clear(m[m.length - 1])) return m[m.length - 1]; }
+      }
+      return '';
+    };
+    var foot = q('.pw-footer') || q('footer'); if (!foot) return;
+    var bottom = colourOf(foot); if (!bottom) return;
+    var body = d.body, top = getComputedStyle(body).backgroundColor;
+    if (clear(top)) { top = '#FFFFFF'; body.style.backgroundColor = top; } // keep the page itself as it was
+    var html = d.documentElement, cur = '';
+    var set = function () {
+      var c = (w.pageYOffset + w.innerHeight / 2) > (html.scrollHeight / 2) ? bottom : top;
+      if (c !== cur) { cur = c; html.style.backgroundColor = c; }
+    };
+    set(); w.addEventListener('scroll', set, { passive: true }); w.addEventListener('resize', set);
+  })();
   }
 
   // English pages: the string maps arrive in their own file (dist/chunks/en.js, requested by src/loader.js before this
