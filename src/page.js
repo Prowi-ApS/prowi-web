@@ -523,10 +523,11 @@
       if (!fig || REDUCED) return;
       var r = fig.getBoundingClientRect(), H = stableH();
       if (SDA) { if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (scrolled) { if (!introDone) finish(); release(); } } return; }
-      var p = Math.max(0, Math.min(1, (H - r.top) / Math.max(1, H - (H * 0.5 - r.height / 2))));
+      var lg = w.innerWidth >= 768;
+      var p = lg ? Math.max(0, Math.min(1, (w.scrollY || w.pageYOffset || 0) / (H * 0.55)))
+        : Math.max(0, Math.min(1, (H - r.top) / Math.max(1, H - (H * 0.5 - r.height / 2))));
       var e = 1 - Math.pow(1 - p, 3);
       fig.style.transformOrigin = '50% 0%';
-      var lg = w.innerWidth >= 768;
       var tf = lg ? 'perspective(1500px) rotateX(' + ((1 - e) * 20).toFixed(2) + 'deg) translateY(' + ((1 - e) * 90).toFixed(1) + 'px) scale(' + (0.92 + 0.08 * e).toFixed(4) + ')'
         : 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
       if (tf !== fig._pwT) { fig._pwT = tf; fig.style.transform = tf; }
