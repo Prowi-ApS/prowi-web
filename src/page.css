@@ -184,3 +184,6 @@ body.pw-menu-open{overflow:hidden}
 .pw-root .pw-demo-modal__input::placeholder{color:#A1A0BD;opacity:1}
 .pw-root .pw-plus{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:300}
 .pw-root .pw-footer__wordmark-svg--ink [fill="#FFFFFF"],.pw-root .pw-footer__wordmark-svg--ink [fill="#ffffff"],.pw-root .pw-footer__wordmark-svg--ink [fill="#fff"]{fill:#110663}
+
+/* iOS Safari tints the area around its floating toolbar with the body's background: match the page base (pw-root covers the body, so nothing else changes) */
+body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
