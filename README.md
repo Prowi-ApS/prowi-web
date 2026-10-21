@@ -29,3 +29,5 @@ python3 build.py        # writes dist/prowi-2026.js + dist/chunks/ + dist/scenes
 ```
 
 Commit `dist/` — jsDelivr serves it straight from the tag. Tag releases `v1`, `v2`, … and bump the tag in the Webflow script URL (site settings → custom code / registered script).
+
+**Release (current practice):** `BUNDLE_TAG=release-vX.Y.Z python3 build.py`, commit, push `main` and push the same commit to the branch `release-vX.Y.Z` (tag pushes are blocked from the build sandbox). Register the entry in Webflow by commit hash with its SRI hash. The branch name is baked into the entry as `window.__PW_CDN`: the loader falls back to it when the entry's own URL is unknown (Webflow's preview serves the registered script from elsewhere), so the add-on chunks still load there.
