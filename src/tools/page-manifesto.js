@@ -37,7 +37,7 @@
       '[data-mf-root] [data-mf-dots-sticky] > *{will-change:transform}' +
       '[data-mf-root] [data-mf-dot]{position:absolute;left:0;top:0;width:12px;height:12px;border-radius:3.5px;box-sizing:border-box;border:1px solid rgba(17,6,99,0.22);background:#FFFFFF;transition:background 260ms ease,border-color 260ms ease;will-change:transform,opacity,filter}' +
       '[data-mf-root] [data-mf-curtain]{height:100lvh;opacity:1;display:none}' +
-      '[data-mf-root] [data-mf-tiles]{position:absolute;left:0;top:0;width:100%;height:100lvh;pointer-events:none;display:none}' +
+      '[data-mf-root] [data-mf-tiles]{position:absolute;left:0;top:0;width:100%;height:calc(100lvh + 160px);pointer-events:none;display:none}' +
       // the footer after the manifesto continues the dark close (it sits above the curtain)
       '.pw-mf[data-mf-ready] ~ .pw-footer{z-index:3;background:#15087B;box-shadow:0 0 0 100vmax #15087B;clip-path:inset(0 -100vmax);color:rgba(255,255,255,0.72)}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__col-title,.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__ticker-word{color:#FFFFFF}' +
@@ -140,22 +140,35 @@
     if (P >= 1) { c.fillStyle = dark; c.fillRect(0, 0, tW, tH); return; }
     var T = Math.max(26, Math.min(44, Math.round(tW / 34))), GAP = Math.max(3, Math.round(T * 0.1)), cols = Math.ceil(tW / T) + 1, rows = Math.ceil(tH / T) + 1, WIN = 0.42;
     var ox = (tW - (cols - 1) * T) / 2 - T / 2, oy = tH - rows * T, rr = !!c.roundRect, i, j;
-    var lpAt = function (i2, j2) { var yn = 1 - (j2 + 0.5) / rows; var v = (P * (1 + WIN) - Math.min(1, yn * 0.78 + hash(i2, j2) * 0.22)) / WIN; return v <= 0 ? 0 : v >= 1 ? 1 : v; };
-    // per column: the lowest run of finished squares becomes solid from the middle of its top square down
-    var base = [];
+    // the front is a slow wave across the columns plus a little per-square jitter (no stray late squares inside the dark)
+    var wave = function (i2) { return 0.5 + 0.3 * Math.sin(i2 * 0.47 + 1.3) + 0.2 * Math.sin(i2 * 1.13 + 4.1); };
+    var lpAt = function (i2, j2) { var yn = 1 - (j2 + 0.5) / rows; var v = (P * (1 + WIN) - Math.min(1, yn * 0.8 + wave(i2) * 0.14 + hash(i2, j2) * 0.06)) / WIN; v = v <= 0 ? 0 : v >= 1 ? 1 : v; return v >= 0.86 ? 1 : v; };
+    // finished squares join their finished neighbours (right, below, and the corner between four), so the dark grows as
+    // one shape whose outer edge keeps the rounded corners; unfinished squares are still growing, violet and separate
+    var F = [], allF = [];
+    for (j = 0; j < rows; j++) { F[j] = []; allF[j] = true; for (i = 0; i < cols; i++) { var lv = lpAt(i, j); F[j][i] = lv; if (lv < 1) allF[j] = false; } }
+    var S = T - GAP, R = S * 0.26, g0 = GAP / 2;
     c.fillStyle = dark;
-    for (i = 0; i < cols; i++) {
-      var jb = rows; while (jb > 0 && lpAt(i, jb - 1) >= 1) jb--;
-      base[i] = jb;
-      if (jb < rows) { var y0 = oy + jb * T + T / 2; c.fillRect(ox + i * T - 0.5, y0, T + 1, tH - y0 + 1); }
+    for (j = 0; j < rows; j++) {
+      var y0 = oy + j * T + g0;
+      if (allF[j] && (j === rows - 1 || allF[j + 1])) { c.fillRect(0, y0, tW, (j === rows - 1 ? tH - y0 + 1 : T + 0.5)); continue; }
+      for (i = 0; i < cols; i++) {
+        if (F[j][i] < 1) continue;
+        var x0 = ox + i * T + g0;
+        if (rr) { c.beginPath(); c.roundRect(x0, y0, S, S, R); c.fill(); } else c.fillRect(x0, y0, S, S);
+        var rgt = i + 1 < cols && F[j][i + 1] >= 1, dn = j + 1 < rows && F[j + 1][i] >= 1;
+        if (rgt) c.fillRect(x0 + S - R, y0, GAP + 2 * R, S);
+        if (dn) c.fillRect(x0, y0 + S - R, S, GAP + 2 * R);
+        if (rgt && dn && F[j + 1][i + 1] >= 1) c.fillRect(x0 + S - R, y0 + S - R, GAP + 2 * R, GAP + 2 * R);
+      }
     }
     for (j = 0; j < rows; j++) {
+      if (allF[j]) continue;
       for (i = 0; i < cols; i++) {
-        if (j > base[i]) continue; // fully inside the solid base
-        var lp = lpAt(i, j); if (lp <= 0) continue;
-        var e = 1 - Math.pow(1 - lp, 3), sz = (T - GAP) * (0.22 + 0.78 * e), r = sz * 0.26;
+        var lp = F[j][i]; if (lp <= 0 || lp >= 1) continue;
+        var e = 1 - Math.pow(1 - lp, 3), sz = S * (0.22 + 0.78 * e), r = sz * 0.26;
         var x = ox + i * T + (T - sz) / 2, y = oy + j * T + (T - sz) / 2;
-        c.fillStyle = e > 0.985 ? dark : 'rgb(' + lerp(117, 17, e) + ',' + lerp(88, 6, e) + ',' + lerp(224, 99, e) + ')';
+        c.fillStyle = 'rgb(' + lerp(117, 17, e) + ',' + lerp(88, 6, e) + ',' + lerp(224, 99, e) + ')';
         if (rr) { c.beginPath(); c.roundRect(x, y, sz, sz, r); c.fill(); } else c.fillRect(x, y, sz, sz);
       }
     }
