@@ -126,7 +126,7 @@ class Component extends DCLogic {
     const cel = this.state.celebrate;
     const podium = order.map((rank) => { const p = P[rank - 1]; const isFirst = rank === 1; const av = compact ? (isFirst ? 64 : 46) : isFirst ? 96 : 64; const hgt = heights[rank]; return {
       rank: String(rank), isFirst, name: compact ? p.name.split(' ')[0] + ' ' + (p.name.split(' ')[1] || '').charAt(0) + '.' : p.name.length > 12 ? p.name.slice(0, 12) + '…' : p.name, score: fmt(p.primary), ini: ini(p.name),
-      slot: { position: 'relative', width: compact ? '33%' : '28%', marginLeft: rank === 1 && !compact ? '-5%' : 0, marginRight: rank === 1 && !compact ? '-5%' : 0, zIndex: isFirst ? 3 : 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
+      slot: { position: 'relative', width: compact ? '36%' : '28%', marginLeft: rank === 1 ? (compact ? '-4%' : '-5%') : 0, marginRight: rank === 1 ? (compact ? '-4%' : '-5%') : 0, zIndex: isFirst ? 3 : 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' },
       person: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '12px' : '16px', maxWidth: '100%', padding: '0 4px' },
       avatarWrap: { position: 'relative', animation: isFirst && cel ? 'cpHop 1.6s ease-in-out 3' : 'none' },
       avatar: Object.assign(avatarStyle(p.name, av), { boxShadow: '0 0 0 4px #FFFFFF, 0 8px 20px rgba(17,6,99,0.18)', animation: isFirst && cel ? 'cpPulse 1.6s ease-out 3' : 'none' }),
