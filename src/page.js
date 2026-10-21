@@ -468,6 +468,30 @@
     }
   })();
 
+  /* ---------- In-page anchors (#section links, e.g. the hero's second CTA): land below the fixed nav bar. Runs in the
+     capture phase so Webflow's own anchor scrolling (no offset for this nav) never starts. The Insider contents list and
+     the demo pop-up triggers keep their own handlers. ---------- */
+  (function anchors() {
+    var navH = function () { var n = q('.pw-nav'); return (n ? n.getBoundingClientRect().height : 0) + 20; };
+    var go = function (t, smooth) { w.scrollTo({ top: Math.max(0, t.getBoundingClientRect().top + w.pageYOffset - navH()), behavior: smooth && !REDUCED ? 'smooth' : 'auto' }); };
+    d.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+      if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey) return;
+      var id = decodeURIComponent(a.getAttribute('href').slice(1)); if (!id) return;
+      var t = d.getElementById(id);
+      if (!t || a.closest('[data-insider-toc]') || a.hasAttribute('data-demo-source') || /demo/.test(id) || t.closest('.pw-demo-modal')) return;
+      e.preventDefault(); e.stopPropagation();
+      var inMenu = a.closest('.pw-menu'); if (inMenu) { var cb = q('.pw-menu__close', inMenu); if (cb) cb.click(); }
+      if (inMenu) setTimeout(function () { go(t, true); }, 30); else go(t, true);
+      if (w.history && history.replaceState) history.replaceState(null, '', '#' + id);
+    }, true);
+    // arriving with a hash (e.g. /#why from another page): correct the browser's jump once layout has settled
+    if (w.location.hash && !/demo/.test(w.location.hash)) {
+      var t0 = null; try { t0 = d.getElementById(decodeURIComponent(w.location.hash.slice(1))); } catch (e) {}
+      if (t0) w.addEventListener('load', function () { setTimeout(function () { go(t0, false); }, 60); });
+    }
+  })();
+
   /* ---------- Hero: staged intro + figure parallax ---------- */
   (function hero() {
     if (!HOME) return;
