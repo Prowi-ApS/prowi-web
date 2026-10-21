@@ -527,10 +527,10 @@
       var e = 1 - Math.pow(1 - p, 3);
       fig.style.transformOrigin = '50% 0%';
       var lg = w.innerWidth >= 768;
-      var tf = lg ? 'perspective(1600px) rotateX(' + ((1 - e) * 14).toFixed(2) + 'deg) translateY(' + ((1 - e) * 56).toFixed(1) + 'px) scale(' + (0.95 + 0.05 * e).toFixed(4) + ')'
+      var tf = lg ? 'perspective(1500px) rotateX(' + ((1 - e) * 20).toFixed(2) + 'deg) translateY(' + ((1 - e) * 90).toFixed(1) + 'px) scale(' + (0.92 + 0.08 * e).toFixed(4) + ')'
         : 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
       if (tf !== fig._pwT) { fig._pwT = tf; fig.style.transform = tf; }
-      fig.style.opacity = (lg ? 0.7 + 0.3 * e : 0.25 + 0.75 * e).toFixed(3);
+      fig.style.opacity = (lg ? 0.55 + 0.45 * e : 0.25 + 0.75 * e).toFixed(3);
       if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (scrolled) { if (!introDone) finish(); release(); } }
     };
     // CSS runs the tilt where scroll timelines exist (page.css); this script only tilts in older browsers
