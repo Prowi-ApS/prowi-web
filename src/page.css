@@ -57,6 +57,12 @@
 .pw-menu__foot a{color:#fff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.25)}
 .pw-menu__foot a.is-cta{background:#fff;color:#110663;border-color:#fff}
 .pw-menu__logo svg{height:28px;width:auto;display:block}
+.pw-menu__toggle{display:flex;width:100%;justify-content:space-between;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.14);color:#fff;font:inherit;font-size:clamp(32px,6vw,64px);font-weight:220;letter-spacing:-.02em;line-height:1.15;padding:10px 0;text-align:left;cursor:pointer}
+.pw-menu__toggle svg{flex:none;transition:transform 220ms cubic-bezier(0.2,0.6,0.2,1)}
+.pw-menu__toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+.pw-menu__sub{display:flex;flex-direction:column;padding:6px 0 10px 16px;border-bottom:1px solid rgba(255,255,255,.14)}
+.pw-menu__sub[hidden]{display:none}
+.pw-menu__nav .pw-menu__sub a{font-size:clamp(18px,3.4vw,24px);font-weight:300;letter-spacing:0;padding:8px 0;border-bottom:0;color:rgba(255,255,255,.86)}
 body.pw-menu-open{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.pw-js [data-pw-rv]:not(.is-in){opacity:inherit;transform:none}.pw-js [data-pw-rv]{transition:none!important}.pw-js .pw-platform__chip--earned,.pw-js .pw-platform__chip--accelerator,.pw-js .pw-platform__chip--trophy{animation:none}}
 @media (max-width:749px){.pw-quarter__scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;border-radius:12px}.pw-quarter__scroll>.pw-quarter__plot{min-width:720px;margin-left:72px;overflow:visible}}

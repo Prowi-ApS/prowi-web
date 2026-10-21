@@ -426,11 +426,36 @@
         });
         var logoA = q('a.pw-nav__logo', bar), homeHref = logoA ? logoA.getAttribute('href') : (DA ? '/' : '/en');
         if (!HOME) R.why = homeHref.replace(/#.*$/, '') + '#why';
-        var links = ['why', 'platform', 'app', 'customers', 'pricing', 'about', 'careers'].map(function (k) { return '<a href="' + R[k] + '">' + T[k] + '</a>'; }).join('');
+        // Platform and Resources open in place (chevron) and list the same pages as the desktop dropdowns
+        var esc = function (t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
+        var txt = function (el) { return el ? String(el.textContent || '').replace(/\s+/g, ' ').trim() : ''; };
+        var group = function (panelId, fallbackLabel, fallbackHref) {
+          var panel = d.getElementById(panelId);
+          var tog = q('[aria-controls="' + panelId + '"]', bar);
+          var label = txt(tog) || fallbackLabel;
+          var items = panel ? qa('a[href]', panel).map(function (a) {
+            var t = txt(q('.pw-nav__item-title', a)) || txt(a);
+            return t ? '<a href="' + esc(a.getAttribute('href')) + '">' + esc(t) + '</a>' : '';
+          }).filter(Boolean) : [];
+          if (!items.length) return fallbackHref ? '<a href="' + fallbackHref + '">' + esc(label) + '</a>' : '';
+          var seen = {}; items = items.filter(function (h) { if (seen[h]) return false; seen[h] = 1; return true; });
+          return '<div class="pw-menu__group"><button type="button" class="pw-menu__toggle" aria-expanded="false">' + esc(label) +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
+            '<div class="pw-menu__sub" hidden>' + items.join('') + '</div></div>';
+        };
+        var one = function (k) { return '<a href="' + R[k] + '">' + T[k] + '</a>'; };
+        var links = one('why') + group('pw-nav-panel-platform', T.platform, R.platform) + group('pw-nav-panel-resources', DA ? 'Ressourcer' : 'Resources', '') +
+          ['customers', 'pricing', 'about', 'careers'].map(one).join('');
         menu.innerHTML = '<div class="pw-menu__top"><span class="pw-menu__logo">' + logoHtml + '</span><button type="button" class="pw-menu__close">' + T.close + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div><nav class="pw-menu__nav">' + links + '</nav><div class="pw-menu__foot"><a class="is-cta" href="' + R.demo + '">' + T.cta + '</a><a href="' + R.login + '">' + T.login + '</a></div>';
         d.body.appendChild(menu); d.body.classList.add('pw-menu-open');
         q('.pw-menu__close', menu).addEventListener('click', closeMenu);
         qa('a', menu).forEach(function (a) { a.addEventListener('click', closeMenu); });
+        qa('.pw-menu__toggle', menu).forEach(function (b) {
+          b.addEventListener('click', function () {
+            var sub = b.nextElementSibling, open = b.getAttribute('aria-expanded') !== 'true';
+            b.setAttribute('aria-expanded', open ? 'true' : 'false'); if (sub) sub.hidden = !open;
+          });
+        });
       });
       d.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
       w.addEventListener('resize', function () { if (vw() > 991) closeMenu(); });
