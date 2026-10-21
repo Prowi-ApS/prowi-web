@@ -8,7 +8,7 @@
 <body>
 <x-dc>
 <div style="width:100%; padding:4% 3% 0">
-<div aria-label="Prowi financial overview in a browser" style="position:relative; width:100%; max-width:100%; filter:drop-shadow(0 30px 40px rgba(17,6,99,0.22))">
+<div aria-label="{{ ckLabel }}" style="position:relative; width:100%; max-width:100%; filter:drop-shadow(0 30px 40px rgba(17,6,99,0.22))">
             <div style="position:relative; border-radius:14px 14px 4px 4px; background:linear-gradient(180deg, #2A2A30 0%, #16161B 100%); padding:8px 8px 11px; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.08)">
               <span aria-hidden="true" style="position:absolute; top:2.5px; left:50%; width:4px; height:4px; margin-left:-2px; border-radius:999px; background:#0A0A0D; box-shadow:inset 0 0 0 1.5px #1F1F26"></span>
               <div style="border-radius:6px; overflow:hidden; background:#F9FBFC; color:#0F172A; font-family:ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:flex; flex-direction:column">
@@ -34,7 +34,7 @@
 class Component extends DCLogic {
   renderVals() {
     const dkk = (this.props.currency ?? 'EUR') === 'DKK';
-    return { ckTotal: dkk ? Math.round(1842600 * 2.5).toLocaleString('da-DK') + ' kr.' : '€ 1.842.600', ckComm: dkk ? Math.round(153550 * 2.5).toLocaleString('da-DK') + ' kr.' : '€ 153.550' };
+    return { ckLabel: dkk ? 'Prowis økonomioverblik i en browser' : 'Prowi financial overview in a browser', ckTotal: dkk ? Math.round(1842600 * 2.5).toLocaleString('da-DK') + ' kr.' : '€ 1.842.600', ckComm: dkk ? Math.round(153550 * 2.5).toLocaleString('da-DK') + ' kr.' : '€ 153.550' };
   }
 }
 </script>
