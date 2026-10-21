@@ -224,6 +224,14 @@
   }
   logo(q('svg.pw-nav__logo-svg'), 'nav');
   logo(q('svg.pw-footer__wordmark-svg'), 'foot');
+  // Footer wordmark: white letters on Home (they sit on the hero-coloured band there); dark blue like the nav
+  // wordmark on every other page.
+  (function () {
+    var fw = q('svg.pw-footer__wordmark-svg'); if (!fw) return;
+    var pid = d.documentElement.getAttribute('data-wf-page') || '';
+    var isHome = pid === '6ad6301484084e5f0e6a7401' || /^\/(?:en\/?)?(?:home-2026\/?)?$/.test(w.location.pathname);
+    if (!isHome) fw.classList.add('pw-footer__wordmark-svg--ink');
+  })();
 
   /* ---------- Nav: hover pill, morphing dropdown, language switch, burger ---------- */
   (function nav() {

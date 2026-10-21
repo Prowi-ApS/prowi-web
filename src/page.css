@@ -172,3 +172,4 @@ body.pw-menu-open{overflow:hidden}
 .pw-root a.pw-types__chip--on:hover{color:rgb(255, 255, 255)}
 .pw-root .pw-demo-modal__input::placeholder{color:#A1A0BD;opacity:1}
 .pw-root .pw-plus{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:300}
+.pw-root .pw-footer__wordmark-svg--ink [fill="#FFFFFF"],.pw-root .pw-footer__wordmark-svg--ink [fill="#ffffff"],.pw-root .pw-footer__wordmark-svg--ink [fill="#fff"]{fill:#110663}
