@@ -222,3 +222,11 @@ body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
 
 /* platform panels out of focus (page.js rail): their animations pause */
 .pw-dim .pw-embed,.pw-dim .pw-embed *,.pw-dim [class*="pw-platform__chip"]{animation-play-state:paused!important}
+
+/* Top performers (page.js board): rows open with their numbers */
+.pw-board__row{transition:height 300ms cubic-bezier(.2,.6,.2,1)}
+.pw-board__row--open{height:auto!important;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}
+.pw-board__detail{display:none;position:relative;z-index:5;flex:0 0 100%;flex-wrap:wrap;gap:6px 18px;padding:10px 4px 2px 54px;font-size:13px;line-height:1.4;color:#475569;font-variant-numeric:tabular-nums}
+.pw-board__row--open .pw-board__detail{display:flex}
+.pw-board__detail b{font-weight:600;color:#0f172a;margin-right:4px}
+@media (max-width:479px){.pw-board__detail{padding-left:4px}}

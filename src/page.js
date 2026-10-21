@@ -866,10 +866,12 @@
     if (jFill) jFill.style.width = '78%'; if (jPct) jPct.textContent = '78%';
     var list = rows[0].parentNode;
     list.insertBefore(jordan, amara.nextSibling); // order: Marie, Amara, Jordan
+    var touched = false; // a visitor clicked the board before the intro ran: skip the intro
     seen(list.parentNode || list, function () {
       setTimeout(function () {
+        if (touched) return;
         if (jFill) jFill.style.width = '100%';
-        tween(1200, function (e) { if (jPct) jPct.textContent = Math.round(78 + 30 * e) + '%'; }, easeInOut);
+        tween(1200, function (e) { if (jPct && !touched) jPct.textContent = Math.round(78 + 30 * e) + '%'; }, easeInOut);
         setTimeout(function () {
           // FLIP: Jordan moves to the top
           var before = rows.map(function (r) { return r.getBoundingClientRect().top; });
@@ -880,6 +882,103 @@
         }, 1200 + 300);
       }, 250);
     });
+
+    /* Interactive: Month / Quarter / Year switch the standings, the month and year pickers step back in time,
+       and each row opens with its numbers. Rows keep their slot (1st gold, 2nd green, 3rd purple); names and
+       numbers move between slots. */
+    var boardEl = list.closest('.pw-board') || panel;
+    var tabEls = qa('.pw-board__tabs > *', boardEl), sels = qa('.pw-board__select', boardEl);
+    var BASE = {
+      month: [['Jordan Reyes', 108], ['Marie Carter', 100], ['Amara Okafor', 84], ['Sofie Berg', 71], ['Kai Brooks', 63]],
+      quarter: [['Marie Carter', 104], ['Jordan Reyes', 97], ['Amara Okafor', 91], ['Kai Brooks', 78], ['Sofie Berg', 66]],
+      year: [['Amara Okafor', 102], ['Marie Carter', 99], ['Jordan Reyes', 94], ['Sofie Berg', 81], ['Kai Brooks', 74]]
+    };
+    var MONTHS = DA ? ['Januar', 'Februar', 'Marts', 'April', 'Maj', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'December']
+      : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var now = new Date(), cur = { per: 'month', m: now.getMonth(), y: now.getFullYear() }, M0 = cur.m, Y0 = cur.y;
+    var firstText = function (el) { return (function f(x) { if (x.nodeType === 3 && x.nodeValue.trim()) return x; for (var i = 0; i < x.childNodes.length; i++) { var r = f(x.childNodes[i]); if (r) return r; } return null; })(el); };
+    var setT = function (el, t) { if (!el) return; var n = firstText(el); if (n) n.nodeValue = t; else el.textContent = t; };
+    var standings = function () {
+      var base = BASE[cur.per];
+      if (cur.m === M0 && cur.y === Y0) return base;
+      var seed = cur.y * 12 + cur.m;
+      return base.map(function (r, i) { return [r[0], Math.max(41, r[1] + ((seed * 7 + i * 13) % 19) - 9)]; })
+        .sort(function (a, b) { return b[1] - a[1]; });
+    };
+    var TARGET = { month: 40000, quarter: 120000, year: 480000 };
+    var money = function (v) { return DA ? fmtDa(v * 2.5) + ' kr.' : '\u20ac' + fmtEn(v); };
+    var L = DA ? { won: 'Closed won', target: 'M\u00e5l', deals: 'Deals', left: 'Til m\u00e5l', over: 'Over m\u00e5l' }
+      : { won: 'Closed won', target: 'Target', deals: 'Deals', left: 'To target', over: 'Above target' };
+    var slots = function () { return qa(':scope > .pw-board__row', list); };
+    var detail = function (row, rec) {
+      var t = TARGET[cur.per], won = Math.round(t * rec[1] / 100 / 10) * 10, deals = Math.max(2, Math.round(won / (cur.per === 'month' ? 9000 : 9500)));
+      var diff = won - t;
+      return '<span><b>' + L.won + '</b> ' + money(won) + '</span><span><b>' + L.target + '</b> ' + money(t) + '</span><span><b>' + L.deals + '</b> ' + deals + '</span><span><b>' + (diff >= 0 ? L.over : L.left) + '</b> ' + money(Math.abs(diff)) + '</span>';
+    };
+    var render = function (animate) {
+      var data = standings();
+      slots().forEach(function (row, i) {
+        var rec = data[i]; if (!rec) return;
+        var nm = q('.pw-board__name, .pw-board__name--sm', row), av = q('.pw-board__avatar, .pw-board__avatar--sm', row);
+        var fill = q('.pw-board__score > span', row), val = q('.pw-board__score-value', row);
+        var ini = rec[0].split(' ').map(function (p) { return p[0]; }).join('');
+        [nm, av].forEach(function (el) { if (el && animate) { el.style.transition = 'opacity 160ms'; el.style.opacity = '0'; } });
+        setTimeout(function () {
+          setT(nm, rec[0]); setT(av, ini);
+          [nm, av].forEach(function (el) { if (el) el.style.opacity = ''; });
+        }, animate ? 160 : 0);
+        if (fill) { fill.style.transition = 'width 700ms ' + EASE + ', background 450ms ' + EASE; fill.style.width = Math.min(100, rec[1]) + '%'; }
+        if (val) val.textContent = rec[1] + '%';
+        var dt = q('.pw-board__detail', row); if (dt) dt.innerHTML = detail(row, rec);
+      });
+    };
+    var takeOver = function () { if (touched) return; touched = true; if (jFill) jFill.style.transition = 'width 700ms ' + EASE; };
+    tabEls.forEach(function (tb, i) {
+      var per = ['month', 'quarter', 'year'][i]; if (!per) return;
+      tb.style.cursor = 'pointer'; tb.setAttribute('role', 'button'); tb.setAttribute('tabindex', '0');
+      var go = function () {
+        takeOver(); cur.per = per;
+        tabEls.forEach(function (o, j) { var on = j === i; o.classList.toggle('pw-board__tab--active', on); o.classList.toggle('pw-board__tab', !on); });
+        render(true);
+      };
+      tb.addEventListener('click', go);
+      tb.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
+    sels.forEach(function (sl, i) {
+      sl.style.cursor = 'pointer'; sl.setAttribute('role', 'button'); sl.setAttribute('tabindex', '0');
+      var go = function () {
+        takeOver();
+        if (i === 0) { cur.m = (cur.m + 11) % 12; if (cur.m === 11) cur.y--; if (cur.y < Y0 - 1) { cur.y = Y0; cur.m = M0; } }
+        else { cur.y = cur.y === Y0 ? Y0 - 1 : Y0; if (cur.y === Y0 && cur.m > M0) cur.m = M0; }
+        setT(sels[0], MONTHS[cur.m]); if (sels[1]) setT(sels[1], String(cur.y));
+        render(true);
+      };
+      sl.addEventListener('click', go);
+      sl.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
+    if (sels[0]) setT(sels[0], MONTHS[cur.m]); if (sels[1]) setT(sels[1], String(cur.y));
+    rows.forEach(function (row) {
+      row.style.cursor = 'pointer'; row.setAttribute('role', 'button'); row.setAttribute('tabindex', '0'); row.setAttribute('aria-expanded', 'false');
+      var chev = q('.pw-board__medal', row);
+      if (chev) chev.style.transition = 'transform 300ms ' + EASE;
+      var toggle = function () {
+        takeOver();
+        var open = row.getAttribute('aria-expanded') !== 'true';
+        row.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+        var dt = q('.pw-board__detail', row);
+        if (open) {
+          if (!dt) { dt = d.createElement('div'); dt.className = 'pw-board__detail'; row.appendChild(dt); }
+          var i = slots().indexOf(row), rec = standings()[i];
+          if (rec) dt.innerHTML = detail(row, rec);
+          row.classList.add('pw-board__row--open');
+        } else row.classList.remove('pw-board__row--open');
+      };
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    });
+    var origTake = takeOver;
+    takeOver = function () { var first = !touched; origTake(); if (first) { list.insertBefore(jordan, marie); theme(jordan, THEME.gold); theme(marie, THEME.green); theme(amara, THEME.purple); render(false); } };
   })();
 
   /* ---------- Getting started: cards land one after another ---------- */
