@@ -38,7 +38,7 @@
       '[data-mf-root] [data-mf-curtain]{height:100lvh;opacity:1;display:none}' +
       '[data-mf-root] [data-mf-tiles]{position:absolute;left:0;top:0;width:100%;height:100lvh;pointer-events:none;display:none}' +
       // the footer after the manifesto continues the dark close (it sits above the curtain)
-      '.pw-mf[data-mf-ready] ~ .pw-footer{z-index:3;background:#110663;box-shadow:0 0 0 100vmax #110663;clip-path:inset(0 -100vmax);color:rgba(255,255,255,0.72)}' +
+      '.pw-mf[data-mf-ready] ~ .pw-footer{z-index:3;background:#15087B;box-shadow:0 0 0 100vmax #15087B;clip-path:inset(0 -100vmax);color:rgba(255,255,255,0.72)}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__col-title,.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__ticker-word{color:#FFFFFF}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__link,.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__brand{color:rgba(255,255,255,0.72)}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__link:hover{color:#FFFFFF}' +
@@ -46,7 +46,8 @@
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__ticker-word::before{filter:invert(1) brightness(2)}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__wordmark-svg g[fill="#FFFFFF"],.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__wordmark-svg [fill="#FFFFFF"]{fill:rgba(255,255,255,0.07)}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer svg [fill="#110663"]{fill:#FFFFFF}' +
-      'body.pw-mf-dark{background-color:#110663}' +
+      // iOS Safari tints its toolbar with the body colour: use the curtain's rendered colour (#110663 under the grain)
+      'body.pw-mf-dark{background-color:#15087B}' +
       '[data-mf-root] [data-mf-curtain] svg{position:absolute;inset:0;width:100%;height:100%;opacity:0.85;mix-blend-mode:overlay;pointer-events:none}' +
       '[data-mf-root] .pw-mf__orb{translate:-50% -50%;aspect-ratio:1}' +
       '[data-mf-root] .pw-mf__orb-a{filter:blur(26px);will-change:transform;animation:mfOrb 18s ' + SWAY + ' infinite}' +
