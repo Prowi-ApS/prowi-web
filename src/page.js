@@ -721,7 +721,8 @@
     });
     // phones (<768px, where the side index is hidden): a sticky tab strip above the panels, under the nav bar.
     // It follows the scroll (active tab highlighted and kept in view) and a tap scrolls to that panel.
-    var tabs = d.createElement('div'); tabs.className = 'pw-ptabs'; tabs.setAttribute('role', 'tablist');
+    var tabs = d.createElement('div'); tabs.className = 'pw-ptabs';
+    var track = d.createElement('div'); track.className = 'pw-ptabs__track'; track.setAttribute('role', 'tablist'); tabs.appendChild(track);
     var tabEls = items.map(function (it, i) {
       var num = q('.pw-platform__index-num', it), label = (it.textContent || '').replace(num ? num.textContent : '', '').replace(/\s+/g, ' ').trim();
       var b = d.createElement('button'); b.type = 'button'; b.className = 'pw-ptabs__tab'; b.textContent = label; b.setAttribute('role', 'tab');
@@ -730,7 +731,7 @@
         var y = p.getBoundingClientRect().top + (w.scrollY || w.pageYOffset) - (tabs.getBoundingClientRect().bottom > 0 ? tabTop() + tabs.offsetHeight : 0) - 16;
         try { w.scrollTo({ top: y, behavior: 'smooth' }); } catch (e) { w.scrollTo(0, y); }
       });
-      tabs.appendChild(b); return b;
+      track.appendChild(b); return b;
     });
     col.parentNode.insertBefore(tabs, col);
     var tabTop = function () {
@@ -744,8 +745,8 @@
       if (tabOn === active) return; tabOn = active;
       tabEls.forEach(function (b, i) { var on = i === active; b.classList.toggle('pw-ptabs__tab--on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
       var b = tabEls[active]; if (!b || !tabs.offsetWidth) return;
-      var x = b.offsetLeft - (tabs.clientWidth - b.offsetWidth) / 2;
-      try { tabs.scrollTo({ left: Math.max(0, x), behavior: 'smooth' }); } catch (e) { tabs.scrollLeft = x; }
+      var x = b.offsetLeft - (track.clientWidth - b.offsetWidth) / 2;
+      try { track.scrollTo({ left: Math.max(0, x), behavior: 'smooth' }); } catch (e) { track.scrollLeft = x; }
     };
     var scanTabs = function () {
       if (!tabs.offsetWidth) return;
@@ -754,7 +755,15 @@
       if (best !== active) { active = best; paint(); }
       paintTabs();
     };
-    placeTabs(); paint(); scan(); scanTabs();
+    // fade the edge(s) where more tabs are hidden
+    var edges = function () {
+      var max = track.scrollWidth - track.clientWidth;
+      track.classList.toggle('pw-ptabs--l', track.scrollLeft > 4);
+      track.classList.toggle('pw-ptabs--r', track.scrollLeft < max - 4);
+    };
+    track.addEventListener('scroll', edges, { passive: true });
+    w.addEventListener('resize', edges);
+    placeTabs(); paint(); scan(); scanTabs(); edges();
     onScroll(function () { if (tabs.offsetWidth) scanTabs(); else scan(); });
     w.addEventListener('resize', function () { placeTabs(); paint(); tabOn = -1; scanTabs(); });
     if (d.fonts && d.fonts.ready) d.fonts.ready.then(paint);
