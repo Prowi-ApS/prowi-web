@@ -719,9 +719,44 @@
       it.style.cursor = 'pointer';
       it.addEventListener('click', function (ev) { ev.preventDefault(); var p = panels[i]; if (!p) return; p.style.scrollMarginTop = (vw() < 768 ? 122 : vw() < 1024 ? 134 : 100) + 'px'; try { p.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { p.scrollIntoView(true); } });
     });
-    paint(); scan();
-    onScroll(scan);
-    w.addEventListener('resize', paint);
+    // phones (<768px, where the side index is hidden): a sticky tab strip above the panels, under the nav bar.
+    // It follows the scroll (active tab highlighted and kept in view) and a tap scrolls to that panel.
+    var tabs = d.createElement('div'); tabs.className = 'pw-ptabs'; tabs.setAttribute('role', 'tablist');
+    var tabEls = items.map(function (it, i) {
+      var num = q('.pw-platform__index-num', it), label = (it.textContent || '').replace(num ? num.textContent : '', '').replace(/\s+/g, ' ').trim();
+      var b = d.createElement('button'); b.type = 'button'; b.className = 'pw-ptabs__tab'; b.textContent = label; b.setAttribute('role', 'tab');
+      b.addEventListener('click', function () {
+        var p = panels[i]; if (!p) return;
+        var y = p.getBoundingClientRect().top + (w.scrollY || w.pageYOffset) - (tabs.getBoundingClientRect().bottom > 0 ? tabTop() + tabs.offsetHeight : 0) - 16;
+        try { w.scrollTo({ top: y, behavior: 'smooth' }); } catch (e) { w.scrollTo(0, y); }
+      });
+      tabs.appendChild(b); return b;
+    });
+    col.parentNode.insertBefore(tabs, col);
+    var tabTop = function () {
+      var n = q('.pw-nav'); if (!n) return 0;
+      var cs = w.getComputedStyle(n), r = n.getBoundingClientRect();
+      return (cs.position === 'fixed' || cs.position === 'sticky') ? Math.max(0, Math.round(r.bottom)) : 0;
+    };
+    var placeTabs = function () { tabs.style.top = tabTop() + 'px'; };
+    var tabOn = -1;
+    var paintTabs = function () {
+      if (tabOn === active) return; tabOn = active;
+      tabEls.forEach(function (b, i) { var on = i === active; b.classList.toggle('pw-ptabs__tab--on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      var b = tabEls[active]; if (!b || !tabs.offsetWidth) return;
+      var x = b.offsetLeft - (tabs.clientWidth - b.offsetWidth) / 2;
+      try { tabs.scrollTo({ left: Math.max(0, x), behavior: 'smooth' }); } catch (e) { tabs.scrollLeft = x; }
+    };
+    var scanTabs = function () {
+      if (!tabs.offsetWidth) return;
+      var line = tabTop() + tabs.offsetHeight + vh() * 0.3, best = 0;
+      panels.forEach(function (p, i) { if (p.getBoundingClientRect().top < line) best = i; });
+      if (best !== active) { active = best; paint(); }
+      paintTabs();
+    };
+    placeTabs(); paint(); scan(); scanTabs();
+    onScroll(function () { if (tabs.offsetWidth) scanTabs(); else scan(); });
+    w.addEventListener('resize', function () { placeTabs(); paint(); tabOn = -1; scanTabs(); });
     if (d.fonts && d.fonts.ready) d.fonts.ready.then(paint);
   })();
 

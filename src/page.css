@@ -199,3 +199,17 @@ body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
 @media (min-width:768px){.pw-hero .pw-hero__scene{animation-name:pwHeroTiltLg;animation-timeline:scroll(root block);animation-range:0px 55vh;animation-timing-function:cubic-bezier(.4,.3,.6,1)}}
 @media (prefers-reduced-motion:reduce){.pw-hero .pw-hero__scene{animation:none}}
 }
+
+/* Platform section on phones: sticky tab strip (built by page.js rail()); the side index is hidden below 768px */
+.pw-ptabs{display:none}
+@media (max-width:767px){
+.pw-ptabs{position:sticky;top:64px;z-index:5;display:flex;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  width:100vw;margin-left:calc(50% - 50vw);margin-bottom:-16px;background:var(--_prowi---pw-white,#fff);
+  border-top:1px solid var(--_prowi---pw-border-hairline,rgba(17,6,99,.08));border-bottom:1px solid var(--_prowi---pw-border-hairline,rgba(17,6,99,.08))}
+.pw-ptabs::-webkit-scrollbar{display:none}
+.pw-ptabs__tab{flex:none;appearance:none;-webkit-appearance:none;border:0;border-right:1px solid var(--_prowi---pw-border-hairline,rgba(17,6,99,.08));background:transparent;
+  font:inherit;font-size:15px;line-height:1.2;font-weight:400;color:var(--_prowi---pw-text-muted,#6664A0);padding:14px 18px;white-space:nowrap;cursor:pointer;
+  transition:background-color 220ms,color 220ms}
+.pw-ptabs__tab:first-child{padding-left:max(18px,env(safe-area-inset-left))}
+.pw-ptabs__tab--on{background:rgba(76,57,202,.08);color:var(--_prowi---pw-dark-purple,#110663);font-weight:500}
+}
