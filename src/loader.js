@@ -9,7 +9,11 @@
   var cs = d.currentScript, src = (cs && cs.src) || '';
   if (!src) { var tag = d.querySelector('script[src*="prowi-2026"]'); if (tag) src = tag.src; }
   // no src: the entry was pasted inline (local file:// previews) - read the chunks from the build folder
-  var base = src ? src.split(/[?#]/)[0].replace(/[^\/]*$/, '') : (w.__PW_BASE || (location.protocol === 'file:' ? 'file:///home/claude/prowi-web/dist/' : ''));
+  // the entry's own folder, but only when it really is a copy of dist/ (Webflow's preview can serve the registered script from
+  // another address, or inline); otherwise the release folder on jsDelivr (window.__PW_CDN, written by build.py)
+  if (src && !/\/prowi-2026\.js(?:[?#]|$)/.test(src)) src = '';
+  var base = src ? src.split(/[?#]/)[0].replace(/[^\/]*$/, '') : (w.__PW_BASE || (location.protocol === 'file:' ? 'file:///home/claude/prowi-web/dist/' : (w.__PW_CDN || '')));
+  if (!base) console.warn('[prowi] no address for the page modules; calculators, search and animations are off');
   w.__PW_BASE = base;
   var st = {};
   // need(name, cb, ordered): load chunk `name` once; cb runs after it executed (or failed). Ordered chunks execute in request order.

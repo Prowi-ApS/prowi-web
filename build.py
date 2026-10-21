@@ -107,6 +107,9 @@ parts.append('(function(){ if (window.__prowiBundle) return; window.__prowiBundl
 parts.append('window.__resources = Object.assign(window.__resources||{}, %s);\n'%json.dumps(RES))
 parts.append('})();\n')
 parts.append('window.__PW_CHUNKS = %s;\n'%json.dumps(CHUNKS,separators=(',',':')))
+# fallback chunk base when the entry's own URL can't be read (e.g. Webflow preview): the release tag on jsDelivr (BUNDLE_TAG=v1.15.0 python3 build.py; tag that commit)
+TAG=os.environ.get('BUNDLE_TAG','')
+if TAG: parts.append('window.__PW_CDN = %s;\n'%json.dumps('https://cdn.jsdelivr.net/gh/Prowi-ApS/prowi-web@'+TAG+'/dist/'))
 parts.append(minify(open('src/loader.js',encoding='utf-8').read())+'\n')
 # page CSS: also pasted into the Webflow page head as <style id="pw-css"> (see head-css.html); keep both in sync
 CSS=open('src/page.css',encoding='utf-8').read()
