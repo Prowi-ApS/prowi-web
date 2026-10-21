@@ -1,0 +1,85 @@
+<!-- === PROWI – HEAD (2026) ========= -->
+
+<!-- 1) Webflow CDN + Critical 3rd-party preconnects -->
+<link rel="preconnect" href="https://cdn.prod.website-files.com" crossorigin>
+<link rel="preconnect" href="https://assets.website-files.com" crossorigin>
+<link rel="preconnect" href="https://d3e54v103j8qbb.cloudfront.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.prod.website-files.com">
+<link rel="dns-prefetch" href="https://assets.website-files.com">
+<link rel="dns-prefetch" href="https://d3e54v103j8qbb.cloudfront.net">
+
+<!-- 5) Google Consent Mode v2 – default denied -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('consent','default',{
+    ad_user_data:'denied',
+    ad_personalization:'denied',
+    ad_storage:'denied',
+    analytics_storage:'denied',
+    functionality_storage:'granted',
+    security_storage:'granted'
+  });
+</script>
+
+<!-- 6) HubSpot event queue -->
+<script>
+  window._hsq = window._hsq || [];
+  window._hsq.push(['setContentType','standard-page']);
+  window._hsq.push(['trackPageView']);
+</script>
+
+<!-- 7) 3rd-party scripts as opt-in (DEFERRED LONGER for better LCP) -->
+<script type="opt-in" data-name="GTM"
+        data-src="https://www.googletagmanager.com/gtm.js?id=GTM-PKFW5PFM"
+        async></script>
+<script type="opt-in" id="hs-script-loader" data-name="HubSpot"
+        data-src="https://js-eu1.hs-scripts.com/145409039.js"
+        async></script>
+
+<!-- 8) Automatic 3P mode + LCP image marker -->
+<script>
+  (function(){
+    var p=(location.pathname||'').toLowerCase();
+    var early=/^\/(pris|kontakt|book-demo)\/?$/.test(p);
+    document.addEventListener('DOMContentLoaded',function(){
+      document.body.setAttribute('data-3p-mode', early ? 'early' : 'balanced');
+      var img=document.querySelector('.tella-thumb');
+      if(img){
+        img.setAttribute('data-lcp','');
+        img.setAttribute('fetchpriority','high');
+        img.setAttribute('loading','eager');
+      }
+    });
+  })();
+</script>
+
+<!-- 9) OctoReports Tracking (consent-friendly) -->
+<script>
+  (function(){
+    function runOcto(){
+      !function(k,u){
+        function E(s){return encodeURIComponent(s||"")}
+        var q=new URLSearchParams(location.search),
+            G=function(n){return q.get(n)||""},
+            D=/iPad|Tablet|Android(?!.*Mobile)/i.test(navigator.userAgent)?2:/Mobi|Android.+Mobile|iPhone/i.test(navigator.userAgent)?1:3,
+            N=(performance.getEntriesByType&&performance.getEntriesByType("navigation")[0])||{},
+            P=location.pathname+location.search;
+        if(P.length>1800) P=P.slice(0,1790)+"…";
+        var Q="?k="+E(k)+"&h="+E(location.hostname)+"&p="+E(P)+"&r="+E(document.referrer||"")+
+               "&pt="+E((document.title||"").slice(0,300))+
+               "&us="+E(G("utm_source"))+"&um="+E(G("utm_medium"))+"&uc="+E(G("utm_campaign"))+
+               "&ut="+E(G("utm_term"))+"&uu="+E(G("utm_content"))+
+               "&dv="+D+
+               "&tf="+(N.responseStart&&N.requestStart?Math.round(N.responseStart-N.requestStart):"")+
+               "&dc="+(N.domContentLoadedEventEnd?Math.round(N.domContentLoadedEventEnd-(N.startTime||0)):"")+
+               "&ld="+(N.loadEventEnd?Math.round(N.loadEventEnd-(N.startTime||0)):"")+
+               "&t="+Date.now();
+        (new Image).src=u+Q;
+      }("53562c3fd556c48161d299446ed9cb714901278f","https://track.octoreports.com/track.php");
+    }
+
+    document.addEventListener('prowiConsentGranted', function(){ try{ runOcto(); }catch(e){} }, { once:true });
+    window.__octoRun = runOcto;
+  })();
+</script>

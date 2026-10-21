@@ -17,3 +17,11 @@ the 2026 JSON-LD lives in each template's head code instead (post + ordbog paste
   .hero-heading, .hero-subheading, .button-primary, .navbar, .nav-logo, .tella-wrap, .tella-thumb, .play-button)
 - The trailing "IMPORTANT NOTES" comment block
 Kept unchanged: CDN preconnects, Consent Mode v2 defaults, HubSpot queue, opt-in GTM/HubSpot loaders, 3P mode marker, OctoReports.
+
+## Site custom code cleanup, 21 Oct 2026 (before the launch publish)
+Full previous versions: `site-head-before-launch.html`, `site-footer-before-launch.html`. Current: `site-*-launch.html`.
+- Head §8: early 3P mode now matches /pris, /demo, /en/pricing, /en/demo (was /pris, /kontakt, /book-demo) and is set on
+  <html> immediately (the footer read it from <body> before DOMContentLoaded, so "early" never applied). Tella LCP marker removed.
+- Footer §2 removed: forced loading=lazy + fetchpriority=low on every image and a document-wide MutationObserver
+  (slowed above-the-fold images and ran on every DOM change of the animated scenes). Footer §3 (Tella preconnect) and the
+  performance-notes comment removed. Consent helpers, opt-in loader and locale switcher fix unchanged.

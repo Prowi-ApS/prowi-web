@@ -1,0 +1,193 @@
+<!-- === PROWI – FOOTER (COMPLETE OPTIMIZATION - Longer 3P delays) === -->
+<script>
+(function(){
+  /* -------------------------------------------------------
+   * 0) 3rd-party loader (GTM/HubSpot) — LONGER delays for better LCP
+   * ----------------------------------------------------- */
+  var mode = (document.body.getAttribute('data-3p-mode') || 'balanced').toLowerCase();
+  // INCREASED delays to prioritize LCP over tracking
+  var FALLBACK_MS = (mode === 'early') ? 1200 : (mode === 'strict' ? 4000 : 3000);
+
+  function activateOptInScripts(){
+    if (window.__optInLoaded) return; window.__optInLoaded = true;
+
+    document.querySelectorAll('script[type="opt-in"]').forEach(function(s){
+      var n = document.createElement('script');
+      for (var i=0; i<s.attributes.length; i++){
+        var a = s.attributes[i];
+        if (a.name === 'type') continue;
+        if (a.name === 'data-src') { n.src = a.value; continue; }
+        n.setAttribute(a.name, a.value);
+      }
+      n.async = true;
+      s.parentNode.replaceChild(n, s);
+    });
+  }
+
+  // Load on first user intention (prioritize user experience)
+  ['mousedown','touchstart','scroll','keydown'].forEach(function(ev){
+    window.addEventListener(ev, activateOptInScripts, { once:true, passive:true });
+  });
+
+  // Backup: load after longer delay (3s for balanced mode)
+  setTimeout(activateOptInScripts, FALLBACK_MS);
+
+  // Prefetch on hover over contact/demo CTA
+  document.addEventListener('mouseover', function(e){
+    if (window.__prefetched3P) return;
+    var t = e.target.closest('.js-load-hubspot, .js-open-form, a[href*="kontakt"], a[href*="demo"]');
+    if (!t) return;
+    window.__prefetched3P = true;
+    document.querySelectorAll('script[type="opt-in"]').forEach(function(s){
+      var href = s.getAttribute('data-src'); if (!href) return;
+      var l = document.createElement('link'); l.rel = 'preload'; l.as = 'script'; l.href = href;
+      document.head.appendChild(l);
+    });
+  }, { passive:true });
+
+  /* ------------------------------------------
+   * 1) Consent helpers
+   * ---------------------------------------- */
+  window.prowiGrantConsent = function(){
+    if (typeof gtag === 'function') {
+      gtag('consent','update',{
+        ad_user_data:'granted',
+        ad_personalization:'granted',
+        ad_storage:'granted',
+        analytics_storage:'granted',
+        functionality_storage:'granted',
+        security_storage:'granted'
+      });
+    }
+    document.dispatchEvent(new CustomEvent('prowiConsentGranted'));
+    activateOptInScripts();
+  };
+
+  window.prowiRevokeConsent = function(){
+    if (typeof gtag === 'function') {
+      gtag('consent','update',{
+        ad_user_data:'denied',
+        ad_personalization:'denied',
+        ad_storage:'denied',
+        analytics_storage:'denied'
+      });
+    }
+  };
+
+  /* ---------------------------------------------------------
+   * 2) Lazy/async: images (non-LCP) + iframes with data-src
+   * ------------------------------------------------------- */
+  document.querySelectorAll('img:not([data-lcp])').forEach(function(img){
+    if (!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
+    if (!img.hasAttribute('decoding')) img.setAttribute('decoding','async');
+    if (!img.hasAttribute('fetchpriority')) img.setAttribute('fetchpriority','low');
+  });
+
+  var lazyIframes = [].slice.call(document.querySelectorAll('iframe[data-src]'));
+  if (lazyIframes.length){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (!entry.isIntersecting) return;
+        var f = entry.target; io.unobserve(f);
+        f.src = f.getAttribute('data-src'); f.removeAttribute('data-src');
+        f.loading = 'lazy';
+      });
+    }, { rootMargin:'400px' });
+    lazyIframes.forEach(function(f){ io.observe(f); });
+  }
+
+  // MutationObserver for lazy-loading dynamically added content
+  var mo = new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      m.addedNodes.forEach(function(n){
+        if (n.nodeType !== 1) return;
+
+        if (n.matches && n.matches('img:not([data-lcp])')) {
+          if (!n.hasAttribute('loading')) n.setAttribute('loading','lazy');
+          if (!n.hasAttribute('decoding')) n.setAttribute('decoding','async');
+          if (!n.hasAttribute('fetchpriority')) n.setAttribute('fetchpriority','low');
+        }
+        n.querySelectorAll && n.querySelectorAll('img:not([data-lcp])').forEach(function(img){
+          if (!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
+          if (!img.hasAttribute('decoding')) img.setAttribute('decoding','async');
+          if (!img.hasAttribute('fetchpriority')) img.setAttribute('fetchpriority','low');
+        });
+
+        if (n.matches && n.matches('iframe[data-src]')) lazyIframes.push(n);
+        n.querySelectorAll && n.querySelectorAll('iframe[data-src]').forEach(function(f){
+          lazyIframes.push(f);
+        });
+      });
+    });
+  });
+  mo.observe(document.documentElement, { childList:true, subtree:true });
+
+  /* ---------------------------------------------------
+   * 3) Tella preconnect: late (for INP, not LCP)
+   * ------------------------------------------------- */
+  var warmed = false, hero = document.querySelector('.tella-wrap, .ph-tella');
+  function prewarm(){
+    if (warmed) return; warmed = true;
+    var l = document.createElement('link');
+    l.rel = 'preconnect'; l.href = 'https://www.tella.tv'; l.crossOrigin = 'anonymous';
+    document.head.appendChild(l);
+  }
+  if (hero){
+    var io2 = new IntersectionObserver(function(es){
+      if (es[0] && es[0].isIntersecting){ prewarm(); io2.disconnect(); }
+    }, { rootMargin:'600px' });
+    io2.observe(hero);
+    hero.addEventListener('mouseover', prewarm, { passive:true });
+  }
+})();
+</script>
+
+<!-- Locale switcher fix (keep this) -->
+<script>
+(function() {
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('a[hreflang], .w-locales-link');
+    if (!link) return;
+
+    var targetLang = link.getAttribute('hreflang');
+    if (!targetLang) {
+      var href = link.getAttribute('href');
+      if (href && href.startsWith('/en')) {
+        targetLang = 'en';
+      } else if (href === '/' || (href && !href.startsWith('/en'))) {
+        targetLang = 'da';
+      }
+    }
+
+    if (!targetLang) return;
+
+    var alternateLink = document.querySelector('link[rel="alternate"][hreflang="' + targetLang + '"]');
+
+    if (alternateLink && alternateLink.href) {
+      e.preventDefault();
+      window.location.href = alternateLink.href;
+      return;
+    }
+
+    var currentPath = window.location.pathname;
+    var isOnEnglish = currentPath.startsWith('/en');
+
+    if (targetLang === 'en' && !isOnEnglish) {
+      e.preventDefault();
+      window.location.href = '/en' + currentPath;
+    } else if (targetLang === 'da' && isOnEnglish) {
+      e.preventDefault();
+      var newPath = currentPath.replace(/^\/en/, '') || '/';
+      window.location.href = newPath;
+    }
+  });
+})();
+</script>
+<!-- ===================================================================== -->
+<!-- PERFORMANCE NOTES:
+1. 3P scripts now delayed 3 seconds (balanced mode) vs 2 seconds before
+2. This gives LCP more breathing room to complete
+3. All lazy-loading logic intact
+4. Delete the MCP Bridge logo carousel script if it exists separately!
+-->
+<!-- ===================================================================== -->
