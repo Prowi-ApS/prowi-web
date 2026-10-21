@@ -512,18 +512,17 @@
     // the pipeline scene starts when the intro (title, sentences, CTA) has finished AND either the figure is scrolled
     // into view or 3 s have passed since the intro ended - whichever comes first
     var released = false, AUTO_MS = 3000;
-    var release = function (force) { if (released || !introOver || !(seen || force)) return; released = true; sceneProps(scene, { hold: false }); };
+    var scrolled = false;
+    var release = function () { if (released || !introOver || !seen || !scrolled) return; released = true; sceneProps(scene, { hold: false }); };
     var introEnded = function () {
       if (introOver) return; introOver = true;
-      // already mostly on screen when the intro ends (wide screens): start now; otherwise wait for the scroll
-      if (fig && !seen) { var r0 = fig.getBoundingClientRect(), H0 = stableH(); if (r0.top + Math.min(r0.height, H0) * 0.6 < H0) seen = true; }
       release();
     };
     // figure parallax: tilts in as it scrolls up; 0 at bottom edge → 1 when its centre reaches 50% of the viewport
     var reveal = function () {
       if (!fig || REDUCED) return;
       var r = fig.getBoundingClientRect(), H = stableH();
-      if (SDA) { if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (introDone) release(); else finish(); } return; }
+      if (SDA) { if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (scrolled) { if (!introDone) finish(); release(); } } return; }
       var p = Math.max(0, Math.min(1, (H - r.top) / Math.max(1, H - (H * 0.5 - r.height / 2))));
       var e = 1 - Math.pow(1 - p, 3);
       fig.style.transformOrigin = '50% 0%';
@@ -532,7 +531,7 @@
         : 'perspective(1100px) rotateX(' + ((1 - e) * 34).toFixed(2) + 'deg) translateY(' + ((1 - e) * 160).toFixed(1) + 'px) scale(' + (0.86 + 0.14 * e).toFixed(4) + ')';
       if (tf !== fig._pwT) { fig._pwT = tf; fig.style.transform = tf; }
       fig.style.opacity = (lg ? 0.7 + 0.3 * e : 0.25 + 0.75 * e).toFixed(3);
-      if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (introDone) release(); else finish(); }
+      if (!seen && ((r.top + r.height / 2) < H * 0.62 || r.top < H * 0.45)) { seen = true; if (scrolled) { if (!introDone) finish(); release(); } }
     };
     var SDA = !!(fig && !REDUCED && w.CSS && CSS.supports && CSS.supports('animation-timeline: scroll(root block)') && CSS.supports('animation-range: 0px 100px'));
     // the tilt runs on the page's own scroll: from the figure's top entering the screen to its centre reaching mid-screen
@@ -603,6 +602,15 @@
         at(acc + 2000, finish);
       });
     }
+    // the first real scroll ends the intro at once (CTAs shown) and lets the deal move once the figure is in view
+    var onFirstScroll = function () {
+      if (scrolled || (w.pageYOffset || 0) < 8) return;
+      scrolled = true;
+      if (!introDone) finish();
+      if (fig && !seen) { var r1 = fig.getBoundingClientRect(), H1 = stableH(); if (r1.top < H1 * 0.85) seen = true; }
+      release();
+    };
+    onScroll(onFirstScroll);
     reveal();
     onScroll(reveal);
     w.addEventListener('resize', reveal);
