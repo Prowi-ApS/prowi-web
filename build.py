@@ -1,7 +1,8 @@
 import re, json, html, os, hashlib, sys, subprocess, shutil
 SRC='src/scenes/'
 OUT='dist/prowi-2026.js'
-FONT_WOFF2='https://cdn.prod.website-files.com/6853f29490f75918cfe11ed3/fonts/6ad62e79ffa54333cee49f07-ReadexPro-Variable.woff2'
+# same URL as Webflow's own @font-face, so the browser fetches the file once (cdn.prod.website-files.com is a second download)
+FONT_WOFF2='https://webflow-files-prod.global.ssl.fastly.net/6853f29490f75918cfe11ed3/fonts/6ad62e79ffa54333cee49f07-ReadexPro-Variable.woff2'
 RES={
  'rep-app-celebration':'https://cdn.prod.website-files.com/6853f29490f75918cfe11ed3/6ad6513f7245cc107aecfea5_rep-app-celebration.webp',
 }
