@@ -15,7 +15,7 @@
   var noBlur = !!(w.matchMedia && w.matchMedia('(hover: none), (pointer: coarse)').matches);
   // touch screens with scroll timelines: the closing squares are real elements animated by the browser on the close
   // section's view timeline (runs off the main thread, so it keeps up with iOS scrolling); elsewhere the canvas below
-  var CSST = noBlur && !reduced && !!(w.CSS && CSS.supports && CSS.supports('animation-timeline: view()') && CSS.supports('animation-range: 0px 100px') && CSS.supports('view-timeline-name: --mfc'));
+  var CSST = noBlur && !reduced && !!(w.CSS && CSS.supports && CSS.supports('animation-timeline: view()') && CSS.supports('animation-range: cover 10% cover 20%'));
 
   // The CTA label sits in a span inside a link block, which Webflow localization can't reach: translate it here.
   if (/^en/i.test(d.documentElement.getAttribute('lang') || '') || /^\/en(\/|$)/.test(w.location.pathname)) {
@@ -109,11 +109,13 @@
 
   /* ---------- tiles: the transition into the close ---------- */
   var tiles = null, tctx = null, tW = 0, tH = 0, tDpr = 1;
-  if (curtain && curtain.parentNode && !CSST) {
+  var makeCanvas = function () {
+    if (tiles || !curtain || !curtain.parentNode) return;
     tiles = d.createElement('canvas'); tiles.setAttribute('data-mf-tiles', '1'); tiles.setAttribute('aria-hidden', 'true');
     curtain.parentNode.insertBefore(tiles, curtain.nextSibling);
     tctx = tiles.getContext('2d');
-  }
+  };
+  if (!CSST) makeCanvas();
   var hash = function (i, j) { var x = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return x - Math.floor(x); };
   var lerp = function (a, b, t) { return Math.round(a + (b - a) * t); };
   // rounded squares (all the same shape) sweep up from the bottom, violet and small first, growing and darkening. In each
@@ -412,10 +414,10 @@
     var grain = 'url(' + gc.toDataURL('image/png') + ')';
     var cs = d.createElement('style'); cs.id = 'pw-mf-csst';
     cs.textContent =
-      '[data-mf-csst] .pw-mf__close{position:relative;background:#110663 ' + grain + ' repeat;view-timeline:--mfc block}' +
-      '[data-mf-csst] .mf-tl{position:absolute;left:0;right:0;bottom:calc(100% - 1px);pointer-events:none;z-index:2;overflow:hidden}' +
-      '[data-mf-csst] .mf-t{position:absolute;border-radius:26%;background:#140874;transform:scale(.2);animation:mfT linear both;animation-timeline:--mfc}' +
-      '[data-mf-csst] .mf-t::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#7558E0;opacity:1;animation:mfTd linear both;animation-timeline:--mfc;animation-range:inherit}' +
+      '[data-mf-csst] .pw-mf__close{position:relative;background:#110663 ' + grain + ' repeat}' +
+      '[data-mf-csst] .mf-tl{position:absolute;left:0;right:0;bottom:calc(100% - 1px);pointer-events:none;z-index:2;overflow:clip}' +
+      '[data-mf-csst] .mf-t{position:absolute;border-radius:26%;background:#140874;transform:scale(.2);animation:mfT linear both;animation-timeline:view()}' +
+      '[data-mf-csst] .mf-t::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#7558E0;opacity:1;animation:mfTd linear both;animation-timeline:view();animation-range:inherit}' +
       '@keyframes mfT{0%{transform:scale(0)}0.5%{transform:scale(.2)}100%{transform:scale(1.4)}}@keyframes mfTd{from{opacity:1}to{opacity:0}}';
     d.head.appendChild(cs);
     var layer = d.createElement('div'); layer.className = 'mf-tl'; layer.setAttribute('aria-hidden', 'true');
@@ -432,11 +434,18 @@
       for (var r = 0; r < rows; r++) for (var i = 0; i < cols; i++) {
         var hgt = (r + 0.5) * T, jit = (wave(i) * 0.75 + hash(i, r) * 0.25 - 0.5) * vh * 0.7;
         var end = Math.max(30, (K - 1) * hgt + jit), start = Math.max(0, end - WIN);
-        html += '<i class="mf-t" style="left:' + (ox + i * T + (T - S) / 2).toFixed(1) + 'px;top:' + (H - (r + 1) * T + (T - S) / 2).toFixed(1) + 'px;width:' + S.toFixed(1) + 'px;height:' + S.toFixed(1) + 'px;animation-range:cover ' + Math.round(start) + 'px cover ' + Math.round(end) + 'px"></i>';
+        // each tile runs on its own view timeline (like the home hero tilt): shift by its height above the close and
+        // express the range in % of its cover range (viewport + tile), which every engine with view() accepts
+        var off = hgt + S / 2, span = vh + S, a0 = (start + off) / span * 100, a1 = (end + off) / span * 100;
+        html += '<i class="mf-t" style="left:' + (ox + i * T + (T - S) / 2).toFixed(1) + 'px;top:' + (H - (r + 1) * T + (T - S) / 2).toFixed(1) + 'px;width:' + S.toFixed(1) + 'px;height:' + S.toFixed(1) + 'px;animation-range:cover ' + a0.toFixed(2) + '% cover ' + a1.toFixed(2) + '%"></i>';
       }
       layer.style.height = H + 'px'; layer.innerHTML = html;
     };
     build();
+    // safety net: if this browser accepted the CSS but does not run the timelines, fall back to the canvas
+    var ok = false;
+    try { var an = layer.firstChild && layer.firstChild.getAnimations ? layer.firstChild.getAnimations() : []; ok = !!(an.length && an[0].timeline && an[0].timeline.constructor && /View/.test(an[0].timeline.constructor.name || 'View')); } catch (e) { ok = false; }
+    if (!ok) { layer.remove(); cs.remove(); root.removeAttribute('data-mf-csst'); CSST = false; makeCanvas(); return; }
     var bT = 0; w.addEventListener('resize', function () { clearTimeout(bT); bT = setTimeout(build, 200); });
   })();
   if (SDA) {
