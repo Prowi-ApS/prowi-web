@@ -48,7 +48,7 @@
       '.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__wordmark-svg g[fill="#FFFFFF"],.pw-mf[data-mf-ready] ~ .pw-footer .pw-footer__wordmark-svg [fill="#FFFFFF"]{fill:rgba(255,255,255,0.07)}' +
       '.pw-mf[data-mf-ready] ~ .pw-footer svg [fill="#110663"]{fill:#FFFFFF}' +
       // iOS Safari tints its toolbar with the body colour: use the curtain's rendered colour (#110663 under the grain)
-      'body.pw-mf-dark{background-color:#15087B}' +
+      'html body.pw-mf-dark,html body.pw-mf-dark:has(> .pw-root){background-color:#15087B!important}' +
       '[data-mf-root][data-mf-full]{background-color:#15087B}' +
       '[data-mf-root] [data-mf-curtain] svg{position:absolute;inset:0;width:100%;height:100%;opacity:0.85;mix-blend-mode:overlay;pointer-events:none}' +
       '[data-mf-root] .pw-mf__orb{translate:-50% -50%;aspect-ratio:1}' +
@@ -138,7 +138,7 @@
     var c = tctx; c.setTransform(tDpr, 0, 0, tDpr, 0, 0); c.clearRect(0, 0, tW, tH);
     var dark = darkFill(c);
     if (P >= 1) { c.fillStyle = dark; c.fillRect(0, 0, tW, tH); return; }
-    var T = Math.max(26, Math.min(44, Math.round(tW / 34))), GAP = Math.max(3, Math.round(T * 0.1)), cols = Math.ceil(tW / T) + 1, rows = Math.ceil(tH / T) + 1, WIN = 0.3;
+    var T = Math.max(noBlur ? 32 : 26, Math.min(44, Math.round(tW / 34))), GAP = Math.max(3, Math.round(T * 0.1)), cols = Math.ceil(tW / T) + 1, rows = Math.ceil(tH / T) + 1, WIN = 0.3;
     var ox = (tW - (cols - 1) * T) / 2 - T / 2, oy = tH - rows * T, rr = !!c.roundRect, i, j;
     // the front is a slow wave across the columns plus a little per-square jitter (no stray late squares inside the dark)
     var wave = function (i2) { return 0.5 + 0.3 * Math.sin(i2 * 0.47 + 1.3) + 0.2 * Math.sin(i2 * 1.13 + 4.1); };
@@ -241,8 +241,8 @@
         _edge = P;
         drawTiles(reduced ? (P >= 0.5 ? 1 : 0) : P);
         var mean = secs[secs.length - 2]; if (mean) { var mo = 1 - Math.max(0, Math.min(1, (P - 0.45) / 0.45)); mo = Math.round(mo * 50) / 50; if (mo !== _mo) { _mo = mo; mean.style.opacity = String(mo); } }
-        var dark = P > 0.6; if (dark !== _bodyDark) { _bodyDark = dark; d.body.classList.toggle('pw-mf-dark', dark); }
-        var run = P > 0; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
+        var dark = P > 0.3; if (dark !== _bodyDark) { _bodyDark = dark; d.body.classList.toggle('pw-mf-dark', dark); }
+        var run = P >= 0.95; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
       }
     }
     _cq = cq;
@@ -380,8 +380,8 @@
       P = Math.round(P * 400) / 400; _cq = P;
       if (P !== _edge) {
         _edge = P; drawTiles(P);
-        var dk = P > 0.6; if (dk !== _bodyDark) { _bodyDark = dk; d.body.classList.toggle('pw-mf-dark', dk); }
-        var run = P > 0; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
+        var dk = P > 0.3; if (dk !== _bodyDark) { _bodyDark = dk; d.body.classList.toggle('pw-mf-dark', dk); }
+        var run = P >= 0.95; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
       }
     }
     if (hero && dots.length) {

@@ -590,24 +590,28 @@
       }
       if (kick) { kick.style.opacity = '0'; kick.style.pointerEvents = 'none'; kick.style.visibility = 'hidden'; }
       if (ctas) { ctas.style.opacity = '0'; ctas.style.pointerEvents = 'none'; ctas.style.visibility = 'hidden'; }
-      var navEnd = 120 + 520 + 160;
-      at(navEnd, function () { chars.forEach(function (s, i) { s.style.animation = 'pwCharIn 520ms ' + EM + ' ' + (i * 28) + 'ms both'; }); });
-      var titleEnd = navEnd + chars.length * 28 + 520;
+      // faster intro (Oct 2026): title starts with the nav, letters stagger 16ms, and the CTAs rise while the lead is still
+      // coming in, about 2 s after load instead of 4+ s
+      var navEnd = 120 + 380;
+      var STAG = 16;
+      at(navEnd, function () { chars.forEach(function (s, i) { s.style.animation = 'pwCharIn 520ms ' + EM + ' ' + (i * STAG) + 'ms both'; }); });
+      var titleEnd = navEnd + chars.length * STAG + 520;
       var DUR = [760, 560, 440, 360], GAP = [340, 240, 170, 120];
-      at(titleEnd - 100 + 380, function () {
+      var leadAt = titleEnd - 100;
+      at(leadAt, function () {
         var acc = 0;
         lines.forEach(function (s, i) {
           var dur = DUR[Math.min(i, 3)];
           at(acc, function () { s.style.animation = 'pwLineIn ' + dur + 'ms ' + EM + ' both'; });
           acc += dur + GAP[Math.min(i, 3)];
         });
-        at(acc + 220, function () {
-          if (kick) { kick.style.visibility = ''; kick.style.pointerEvents = ''; kick.style.animation = 'pwFadeIn 500ms linear both'; }
-          if (ctas) { ctas.style.visibility = ''; ctas.style.pointerEvents = ''; ctas.style.animation = 'pwRise 700ms ' + EASE + ' both'; }
-        });
-        at(acc + 220 + 700, introEnded); // CTA rise (700ms) has landed
         at(acc + 2000, finish);
       });
+      at(leadAt + 200, function () {
+        if (kick) { kick.style.visibility = ''; kick.style.pointerEvents = ''; kick.style.animation = 'pwFadeIn 500ms linear both'; }
+        if (ctas) { ctas.style.visibility = ''; ctas.style.pointerEvents = ''; ctas.style.animation = 'pwRise 700ms ' + EASE + ' both'; }
+      });
+      at(leadAt + 200 + 700, introEnded); // CTA rise (700ms) has landed
     }
     // the first real scroll ends the intro at once (CTAs shown) and lets the deal move once the figure is in view
     var onFirstScroll = function () {
