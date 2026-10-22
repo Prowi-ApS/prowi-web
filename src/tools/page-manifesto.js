@@ -134,7 +134,7 @@
     if (P <= 0) { tiles.style.display = 'none'; return; }
     tiles.style.display = 'block';
     var cw = tiles.clientWidth, ch = tiles.clientHeight;
-    if (cw !== tW || ch !== tH) { tW = cw; tH = ch; tDpr = Math.min(noBlur ? 1.5 : 2, w.devicePixelRatio || 1); tiles.width = Math.round(cw * tDpr); tiles.height = Math.round(ch * tDpr); }
+    if (cw !== tW || ch !== tH) { tW = cw; tH = ch; tDpr = Math.min(noBlur ? 1.25 : 2, w.devicePixelRatio || 1); tiles.width = Math.round(cw * tDpr); tiles.height = Math.round(ch * tDpr); }
     var c = tctx; c.setTransform(tDpr, 0, 0, tDpr, 0, 0); c.clearRect(0, 0, tW, tH);
     var dark = darkFill(c);
     if (P >= 1) { c.fillStyle = dark; c.fillRect(0, 0, tW, tH); return; }
@@ -148,29 +148,42 @@
     var F = [], allF = [];
     for (j = 0; j < rows; j++) { F[j] = []; allF[j] = true; for (i = 0; i < cols; i++) { var lv = lpAt(i, j); F[j][i] = lv; if (lv < 1) allF[j] = false; } }
     var S = T - GAP, R = S * 0.26, g0 = GAP / 2;
-    c.fillStyle = dark;
+    // all finished squares, their joins and the full bands go into ONE path and one fill (hundreds of separate fills with
+    // the grain pattern were what made iPhones stutter); growing squares are filled in a dozen colour batches
+    var add = rr ? function (x, y, ww, hh, r) { c.roundRect(x, y, ww, hh, r); } : function (x, y, ww, hh) { c.rect(x, y, ww, hh); };
+    c.fillStyle = dark; c.beginPath();
     for (j = 0; j < rows; j++) {
       var y0 = oy + j * T + g0;
-      if (allF[j] && (j === rows - 1 || allF[j + 1])) { c.fillRect(0, y0, tW, (j === rows - 1 ? tH - y0 + 1 : T + 0.5)); continue; }
+      if (allF[j] && (j === rows - 1 || allF[j + 1])) { c.rect(0, y0, tW, (j === rows - 1 ? tH - y0 + 1 : T + 0.5)); continue; }
       for (i = 0; i < cols; i++) {
         if (F[j][i] < 1) continue;
         var x0 = ox + i * T + g0;
-        if (rr) { c.beginPath(); c.roundRect(x0, y0, S, S, R); c.fill(); } else c.fillRect(x0, y0, S, S);
+        add(x0, y0, S, S, R);
         var rgt = i + 1 < cols && F[j][i + 1] >= 1, dn = j + 1 < rows && F[j + 1][i] >= 1;
-        if (rgt) c.fillRect(x0 + S - R, y0, GAP + 2 * R, S);
-        if (dn) c.fillRect(x0, y0 + S - R, S, GAP + 2 * R);
-        if (rgt && dn && F[j + 1][i + 1] >= 1) c.fillRect(x0 + S - R, y0 + S - R, GAP + 2 * R, GAP + 2 * R);
+        if (rgt) c.rect(x0 + S - R, y0, GAP + 2 * R, S);
+        if (dn) c.rect(x0, y0 + S - R, S, GAP + 2 * R);
+        if (rgt && dn && F[j + 1][i + 1] >= 1) c.rect(x0 + S - R, y0 + S - R, GAP + 2 * R, GAP + 2 * R);
       }
     }
+    c.fill();
+    var BK = 12, buckets = [];
     for (j = 0; j < rows; j++) {
       if (allF[j]) continue;
       for (i = 0; i < cols; i++) {
         var lp = F[j][i]; if (lp <= 0 || lp >= 1) continue;
-        var e = lp, sz = S * (0.2 + 0.8 * e), r = sz * 0.26;
-        var x = ox + i * T + (T - sz) / 2, y = oy + j * T + (T - sz) / 2;
-        c.fillStyle = 'rgb(' + lerp(117, 17, e) + ',' + lerp(88, 6, e) + ',' + lerp(224, 99, e) + ')';
-        if (rr) { c.beginPath(); c.roundRect(x, y, sz, sz, r); c.fill(); } else c.fillRect(x, y, sz, sz);
+        var b = Math.round(lp * BK); (buckets[b] || (buckets[b] = [])).push(i, j, lp);
       }
+    }
+    for (var bi = 0; bi <= BK; bi++) {
+      var L = buckets[bi]; if (!L) continue;
+      var ec = bi / BK;
+      c.fillStyle = 'rgb(' + lerp(117, 17, ec) + ',' + lerp(88, 6, ec) + ',' + lerp(224, 99, ec) + ')';
+      c.beginPath();
+      for (var q = 0; q < L.length; q += 3) {
+        var e = L[q + 2], sz = S * (0.2 + 0.8 * e);
+        add(ox + L[q] * T + (T - sz) / 2, oy + L[q + 1] * T + (T - sz) / 2, sz, sz, sz * 0.26);
+      }
+      c.fill();
     }
   }
 
