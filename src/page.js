@@ -190,14 +190,14 @@
 
   /* ---------- Customer stories: locale links + hide the current story in "More stories" ----------
      Story links are plain URLs (/kunder/<slug>) because rich text and collection links cannot be page links;
-     on the English site they get the /en prefix (the collection path is not localised yet; see the launch list). */
+     on the English site they become /en/customers/<slug>. */
   (function stories() {
     // CMS item slugs that differ per locale (DA slug → EN slug)
     var EN_SLUG = { 'nordisk-it-servicekoncern': 'nordic-it-services-group' };
     qa('a[data-story]').forEach(function (a) {
       var slug = a.getAttribute('data-story');
       if (!DA) {
-        var h = (a.getAttribute('href') || '/kunder/' + slug).replace(/^\/en(?=\/)/, '');
+        var h = (a.getAttribute('href') || '/kunder/' + slug).replace(/^\/en(?=\/)/, '').replace(/^\/kunder\//, '/customers/');
         if (EN_SLUG[slug]) h = h.replace('/' + slug, '/' + EN_SLUG[slug]);
         a.setAttribute('href', '/en' + h);
       }
@@ -224,16 +224,22 @@
     }
   })();
 
+  // DA → EN CMS item slugs of the commission models (the EN items have their own slugs)
+  var MODEL_SLUG_EN = {"loebende-provision": "residual", "teambonus": "team", "delt-provision": "split", "forskud": "draw", "bruttomargin": "margin", "trappemodel": "tiered", "milepael": "milestone-bonus", "fast-sats": "flat-rate"};
   /* ---------- Plain internal links (set as URLs, not page links) get their English path on the English site ---------- */
   if (!DA) qa('.pw-legal__aside nav[aria-label]').forEach(function (n) { n.setAttribute('aria-label', 'Contents'); });
   if (!DA) {
     var EN_PATH = { '/byg-eller-koeb-provisionssoftware': '/build-or-buy-commission-software', '/karriere': '/careers', '/partnerprogram': '/partner-program', '/provisionsmodeller': '/commission-models', '/provisionsordbogen': '/commission-dictionary', '/virksomhedstyper-oversigt': '/business-types', '/integrationer': '/integrations',
       '/kunder': '/customers', '/pris': '/pricing', '/om-os': '/about-us', '/ote-beregner': '/ote-ratio-calculator', '/corrections-beregner': '/corrections-calculator' };
+    var EN_ITEM = { '/kunder': { base: '/customers', slugs: { 'nordisk-it-servicekoncern': 'nordic-it-services-group' } },
+      '/provisionsmodeller': { base: '/commission-models', slugs: MODEL_SLUG_EN } };
     qa('a[href^="/"]').forEach(function (a) {
       if (a.closest('.w-richtext')) return;
       var h = a.getAttribute('href'); if (/^\/en(\/|$)/.test(h) || /^\/\//.test(h)) return;
       var m = h.match(/^(\/[^\/?#]*)(.*)$/); var head = m ? m[1] : h, rest = m ? m[2] : '';
       if (EN_PATH[head] && (!rest || rest.charAt(0) !== '/')) head = EN_PATH[head];
+      // collection items: /kunder/<slug> → /customers/<slug>, /provisionsmodeller/<slug> → /commission-models/<en slug>
+      else if (rest.charAt(0) === '/' && EN_ITEM[head]) { var it = rest.match(/^\/([^\/?#]+)(.*)$/), ci = EN_ITEM[head]; if (it) { head = ci.base; rest = '/' + (ci.slugs[it[1]] || it[1]) + it[2]; } }
       a.setAttribute('href', '/en' + head + rest);
     });
   }
@@ -398,19 +404,21 @@
           var h = (l.getAttribute('hreflang') || '').toLowerCase(); return h === want || h.indexOf(want + '-') === 0;
         })[0];
         if (alt && alt.href) { try { var u = new URL(alt.href, w.location.href); return u.pathname + w.location.search + w.location.hash; } catch (e) {} }
-        // fallback: our own DA ↔ EN slug list (drafts and final URLs; model items keep the /provisionsmodeller path)
-        var SLUG_EN = {"/administration": "/commission-management", "/administration-2026": "/commission-management-2026", "/byg-eller-koeb-provisionssoftware": "/build-or-buy-commission-software", "/corrections-beregner": "/corrections-calculator", "/corrections-beregner-2026": "/corrections-calculator-2026", "/integrationer": "/integrations", "/karriere": "/careers", "/kunder": "/customers", "/medarbejder-app": "/employee-app", "/medarbejder-app-2026": "/employee-app-2026", "/om-os": "/about-us", "/om-os-2026": "/about-us-2026", "/ote-beregner": "/ote-ratio-calculator", "/ote-beregner-2026": "/ote-ratio-calculator-2026", "/partnerprogram": "/partner-program", "/platform-korrektioner-2026": "/platform-corrections-and-clawbacks-2026", "/platform-live-provision-2026": "/platform-live-commission-2026", "/platform-loen-2026": "/platform-payroll-2026", "/platform-opgoerelser-2026": "/platform-statements-and-approvals-2026", "/platform-provisionsmodeller-2026": "/platform-commission-models-2026", "/platform-studio-2026": "/platform-commission-studio-2026", "/platform/korrektioner-og-clawbacks": "/platform/corrections-and-clawbacks", "/platform/live-provision": "/platform/live-commission", "/platform/loen": "/platform/payroll", "/platform/opgoerelser-og-godkendelser": "/platform/statements-and-approvals", "/platform/provisionsmodeller": "/platform/commission-models", "/pris": "/pricing", "/pris-2026": "/pricing-2026", "/provisionsmodeller": "/commission-models", "/provisionsmodeller-2026": "/commission-models-2026", "/provisionsordbogen": "/commission-dictionary", "/provisionsordbogen-2026": "/commission-dictionary-2026", "/salgsledere": "/sales-leaders", "/salgsledere-2026": "/sales-leaders-2026", "/virksomhedstyper-oversigt": "/business-types", "/virksomhedstyper-oversigt-2026": "/business-types-2026"}, MODEL_EN = {"loebende-provision": "residual", "teambonus": "team", "delt-provision": "split", "forskud": "draw", "bruttomargin": "margin", "trappemodel": "tiered", "milepael": "milestone-bonus", "fast-sats": "flat-rate"};
+        // fallback: our own DA ↔ EN slug list (drafts and final URLs, plus the customer and model collection items)
+        var SLUG_EN = {"/administration": "/commission-management", "/administration-2026": "/commission-management-2026", "/byg-eller-koeb-provisionssoftware": "/build-or-buy-commission-software", "/corrections-beregner": "/corrections-calculator", "/corrections-beregner-2026": "/corrections-calculator-2026", "/integrationer": "/integrations", "/karriere": "/careers", "/kunder": "/customers", "/medarbejder-app": "/employee-app", "/medarbejder-app-2026": "/employee-app-2026", "/om-os": "/about-us", "/om-os-2026": "/about-us-2026", "/ote-beregner": "/ote-ratio-calculator", "/ote-beregner-2026": "/ote-ratio-calculator-2026", "/partnerprogram": "/partner-program", "/platform-korrektioner-2026": "/platform-corrections-and-clawbacks-2026", "/platform-live-provision-2026": "/platform-live-commission-2026", "/platform-loen-2026": "/platform-payroll-2026", "/platform-opgoerelser-2026": "/platform-statements-and-approvals-2026", "/platform-provisionsmodeller-2026": "/platform-commission-models-2026", "/platform-studio-2026": "/platform-commission-studio-2026", "/platform/korrektioner-og-clawbacks": "/platform/corrections-and-clawbacks", "/platform/live-provision": "/platform/live-commission", "/platform/loen": "/platform/payroll", "/platform/opgoerelser-og-godkendelser": "/platform/statements-and-approvals", "/platform/provisionsmodeller": "/platform/commission-models", "/pris": "/pricing", "/pris-2026": "/pricing-2026", "/provisionsmodeller": "/commission-models", "/provisionsmodeller-2026": "/commission-models-2026", "/provisionsordbogen": "/commission-dictionary", "/provisionsordbogen-2026": "/commission-dictionary-2026", "/salgsledere": "/sales-leaders", "/salgsledere-2026": "/sales-leaders-2026", "/virksomhedstyper-oversigt": "/business-types", "/virksomhedstyper-oversigt-2026": "/business-types-2026"}, MODEL_EN = MODEL_SLUG_EN, STORY_EN = { 'nordisk-it-servicekoncern': 'nordic-it-services-group' };
         var flip = function (o) { var r = {}; for (var k in o) r[o[k]] = k; return r; };
         var path = p.replace(/\/$/, '') || '/', mm;
         if (DA) {
           if (SLUG_EN[path]) path = SLUG_EN[path];
-          else if ((mm = path.match(/^\/provisionsmodeller\/([^\/]+)$/)) && MODEL_EN[mm[1]]) path = '/provisionsmodeller/' + MODEL_EN[mm[1]];
+          else if ((mm = path.match(/^\/provisionsmodeller\/([^\/]+)$/))) path = '/commission-models/' + (MODEL_EN[mm[1]] || mm[1]);
+          else if ((mm = path.match(/^\/kunder\/([^\/]+)$/))) path = '/customers/' + (STORY_EN[mm[1]] || mm[1]);
           return '/en' + (path === '/' ? '' : path) + w.location.search + w.location.hash;
         }
         path = path.replace(/^\/en(\/|$)/, '/').replace(/\/$/, '') || '/';
         var SD = flip(SLUG_EN), MD = flip(MODEL_EN);
         if (SD[path]) path = SD[path];
-        else if ((mm = path.match(/^\/provisionsmodeller\/([^\/]+)$/)) && MD[mm[1]]) path = '/provisionsmodeller/' + MD[mm[1]];
+        else if ((mm = path.match(/^\/(?:commission-models|provisionsmodeller)\/([^\/]+)$/))) path = '/provisionsmodeller/' + (MD[mm[1]] || mm[1]);
+        else if ((mm = path.match(/^\/(?:customers|kunder)\/([^\/]+)$/))) path = '/kunder/' + (flip(STORY_EN)[mm[1]] || mm[1]);
         return path + w.location.search + w.location.hash;
       };
       if (lb.tagName === 'A') lb.setAttribute('href', target());
