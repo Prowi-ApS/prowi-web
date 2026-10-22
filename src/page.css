@@ -127,7 +127,13 @@ body.pw-menu-open{overflow:hidden}
 .pw-demo-modal.is-booked .pw-dm__bk-back{animation:pwDmUp 600ms cubic-bezier(0.2,0.8,0.2,1) 1000ms both}
 .pw-demo-modal a.pw-dm__bk-back:hover{background-color:#F4F1FE;color:#110663}
 @media (max-width:899px){.pw-dm__grid{grid-template-columns:minmax(0,1fr)}.pw-dm__proof,.pw-dm__hs{display:none}.pw-dm__side{grid-row-gap:18px;padding:24px 22px}.pw-dm__steps{padding:8px 22px 20px}}
-@media (max-width:639px){.pw-demo-modal{padding:12px 0 0;align-items:flex-end}.pw-demo-modal__panel{height:100%;max-height:100%;border-radius:20px 20px 0 0}.pw-dm__side{padding:22px 20px;padding-right:64px}.pw-dm__steps{padding:4px 20px 24px}.pw-dm__calbox,.pw-dm__cal{min-height:460px}}
+@media (max-width:639px){.pw-demo-modal{padding:12px 0 0;align-items:flex-end}.pw-demo-modal__panel{height:100%;max-height:100%;border-radius:20px 20px 0 0}.pw-dm__side{padding:22px 20px;padding-right:64px}.pw-dm__steps{padding:4px 20px 24px}.pw-dm__calbox,.pw-dm__cal{min-height:460px}
+/* compact header and steps so step 1 (name, email, Continue) fits a phone screen without scrolling */
+.pw-dm .pw-dm__side{padding:16px 20px 18px;padding-right:60px;grid-row-gap:12px}.pw-dm .pw-dm__intro{grid-row-gap:6px}
+.pw-dm .pw-dm__avatar{width:44px;height:44px;border-radius:12px}.pw-dm .pw-dm__person{grid-column-gap:12px}.pw-dm .pw-dm__name{font-size:15px}.pw-dm .pw-dm__role{font-size:12.5px}
+.pw-dm .pw-dm__title{font-size:24px;line-height:1.15}.pw-dm .pw-dm__sub{font-size:14px;line-height:1.45}
+.pw-dm .pw-dm__meta{grid-column-gap:6px;grid-row-gap:6px}.pw-dm .pw-dm__chip{height:28px;padding:0 10px;font-size:12px;grid-column-gap:5px}
+.pw-dm .pw-dm__step{padding-top:12px;padding-bottom:12px;grid-row-gap:12px}.pw-dm .pw-dm__body{grid-row-gap:12px}}
 @media (prefers-reduced-motion:reduce){.pw-dm *{animation:none!important;transition:none!important}}
 /* Pricing: the toggle thumb stays inside its track; the check glyph uses the system font like the design (Readex Pro has no U+2713) */
 .pw-pricing__billing{overflow:hidden}
