@@ -1352,7 +1352,10 @@
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
       if (isDemoLink(a)) {
         e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-        var cls = (a.className && typeof a.className === 'string' ? a.className.split(/\s+/)[0] : '') || 'link';
+        // from the mobile menu: close it first (this capture handler stops the menu link's own close handler, so the
+        // menu, z-index 9000, would stay on top of the pop-up)
+        var mm = a.closest('.pw-menu'); if (mm) { var mc = q('.pw-menu__close', mm); if (mc) mc.click(); }
+        var cls =(a.className && typeof a.className === 'string' ? a.className.split(/\s+/)[0] : '') || 'link';
         var named = a.getAttribute('data-demo-source');
         open(named || cls, !!named);
       }
