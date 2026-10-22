@@ -1270,6 +1270,8 @@
       if (old) old.parentNode.replaceChild(box, old); else calBox.appendChild(box);
       var cfg = { layout: 'month_view', useSlotsViewOnSmallScreen: 'true', theme: 'light', email: em };
       if (nm) cfg.name = nm; var nt = notes(); if (nt) cfg.notes = nt;
+      // hidden booking questions on the Cal.com event type (identifiers reps / crm / heardvia): the answers reach the booking as their own fields
+      if (S.reps) cfg.reps = S.reps; if (S.crm) cfg.crm = S.crm; if (S.src) cfg.heardvia = S.src;
       w.Cal.ns['30min']('inline', { elementOrSelector: '#my-cal-inline-30min', calLink: CAL, config: cfg });
     };
     // booked
