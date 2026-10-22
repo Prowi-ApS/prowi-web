@@ -54,9 +54,11 @@
 
   var css = '#pw-cc{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2147483000;margin:0 auto;max-width:760px;' +
     'background:#fff;color:#110663;border:1px solid rgba(17,6,99,.12);border-radius:16px;box-shadow:0 18px 50px -12px rgba(17,6,99,.28);' +
-    'font:400 14px/1.5 inherit;font-family:inherit;padding:18px 20px;box-sizing:border-box;animation:pwCcIn .32s cubic-bezier(.2,.8,.2,1) both}' +
+    'font-family:inherit;font-size:14px;line-height:1.5;font-weight:400;padding:18px 20px;box-sizing:border-box;animation:pwCcIn .32s cubic-bezier(.2,.8,.2,1) both}' +
     '@keyframes pwCcIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}' +
     '#pw-cc *{box-sizing:border-box}' +
+    // Webflow makes every <label> bold with a bottom margin: reset it for the category rows
+    '#pw-cc label{font-weight:400;margin:0}' +
     '#pw-cc h2{margin:0 0 6px;font-size:15px;line-height:1.35;font-weight:500;color:#110663;letter-spacing:0}' +
     '#pw-cc p{margin:0;font-size:13.5px;line-height:1.5;color:#34326C}' +
     '#pw-cc a{color:#4C39CA;text-decoration:underline;text-underline-offset:2px}' +
@@ -69,7 +71,7 @@
     '#pw-cc .pw-cc__cats{display:none;margin-top:14px;border-top:1px solid rgba(17,6,99,.1)}#pw-cc.is-custom .pw-cc__cats{display:block}' +
     '#pw-cc.is-custom .pw-cc__more{display:none}' +
     '#pw-cc .pw-cc__cat{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(17,6,99,.1)}' +
-    '#pw-cc .pw-cc__cat b{display:block;font-weight:500;font-size:14px;color:#110663}#pw-cc .pw-cc__cat span{display:block;font-size:13px;color:#6664A0;margin-top:2px}' +
+    '#pw-cc .pw-cc__cat b{display:block;font-weight:500;font-size:14px;color:#110663}#pw-cc .pw-cc__cat span{display:block;font-size:13px;font-weight:400;color:#6664A0;margin-top:2px}' +
     '#pw-cc .pw-cc__fixed{flex:none;font-size:12.5px;color:#1E9E6A;font-weight:500;white-space:nowrap;padding-top:2px}' +
     '#pw-cc input[type=checkbox]{flex:none;-webkit-appearance:none;appearance:none;width:40px;height:24px;border-radius:999px;background:#D9D6EA;position:relative;cursor:pointer;margin:0;transition:background .16s}' +
     '#pw-cc input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(17,6,99,.25);transition:transform .16s}' +
