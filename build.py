@@ -122,6 +122,8 @@ open('dist/head-critical.html','w',encoding='utf-8').write('<style id="pw-css-cr
 parts.append('window.__PW_CSS = %s;\n'%json.dumps(CSS_MIN))
 parts.append(minify(PAGE)+'\n')
 parts.append(minify(open('src/tools/_shared.js',encoding='utf-8').read())+'\n')
+# cookie consent banner + footer "Cookie settings" link (replaces Conzent; the site head applies a stored choice early)
+parts.append(minify(open('src/consent.js',encoding='utf-8').read())+'\n')
 out=''.join(parts)
 open(OUT,'w',encoding='utf-8').write(out)
 print(OUT, len(out), 'bytes; chunks:', {k:os.path.getsize('dist/'+v['f']) for k,v in CHUNKS.items()})
