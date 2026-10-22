@@ -13,9 +13,9 @@
   // touch screens: dim the unread words without the per-word blur (iOS WebKit paints colour fringes between blurred
   // inline spans, and it is the expensive part of every scroll frame)
   var noBlur = !!(w.matchMedia && w.matchMedia('(hover: none), (pointer: coarse)').matches);
-  // touch screens with scroll timelines: the closing squares are real elements animated by the browser on the close
-  // section's view timeline (runs off the main thread, so it keeps up with iOS scrolling); elsewhere the canvas below
-  var CSST = noBlur && !reduced && !!(w.CSS && CSS.supports && CSS.supports('animation-timeline: view()') && CSS.supports('animation-range: cover 10% cover 20%'));
+  // touch screens: the closing squares are real elements in the page (so they scroll natively with it, no redrawn
+  // canvas); a light per-frame step only sets each square's scale. Elsewhere the canvas below.
+  var CSST = noBlur && !reduced;
 
   // The CTA label sits in a span inside a link block, which Webflow localization can't reach: translate it here.
   if (/^en/i.test(d.documentElement.getAttribute('lang') || '') || /^\/en(\/|$)/.test(w.location.pathname)) {
@@ -403,8 +403,9 @@
       }
     }
   }
-  if (CSST) (function cssTiles() {
-    var close = secs[secs.length - 1]; if (!close) return;
+  var tilesTick = null;
+  if (CSST) (function domTiles() {
+    var close = secs[secs.length - 1]; if (!close) { CSST = false; makeCanvas(); return; }
     root.setAttribute('data-mf-csst', '1');
     var gc = d.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d');
     gx.fillStyle = 'rgb(17,6,99)'; gx.fillRect(0, 0, 128, 128);
@@ -416,37 +417,44 @@
     cs.textContent =
       '[data-mf-csst] .pw-mf__close{position:relative;background:#110663 ' + grain + ' repeat}' +
       '[data-mf-csst] .mf-tl{position:absolute;left:0;right:0;bottom:calc(100% - 1px);pointer-events:none;z-index:2;overflow:clip}' +
-      '[data-mf-csst] .mf-t{position:absolute;border-radius:26%;background:#140874;transform:scale(.2);animation:mfT linear both;animation-timeline:view()}' +
-      '[data-mf-csst] .mf-t::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#7558E0;opacity:1;animation:mfTd linear both;animation-timeline:view();animation-range:inherit}' +
-      '@keyframes mfT{0%{transform:scale(0)}0.5%{transform:scale(.2)}100%{transform:scale(1.4)}}@keyframes mfTd{from{opacity:1}to{opacity:0}}';
+      '[data-mf-csst] .mf-t{position:absolute;display:block;border-radius:26%;background:#140874;transform:scale(0)}' +
+      '[data-mf-csst] .mf-t>b{position:absolute;inset:0;border-radius:inherit;background:#7558E0}';
     d.head.appendChild(cs);
     var layer = d.createElement('div'); layer.className = 'mf-tl'; layer.setAttribute('aria-hidden', 'true');
     close.insertBefore(layer, close.firstChild);
     var wave = function (i2) { return 0.5 + 0.3 * Math.sin(i2 * 0.47 + 1.3) + 0.2 * Math.sin(i2 * 1.13 + 4.1); };
-    var lastW = 0;
+    var lastW = 0, list = [];
     var build = function () {
       var W = root.clientWidth || w.innerWidth, vh = w.innerHeight || 800;
-      if (Math.abs(W - lastW) < 2 && layer.childNodes.length) return; lastW = W;
+      if (Math.abs(W - lastW) < 2 && list.length) return; lastW = W;
       var T = Math.max(32, Math.min(44, Math.round(W / 34))), S = T * 0.9, cols = Math.ceil(W / T) + 1, rows = Math.ceil(vh / T) + 1, H = rows * T;
-      var ox = (W - (cols - 1) * T) / 2 - T / 2, K = 5, WIN = vh * 0.5, html = '';
+      var ox = (W - (cols - 1) * T) / 2 - T / 2, K = 5, WIN = vh * 0.5, html = '', ranges = [];
       // a tile `h` px above the close is finished once the close top is (K-1)*h above the viewport bottom: the dark
-      // rises a little faster than the page and covers the screen when the close top reaches 20% (as the canvas does)
+      // rises a little faster than the page and covers the screen when the close top reaches about 20%
       for (var r = 0; r < rows; r++) for (var i = 0; i < cols; i++) {
         var hgt = (r + 0.5) * T, jit = (wave(i) * 0.75 + hash(i, r) * 0.25 - 0.5) * vh * 0.7;
         var end = Math.max(30, (K - 1) * hgt + jit), start = Math.max(0, end - WIN);
-        // each tile runs on its own view timeline (like the home hero tilt): shift by its height above the close and
-        // express the range in % of its cover range (viewport + tile), which every engine with view() accepts
-        var off = hgt + S / 2, span = vh + S, a0 = (start + off) / span * 100, a1 = (end + off) / span * 100;
-        html += '<i class="mf-t" style="left:' + (ox + i * T + (T - S) / 2).toFixed(1) + 'px;top:' + (H - (r + 1) * T + (T - S) / 2).toFixed(1) + 'px;width:' + S.toFixed(1) + 'px;height:' + S.toFixed(1) + 'px;animation-range:cover ' + a0.toFixed(2) + '% cover ' + a1.toFixed(2) + '%"></i>';
+        ranges.push([start, end]);
+        html += '<i class="mf-t" style="left:' + (ox + i * T + (T - S) / 2).toFixed(1) + 'px;top:' + (H - (r + 1) * T + (T - S) / 2).toFixed(1) + 'px;width:' + S.toFixed(1) + 'px;height:' + S.toFixed(1) + 'px"><b></b></i>';
       }
       layer.style.height = H + 'px'; layer.innerHTML = html;
+      list = Array.prototype.map.call(layer.children, function (el, n) { return { el: el, b: el.firstChild, s0: ranges[n][0], s1: ranges[n][1], q: -1 }; });
     };
     build();
-    // safety net: if this browser accepted the CSS but does not run the timelines, fall back to the canvas
-    var ok = false;
-    try { var an = layer.firstChild && layer.firstChild.getAnimations ? layer.firstChild.getAnimations() : []; ok = !!(an.length && an[0].timeline && an[0].timeline.constructor && /View/.test(an[0].timeline.constructor.name || 'View')); } catch (e) { ok = false; }
-    if (!ok) { layer.remove(); cs.remove(); root.removeAttribute('data-mf-csst'); CSST = false; makeCanvas(); return; }
-    var bT = 0; w.addEventListener('resize', function () { clearTimeout(bT); bT = setTimeout(build, 200); });
+    // per frame: progress of each tile from how far the close top has risen above the viewport bottom (only the
+    // tiles whose step changed are touched, and only transform / opacity, so the browser just recomposites)
+    tilesTick = function () {
+      var vh = w.innerHeight || 800, rise = vh - close.getBoundingClientRect().top;
+      for (var n = 0; n < list.length; n++) {
+        var o = list[n], t = (rise - o.s0) / (o.s1 - o.s0);
+        var q = t <= 0 ? 0 : t >= 1 ? 48 : Math.round(t * 48);
+        if (q === o.q) continue; o.q = q;
+        var p = q / 48;
+        o.el.style.transform = q === 0 ? 'scale(0)' : 'scale(' + (0.2 + 1.2 * p).toFixed(3) + ')';
+        o.b.style.opacity = (1 - p).toFixed(3);
+      }
+    };
+    var bT = 0; w.addEventListener('resize', function () { clearTimeout(bT); bT = setTimeout(function () { build(); tilesTick(); }, 200); });
   })();
   if (SDA) {
     // clear the inline states the JS mode would have set, then hand over to the browser
@@ -456,6 +464,8 @@
     var _m = measure; measure = function () { _m(); measureSDA(); };
     if (w.ResizeObserver) { var roT = 0, lastH = 0; new ResizeObserver(function () { var hh = root.offsetHeight; if (Math.abs(hh - lastH) < 2) return; lastH = hh; clearTimeout(roT); roT = setTimeout(function () { measure(); _edge = -1; paint(); }, 150); }).observe(root); }
   }
+
+  if (tilesTick) { var _pt = paint; paint = function () { _pt(); tilesTick(); }; }
 
   var rT = 0;
   var rafAt = 0;
