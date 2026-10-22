@@ -584,7 +584,9 @@
           node.parentNode.replaceChild(frag, node);
         } else if (node.nodeType === 1 && node.tagName !== 'BR') { Array.from(node.childNodes).forEach(wrap); }
       };
-      Array.from(h1.childNodes).forEach(wrap);
+      // phones: the title stays as painted (no letter-by-letter typing). It is the LCP element, and typing it in
+      // pushed mobile LCP from ~4 s to ~6.3 s. Subtitle, badge and CTAs still animate in; desktop is unchanged.
+      if (!(w.matchMedia && w.matchMedia('(max-width: 767px)').matches)) Array.from(h1.childNodes).forEach(wrap);
       // subtitle: wrap sentences
       var lines = [];
       if (sub) {
