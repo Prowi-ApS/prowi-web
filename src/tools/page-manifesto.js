@@ -241,7 +241,7 @@
         _edge = P;
         drawTiles(reduced ? (P >= 0.5 ? 1 : 0) : P);
         var mean = secs[secs.length - 2]; if (mean) { var mo = 1 - Math.max(0, Math.min(1, (P - 0.45) / 0.45)); mo = Math.round(mo * 50) / 50; if (mo !== _mo) { _mo = mo; mean.style.opacity = String(mo); } }
-        var dark = P > 0.3; if (dark !== _bodyDark) { _bodyDark = dark; d.body.classList.toggle('pw-mf-dark', dark); }
+        var dark = P > 0.12; if (dark !== _bodyDark) { _bodyDark = dark; d.body.classList.toggle('pw-mf-dark', dark); }
         var run = P >= 0.95; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
       }
     }
@@ -380,7 +380,7 @@
       P = Math.round(P * 400) / 400; _cq = P;
       if (P !== _edge) {
         _edge = P; drawTiles(P);
-        var dk = P > 0.3; if (dk !== _bodyDark) { _bodyDark = dk; d.body.classList.toggle('pw-mf-dark', dk); }
+        var dk = P > 0.12; if (dk !== _bodyDark) { _bodyDark = dk; d.body.classList.toggle('pw-mf-dark', dk); }
         var run = P >= 0.95; if (run !== _orbRun) { _orbRun = run; orbs.forEach(function (o) { o.style.animationPlayState = run ? 'running' : 'paused'; }); }
       }
     }
