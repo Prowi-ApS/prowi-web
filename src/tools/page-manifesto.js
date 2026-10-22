@@ -416,12 +416,15 @@
     var cs = d.createElement('style'); cs.id = 'pw-mf-csst';
     cs.textContent =
       '[data-mf-csst] .pw-mf__close{position:relative;background:#110663 ' + grain + ' repeat}' +
-      '[data-mf-csst] .mf-tl{position:absolute;left:0;right:0;bottom:calc(100% - 1px);pointer-events:none;z-index:2;overflow:clip}' +
+      // the layer hangs above the close from a zero-height holder just before it (the close itself clips its overflow)
+      '[data-mf-csst] .mf-tw{position:relative;height:0;z-index:3;pointer-events:none}' +
+      '[data-mf-csst] .mf-tl{position:absolute;left:0;right:0;bottom:-1px;pointer-events:none;overflow:hidden}' +
       '[data-mf-csst] .mf-t{position:absolute;display:block;border-radius:26%;background:#140874;transform:scale(0)}' +
       '[data-mf-csst] .mf-t>b{position:absolute;inset:0;border-radius:inherit;background:#7558E0}';
     d.head.appendChild(cs);
-    var layer = d.createElement('div'); layer.className = 'mf-tl'; layer.setAttribute('aria-hidden', 'true');
-    close.insertBefore(layer, close.firstChild);
+    var hold = d.createElement('div'); hold.className = 'mf-tw'; hold.setAttribute('aria-hidden', 'true');
+    var layer = d.createElement('div'); layer.className = 'mf-tl'; hold.appendChild(layer);
+    close.parentNode.insertBefore(hold, close);
     var wave = function (i2) { return 0.5 + 0.3 * Math.sin(i2 * 0.47 + 1.3) + 0.2 * Math.sin(i2 * 1.13 + 4.1); };
     var lastW = 0, list = [];
     var build = function () {
