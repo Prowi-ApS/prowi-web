@@ -13,6 +13,9 @@
   // touch screens: dim the unread words without the per-word blur (iOS WebKit paints colour fringes between blurred
   // inline spans, and it is the expensive part of every scroll frame)
   var noBlur = !!(w.matchMedia && w.matchMedia('(hover: none), (pointer: coarse)').matches);
+  // touch screens with scroll timelines: the closing squares are real elements animated by the browser on the close
+  // section's view timeline (runs off the main thread, so it keeps up with iOS scrolling); elsewhere the canvas below
+  var CSST = noBlur && !reduced && !!(w.CSS && CSS.supports && CSS.supports('animation-timeline: view()') && CSS.supports('animation-range: 0px 100px') && CSS.supports('view-timeline-name: --mfc'));
 
   // The CTA label sits in a span inside a link block, which Webflow localization can't reach: translate it here.
   if (/^en/i.test(d.documentElement.getAttribute('lang') || '') || /^\/en(\/|$)/.test(w.location.pathname)) {
@@ -106,7 +109,7 @@
 
   /* ---------- tiles: the transition into the close ---------- */
   var tiles = null, tctx = null, tW = 0, tH = 0, tDpr = 1;
-  if (curtain && curtain.parentNode) {
+  if (curtain && curtain.parentNode && !CSST) {
     tiles = d.createElement('canvas'); tiles.setAttribute('data-mf-tiles', '1'); tiles.setAttribute('aria-hidden', 'true');
     curtain.parentNode.insertBefore(tiles, curtain.nextSibling);
     tctx = tiles.getContext('2d');
@@ -398,6 +401,44 @@
       }
     }
   }
+  if (CSST) (function cssTiles() {
+    var close = secs[secs.length - 1]; if (!close) return;
+    root.setAttribute('data-mf-csst', '1');
+    var gc = d.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d');
+    gx.fillStyle = 'rgb(17,6,99)'; gx.fillRect(0, 0, 128, 128);
+    var im = gx.getImageData(0, 0, 128, 128), a = im.data;
+    for (var k = 0; k < a.length; k += 4) { var rnd = Math.random(), g = rnd * rnd * rnd * 0.47; a[k] = Math.round(a[k] + (40 - a[k]) * g); a[k + 1] = Math.round(a[k + 1] + (20 - a[k + 1]) * g); a[k + 2] = Math.round(a[k + 2] + (255 - a[k + 2]) * g); }
+    gx.putImageData(im, 0, 0);
+    var grain = 'url(' + gc.toDataURL('image/png') + ')';
+    var cs = d.createElement('style'); cs.id = 'pw-mf-csst';
+    cs.textContent =
+      '[data-mf-csst] .pw-mf__close{position:relative;background:#110663 ' + grain + ' repeat;view-timeline:--mfc block}' +
+      '[data-mf-csst] .mf-tl{position:absolute;left:0;right:0;bottom:calc(100% - 1px);pointer-events:none;z-index:2;overflow:hidden}' +
+      '[data-mf-csst] .mf-t{position:absolute;border-radius:26%;background:#140874;transform:scale(.2);animation:mfT linear both;animation-timeline:--mfc}' +
+      '[data-mf-csst] .mf-t::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#7558E0;opacity:1;animation:mfTd linear both;animation-timeline:--mfc;animation-range:inherit}' +
+      '@keyframes mfT{0%{transform:scale(0)}0.5%{transform:scale(.2)}100%{transform:scale(1.4)}}@keyframes mfTd{from{opacity:1}to{opacity:0}}';
+    d.head.appendChild(cs);
+    var layer = d.createElement('div'); layer.className = 'mf-tl'; layer.setAttribute('aria-hidden', 'true');
+    close.insertBefore(layer, close.firstChild);
+    var wave = function (i2) { return 0.5 + 0.3 * Math.sin(i2 * 0.47 + 1.3) + 0.2 * Math.sin(i2 * 1.13 + 4.1); };
+    var lastW = 0;
+    var build = function () {
+      var W = root.clientWidth || w.innerWidth, vh = w.innerHeight || 800;
+      if (Math.abs(W - lastW) < 2 && layer.childNodes.length) return; lastW = W;
+      var T = Math.max(32, Math.min(44, Math.round(W / 34))), S = T * 0.9, cols = Math.ceil(W / T) + 1, rows = Math.ceil(vh / T) + 1, H = rows * T;
+      var ox = (W - (cols - 1) * T) / 2 - T / 2, K = 5, WIN = vh * 0.5, html = '';
+      // a tile `h` px above the close is finished once the close top is (K-1)*h above the viewport bottom: the dark
+      // rises a little faster than the page and covers the screen when the close top reaches 20% (as the canvas does)
+      for (var r = 0; r < rows; r++) for (var i = 0; i < cols; i++) {
+        var hgt = (r + 0.5) * T, jit = (wave(i) * 0.75 + hash(i, r) * 0.25 - 0.5) * vh * 0.7;
+        var end = Math.max(30, (K - 1) * hgt + jit), start = Math.max(0, end - WIN);
+        html += '<i class="mf-t" style="left:' + (ox + i * T + (T - S) / 2).toFixed(1) + 'px;top:' + (H - (r + 1) * T + (T - S) / 2).toFixed(1) + 'px;width:' + S.toFixed(1) + 'px;height:' + S.toFixed(1) + 'px;animation-range:cover ' + Math.round(start) + 'px cover ' + Math.round(end) + 'px"></i>';
+      }
+      layer.style.height = H + 'px'; layer.innerHTML = html;
+    };
+    build();
+    var bT = 0; w.addEventListener('resize', function () { clearTimeout(bT); bT = setTimeout(build, 200); });
+  })();
   if (SDA) {
     // clear the inline states the JS mode would have set, then hand over to the browser
     revs.forEach(function (o) { o.el.style.opacity = ''; o.el.style.transform = ''; o.tracks.forEach(function (h) { h.style.letterSpacing = ''; }); });
