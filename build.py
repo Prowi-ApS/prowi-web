@@ -97,6 +97,8 @@ TOOL_ROOTS={
  'calc-holiday':['[data-tool="holiday-pay"]'],
  'calc-absence':['[data-tool="sick-pay"]'],
  'calc-quota':['[data-tool="quota"]'],
+ # Provisionsplan-tjek / commission plan health check (feature/plan-health-check)
+ 'healthcheck':['[data-tool="health-check"]'],
  'corrections':['[data-tool="corrections"]'],
  'fit':['[data-tool="fit"]'],
  'ote':['[data-tool="ote"]'],
