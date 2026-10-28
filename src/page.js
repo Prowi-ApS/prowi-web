@@ -425,7 +425,7 @@
       lb.addEventListener('click', function (e) { e.preventDefault(); w.location.href = target(); });
     }
 
-    // Burger + full-screen menu (≤991px)
+    // Burger + full-screen menu (≤1199px)
     var right = q('.pw-nav__actions', bar);
     if (right) {
       var T = NAVTXT[LANG], R = ROUTES[LANG];
@@ -487,7 +487,7 @@
         });
       });
       d.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
-      w.addEventListener('resize', function () { if (vw() > 991) closeMenu(); });
+      w.addEventListener('resize', function () { if (vw() > 1199) closeMenu(); });
     }
     // "Why Prowi" anchor → the problem section on the homepage; from other pages it goes to the homepage's section
     var why = trigs[0];

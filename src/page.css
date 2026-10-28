@@ -46,7 +46,8 @@
 .pw-js .pw-platform__chip--accelerator{animation:pwBob 4.8s ease-in-out 0.9s infinite}
 .pw-js .pw-platform__chip--trophy{animation:pwBob 3.9s ease-in-out 1.7s infinite}
 .pw-burger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border:0;border-radius:8px;background:var(--_prowi---pw-bg-subtle,#F4F1FE);color:var(--_prowi---pw-dark-purple,#110663);cursor:pointer}
-@media (max-width:991px){.pw-burger{display:inline-flex}}
+/* Burger from 1199px down: the full desktop nav (logo, 5 items, language, log in, demo) needs about 1180px */
+@media (max-width:1199px){.pw-burger{display:inline-flex}.pw-nav__menu,.pw-nav__login{display:none!important}}
 .pw-menu{position:fixed;inset:0;z-index:9000;background:linear-gradient(155deg,#0C0550 0%,#1B0E80 52%,#3826A8 100%);color:#fff;display:flex;flex-direction:column;padding:clamp(16px,4vw,40px);overflow:auto;animation:pwMenuIn 320ms cubic-bezier(0.2,0.6,0.2,1) both;font-family:inherit}
 .pw-menu__top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .pw-menu__close{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:0 14px 0 18px;height:40px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
