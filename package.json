@@ -1,6 +1,6 @@
 {
   "name": "prowi-web",
-  "version": "1.25.52",
+  "version": "1.25.53",
   "description": "JavaScript for the 2026 prowi.io site (Webflow). One bundle, served via jsDelivr:",
   "main": "index.js",
   "scripts": {
