@@ -4,7 +4,8 @@
    - search matches category + name + summary (case-insensitive substring), chips filter by category, "n of N" count,
      chips with no hits under the current search turn pale, cards re-enter with the listIn stagger, empty state below the grid;
    - the kategori option holds Danish names (Tech, Salg, Finans, ...); on English pages they are shown in English;
-   - item page: the collection list loads 4 items (sorted like the hub), the current item is hidden and 3 remain. */
+   - item page: the collection list loads all items (sorted like the hub); 3 are shown: same category first, then the
+     items after the current one in hub order. The rest stay in the HTML (crawlable links) but are hidden. */
 (function () {
   var hub = document.querySelector('[data-types="hub"]');
   var item = document.querySelector('[data-types="item"]');
@@ -51,17 +52,24 @@
   }
 
   if (item) {
+    // The list loads every business type (sorted like the hub). Show 3 related ones: same category first,
+    // then the ones that follow the current page in hub order (wrapping), so each page points somewhere different.
     var more = [].slice.call(item.querySelectorAll('.pw-type__more-card'));
     localiseCats(more);
     var here = location.pathname.replace(/\/+$/, '').split('/').pop();
-    var shown = 0;
-    more.forEach(function (a) {
-      var slug = (a.getAttribute('href') || '').split(/[?#]/)[0].replace(/\/+$/, '').split('/').pop();
-      var mine = !!slug && slug === here;
-      var hide = mine || shown >= 3;
-      cellOf(a).style.display = hide ? 'none' : '';
-      if (!hide) shown++;
-    });
+    function slugOf(a) { return (a.getAttribute('href') || '').split(/[?#]/)[0].replace(/\/+$/, '').split('/').pop(); }
+    var pos = -1;
+    more.forEach(function (a, i) { if (slugOf(a) === here) pos = i; });
+    var myCat = pos >= 0 ? catOf(more[pos]) : '';
+    var order = [];
+    for (var k = 1; k < more.length; k++) order.push(more[((pos < 0 ? -1 : pos) + k + more.length) % more.length]);
+    if (pos < 0) order = more.slice();
+    var pick = order.filter(function (a) { return myCat && catOf(a) === myCat; });
+    order.forEach(function (a) { if (pick.indexOf(a) === -1) pick.push(a); });
+    pick = pick.slice(0, 3);
+    more.forEach(function (a) { cellOf(a).style.display = pick.indexOf(a) === -1 ? 'none' : ''; });
+    // keep the chosen three in the chosen order
+    pick.forEach(function (a) { var c = cellOf(a); if (c.parentNode) c.parentNode.appendChild(c); });
   }
 
   if (!hub) return;

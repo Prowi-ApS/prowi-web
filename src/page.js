@@ -230,7 +230,7 @@
   if (!DA) qa('.pw-legal__aside nav[aria-label]').forEach(function (n) { n.setAttribute('aria-label', 'Contents'); });
   if (!DA) {
     var EN_PATH = { '/byg-eller-koeb-provisionssoftware': '/build-or-buy-commission-software', '/karriere': '/careers', '/partnerprogram': '/partner-program', '/provisionsmodeller': '/commission-models', '/provisionsordbogen': '/commission-dictionary', '/virksomhedstyper-oversigt': '/business-types', '/integrationer': '/integrations',
-      '/kunder': '/customers', '/pris': '/pricing', '/om-os': '/about-us', '/ote-beregner': '/ote-ratio-calculator', '/corrections-beregner': '/corrections-calculator' };
+      '/kunder': '/customers', '/pris': '/pricing', '/om-os': '/about-us', '/ote-beregner': '/ote-ratio-calculator', '/corrections-beregner': '/corrections-calculator', '/provisionsberegner': '/commission-calculator' };
     var EN_ITEM = { '/kunder': { base: '/customers', slugs: { 'nordisk-it-servicekoncern': 'nordic-it-services-group' } },
       '/provisionsmodeller': { base: '/commission-models', slugs: MODEL_SLUG_EN } };
     qa('a[href^="/"]').forEach(function (a) {
