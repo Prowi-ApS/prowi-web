@@ -72,7 +72,7 @@ Object.keys(H.RES).forEach(k => {
   ok(/^\/en\//.test(H.RES[k].en[0]), 'EN path ' + k);
 });
 H.Q.forEach(q => q.opts.forEach(o => { if (o[3]) ok(!!H.RES[H.res(o[3])], 'resource ' + o[3]); }));
-is(H.res('roles'), 'plan', 'role plans hub falls back to the plan template until it is live');
+is(H.res('roles'), 'roles', 'role plans hub is live and linked');
 
 // copy rules: no acute accents in Danish, no competitor names anywhere, Danish number formats
 const dump = L => JSON.stringify(H.T[L]);

@@ -38,7 +38,7 @@
     // role plans hub: set ROLE_HUB to true once /post/provisionsplaner-pr-rolle is published in both locales
     roles: { da: ['/post/provisionsplaner-pr-rolle', 'Provisionsplaner pr. rolle'], en: ['/en/post/commission-plans-by-role', 'Commission plans by role'] }
   };
-  var ROLE_HUB = false;
+  var ROLE_HUB = true;
   function res(key) { return key === 'roles' && !ROLE_HUB ? 'plan' : key; }
 
   /* ---------------- areas and questions ----------------
