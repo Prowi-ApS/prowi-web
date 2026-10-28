@@ -182,6 +182,38 @@
         w.className = 'pw-post__table-scroll';
         t.parentNode.insertBefore(w, t); w.appendChild(t);
       });
+      // 4. a paragraph that is only a file link (.xlsx/.docx/.pdf/.csv) becomes a download card: file icon, title,
+      //    format line and a button. The original <a> is moved into the card as the button, so the href, the download
+      //    attribute and the link text stay crawlable; without JS the plain link remains.
+      each(body.querySelectorAll('a[href]'), function (a) {
+        if (a.closest('.pw-dl')) return;
+        var m = (a.getAttribute('href') || '').split(/[?#]/)[0].match(/\.(xlsx|xls|csv|docx|doc|pdf)$/i);
+        if (!m) return;
+        var p = a.closest('p');
+        if (!p || !body.contains(p) || txt(p) !== txt(a)) return;
+        var ext = m[1].toLowerCase();
+        var K = /xls|csv/.test(ext) ? { c: '#1D7A46', da: 'Excel-regneark', en: 'Excel workbook' }
+          : /doc/.test(ext) ? { c: '#2B5797', da: 'Word-dokument', en: 'Word document' }
+          : { c: '#B42318', da: 'PDF-dokument', en: 'PDF document' };
+        var label = txt(a);
+        var title = label.replace(/\s*\([^)]*\)\s*$/, '');
+        var card = document.createElement('div');
+        card.className = 'pw-dl';
+        card.innerHTML =
+          '<span class="pw-dl__icon" aria-hidden="true"><svg viewBox="0 0 40 48" width="40" height="48">' +
+          '<path d="M5 0h21l14 14v29a5 5 0 0 1-5 5H5a5 5 0 0 1-5-5V5a5 5 0 0 1 5-5z" fill="' + K.c + '"/>' +
+          '<path d="M26 0v9a5 5 0 0 0 5 5h9z" fill="#fff" fill-opacity=".38"/>' +
+          '<text x="20" y="37" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9.5" font-weight="700" fill="#fff" letter-spacing=".3">' +
+          ext.toUpperCase() + '</text></svg></span>' +
+          '<span class="pw-dl__text"><span class="pw-dl__title"></span><span class="pw-dl__meta"></span></span>';
+        card.querySelector('.pw-dl__title').textContent = title;
+        card.querySelector('.pw-dl__meta').textContent = (isEn ? K.en : K.da) + ' · .' + ext + (isEn ? ' · Free, no sign-up' : ' · Gratis, uden tilmelding');
+        a.setAttribute('aria-label', label);
+        a.classList.add('pw-dl__btn');
+        a.innerHTML = '<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>' + (isEn ? 'Download' : 'Download') + '</span>';
+        card.appendChild(a);
+        p.parentNode.replaceChild(card, p);
+      });
     }
     }
     prep();

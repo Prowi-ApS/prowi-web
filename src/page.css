@@ -241,3 +241,15 @@ body:has(> .pw-root){background-color:var(--_prowi---pw-base,#ECE7E5)}
 .pw-board__opt{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;font-size:13px;color:#0f172a;text-align:left;white-space:nowrap;padding:8px 12px;border-radius:8px;cursor:pointer}
 .pw-board__opt:hover,.pw-board__opt:focus-visible{background:#f1f0f9;outline:none}
 .pw-board__opt--on{font-weight:600;color:#4c3cb4}
+/* Download card in posts (cms-insider.js turns a paragraph that is only a file link into this) */
+.pw-dl,.pw-dl *{box-sizing:border-box}
+.pw-dl{display:flex;align-items:center;gap:16px;margin:28px 0;padding:18px 20px;background:#F4F1FE;border:1px solid rgba(17,6,99,.10);border-radius:16px}
+.pw-dl__icon{flex:0 0 auto;display:flex;filter:drop-shadow(0 2px 4px rgba(17,6,99,.12))}
+.pw-dl__text{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pw-dl__title{color:#110663;font-size:17px;line-height:1.35;font-weight:500;text-wrap:balance}
+.pw-dl__meta{color:#5E5B98;font-size:13px;line-height:1.4}
+.w-richtext a.pw-dl__btn,a.pw-dl__btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;background:#110663;color:#fff!important;font-size:15px;font-weight:500;line-height:1;text-decoration:none!important;transition:background-color 160ms,transform 160ms}
+a.pw-dl__btn:hover{background:#4C39CA}
+a.pw-dl__btn:active{transform:translateY(1px)}
+a.pw-dl__btn:focus-visible{outline:2px solid #46D3F7;outline-offset:3px}
+@media (max-width:560px){.pw-dl{flex-wrap:wrap}.pw-dl__text{flex-basis:calc(100% - 56px)}a.pw-dl__btn{width:100%;justify-content:center}}
