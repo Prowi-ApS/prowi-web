@@ -76,6 +76,11 @@ PAGE=re.sub(r'^(\s*)var (M|MT|SCOPED) = (.*?);[ \t]*(?:/\*[^\n]*?\*/)?[ \t]*$',_
 assert sorted(EN)==['M','MT','SCOPED'], 'page.js: enStrings maps not found (%s)'%sorted(EN)
 emit('en','chunks/en.js',minify('window.__PW_EN={M:%s,MT:%s,SCOPED:%s};'%(EN['M'],EN['MT'],EN['SCOPED']))+'\n')
 
+# 3b. CMS slug pairs (dist/chunks/slugs.js): DA slug -> EN slug per collection (src/cms-slugs.json, built by
+#     scripts/cms_slugs.py). Not tied to a selector: page.js asks for it on CMS item pages, for the language switch.
+_SLUGS=json.load(open('src/cms-slugs.json',encoding='utf-8'))
+emit('slugs','chunks/slugs.js',minify('window.__PW_SLUGS=%s;'%json.dumps(_SLUGS,ensure_ascii=False,separators=(',',':')))+'\n')
+
 # 4. Page modules (src/tools/*.js): one file each, fetched only when its root element is on the page.
 #    Every module also guards on the same root itself. _shared.js (a few hundred bytes) stays in the entry.
 TOOL_ROOTS={
@@ -84,6 +89,14 @@ TOOL_ROOTS={
  'cms-insider':['[data-insider="hub"]','[data-insider="post"]'],
  'cms-integrations':['[data-cms-hub="integrations"]','[data-cms-item="integrations"]'],
  'cms-models':['[data-models="hub"]','[data-models="item"]'],
+ # free calculators (v1.25.51): calc-kit builds the markup for all six; each calculator module only describes itself
+ 'calc-kit':['[data-tool="tiers"]','[data-tool="accelerator"]','[data-tool="split"]','[data-tool="holiday-pay"]','[data-tool="sick-pay"]','[data-tool="quota"]'],
+ 'calc-tiers':['[data-tool="tiers"]'],
+ 'calc-accelerator':['[data-tool="accelerator"]'],
+ 'calc-split':['[data-tool="split"]'],
+ 'calc-holiday':['[data-tool="holiday-pay"]'],
+ 'calc-absence':['[data-tool="sick-pay"]'],
+ 'calc-quota':['[data-tool="quota"]'],
  'corrections':['[data-tool="corrections"]'],
  'fit':['[data-tool="fit"]'],
  'ote':['[data-tool="ote"]'],

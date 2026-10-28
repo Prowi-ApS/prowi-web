@@ -1,6 +1,8 @@
 /* Cookie consent (replaces Conzent). One first-party cookie "pw_consent" = "v1.s<0|1>.m<0|1>.<unix time>", 12 months,
    on .prowi.io (covers www and the bare domain). Categories: necessary (always), statistics (HubSpot analytics +
-   OctoReports + Google analytics_storage), marketing (Google ad_* signals + HubSpot advertisement).
+   Google analytics_storage), marketing (Google ad_* signals + HubSpot advertisement).
+   The 'prowiConsentGranted' event this file used to dispatch (for OctoReports in the old site head) is gone since
+   v1.25.51: nothing on the site listens to it any more. pw_consent_update in dataLayer is the signal to use.
    The site head (Webflow site custom code) reads the same cookie before HubSpot/GTM load, sets
    window.disableHubSpotCookieBanner and pushes the stored state to HubSpot and Google consent mode; this file is the UI,
    the "Cookie settings" footer link and the update when a visitor chooses. HubSpot itself always loads (forms, chat);
@@ -40,7 +42,6 @@
     d.cookie = NAME + '=' + encodeURIComponent('v1.s' + (c.s ? 1 : 0) + '.m' + (c.m ? 1 : 0) + '.' + Math.round(Date.now() / 1000)) +
       ';path=/;max-age=31536000;SameSite=Lax' + (w.location.protocol === 'https:' ? ';Secure' : '') + dom;
   };
-  var octoFired = false;
   var apply = function (c, prev) {
     var g = function (x) { return x ? 'granted' : 'denied'; };
     if (typeof w.gtag === 'function') w.gtag('consent', 'update', { analytics_storage: g(c.s), ad_storage: g(c.m), ad_user_data: g(c.m), ad_personalization: g(c.m) });
@@ -49,7 +50,6 @@
     w._hsp.push(['setHubSpotConsent', { analytics: c.s, advertisement: c.m, functionality: c.s }]);
     // withdrawn: drop HubSpot's tracking cookies
     if (prev && prev.s && !c.s) w._hsp.push(['revokeCookieConsent']);
-    if (c.s && !octoFired) { octoFired = true; try { d.dispatchEvent(new CustomEvent('prowiConsentGranted')); } catch (e) {} }
   };
 
   var css = '#pw-cc{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2147483000;margin:0 auto;max-width:760px;' +
@@ -126,7 +126,7 @@
   var start = function () {
     addLink();
     var c = read();
-    if (c) { prevState = c; if (c.s) { octoFired = true; try { d.dispatchEvent(new CustomEvent('prowiConsentGranted')); } catch (e) {} } return; }
+    if (c) { prevState = c; return; }
     // first visit: show after first paint so the banner never competes with the page for loading
     setTimeout(function () { open(false); }, 600);
   };

@@ -230,7 +230,10 @@
   if (!DA) qa('.pw-legal__aside nav[aria-label]').forEach(function (n) { n.setAttribute('aria-label', 'Contents'); });
   if (!DA) {
     var EN_PATH = { '/byg-eller-koeb-provisionssoftware': '/build-or-buy-commission-software', '/karriere': '/careers', '/partnerprogram': '/partner-program', '/provisionsmodeller': '/commission-models', '/provisionsordbogen': '/commission-dictionary', '/virksomhedstyper-oversigt': '/business-types', '/integrationer': '/integrations',
-      '/kunder': '/customers', '/pris': '/pricing', '/om-os': '/about-us', '/ote-beregner': '/ote-ratio-calculator', '/corrections-beregner': '/corrections-calculator', '/provisionsberegner': '/commission-calculator' };
+      '/kunder': '/customers', '/pris': '/pricing', '/om-os': '/about-us', '/ote-beregner': '/ote-ratio-calculator', '/corrections-beregner': '/corrections-calculator', '/provisionsberegner': '/commission-calculator',
+      '/manifestet': '/manifesto', '/trappemodel-beregner': '/tiered-commission-calculator', '/accelerator-beregner': '/commission-accelerator-calculator',
+      '/delt-provision-beregner': '/split-commission-calculator', '/feriepenge-af-provision-beregner': '/holiday-pay-on-commission-calculator',
+      '/provision-under-sygdom-beregner': '/commission-during-sick-leave-calculator', '/kvote-beregner': '/sales-quota-calculator' };
     var EN_ITEM = { '/kunder': { base: '/customers', slugs: { 'nordisk-it-servicekoncern': 'nordic-it-services-group' } },
       '/provisionsmodeller': { base: '/commission-models', slugs: MODEL_SLUG_EN } };
     qa('a[href^="/"]').forEach(function (a) {
@@ -396,33 +399,70 @@
       // accessible name starts with the visible letters (top letter of each column, e.g. "DA") — WCAG 2.5.3 label in name
       var shown = cols.map(function (c) { var l = q('.pw-nav__lang-letter', c); return l ? l.textContent.trim() : ''; }).join('') || (DA ? 'DA' : 'EN');
       lb.setAttribute('aria-label', shown + ' · ' + (DA ? 'Switch to English' : 'Skift til dansk'));
-      var target = function () {
-        var p = w.location.pathname;
-        // Webflow prints <link rel="alternate" hreflang> for every locale with the localized slug (pris ↔ pricing);
-        // use it so pages whose slugs differ per language don't 404. Path only, so staging stays on its own host.
-        var want = DA ? 'en' : 'da', alt = qa('link[rel="alternate"][hreflang]').filter(function (l) {
-          var h = (l.getAttribute('hreflang') || '').toLowerCase(); return h === want || h.indexOf(want + '-') === 0;
-        })[0];
-        if (alt && alt.href) { try { var u = new URL(alt.href, w.location.href); return u.pathname + w.location.search + w.location.hash; } catch (e) {} }
-        // fallback: our own DA ↔ EN slug list (drafts and final URLs, plus the customer and model collection items)
-        var SLUG_EN = {"/administration": "/commission-management", "/administration-2026": "/commission-management-2026", "/byg-eller-koeb-provisionssoftware": "/build-or-buy-commission-software", "/corrections-beregner": "/corrections-calculator", "/corrections-beregner-2026": "/corrections-calculator-2026", "/integrationer": "/integrations", "/karriere": "/careers", "/kunder": "/customers", "/medarbejder-app": "/employee-app", "/medarbejder-app-2026": "/employee-app-2026", "/om-os": "/about-us", "/om-os-2026": "/about-us-2026", "/ote-beregner": "/ote-ratio-calculator", "/ote-beregner-2026": "/ote-ratio-calculator-2026", "/partnerprogram": "/partner-program", "/platform-korrektioner-2026": "/platform-corrections-and-clawbacks-2026", "/platform-live-provision-2026": "/platform-live-commission-2026", "/platform-loen-2026": "/platform-payroll-2026", "/platform-opgoerelser-2026": "/platform-statements-and-approvals-2026", "/platform-provisionsmodeller-2026": "/platform-commission-models-2026", "/platform-studio-2026": "/platform-commission-studio-2026", "/platform/korrektioner-og-clawbacks": "/platform/corrections-and-clawbacks", "/platform/live-provision": "/platform/live-commission", "/platform/loen": "/platform/payroll", "/platform/opgoerelser-og-godkendelser": "/platform/statements-and-approvals", "/platform/provisionsmodeller": "/platform/commission-models", "/pris": "/pricing", "/pris-2026": "/pricing-2026", "/provisionsmodeller": "/commission-models", "/provisionsmodeller-2026": "/commission-models-2026", "/provisionsordbogen": "/commission-dictionary", "/provisionsordbogen-2026": "/commission-dictionary-2026", "/salgsledere": "/sales-leaders", "/salgsledere-2026": "/sales-leaders-2026", "/virksomhedstyper-oversigt": "/business-types", "/virksomhedstyper-oversigt-2026": "/business-types-2026"}, MODEL_EN = MODEL_SLUG_EN, STORY_EN = { 'nordisk-it-servicekoncern': 'nordic-it-services-group' };
-        var flip = function (o) { var r = {}; for (var k in o) r[o[k]] = k; return r; };
-        var path = p.replace(/\/$/, '') || '/', mm;
-        if (DA) {
-          if (SLUG_EN[path]) path = SLUG_EN[path];
-          else if ((mm = path.match(/^\/provisionsmodeller\/([^\/]+)$/))) path = '/commission-models/' + (MODEL_EN[mm[1]] || mm[1]);
-          else if ((mm = path.match(/^\/kunder\/([^\/]+)$/))) path = '/customers/' + (STORY_EN[mm[1]] || mm[1]);
-          return '/en' + (path === '/' ? '' : path) + w.location.search + w.location.hash;
+      // CMS collections: DA path, EN path (after /en), and the hub page each falls back to when an item has no twin
+      var COLL = [
+        { k: 'glossary', da: '/ordbog', en: '/glossary', hubDa: '/provisionsordbogen', hubEn: '/commission-dictionary' },
+        { k: 'posts', da: '/post', en: '/post', hubDa: '/prowi-insider', hubEn: '/prowi-insider' },
+        { k: 'integrations', da: '/integrationer', en: '/integrations', hubDa: '/integrationer', hubEn: '/integrations' },
+        { k: 'types', da: '/virksomhedstype', en: '/business-types', hubDa: '/virksomhedstyper-oversigt', hubEn: '/business-types' },
+        { k: 'models', da: '/provisionsmodeller', en: '/commission-models', hubDa: '/provisionsmodeller', hubEn: '/commission-models' },
+        { k: 'customers', da: '/kunder', en: '/customers', hubDa: '/kunder', hubEn: '/customers' }
+      ];
+      var flip = function (o) { var r = {}; for (var k in o) r[o[k]] = k; return r; };
+      var bare = function () { var p = w.location.pathname; if (!DA) p = p.replace(/^\/en(\/|$)/, '/'); return p.replace(/\/$/, '') || '/'; };
+      // the CMS item this page shows: { c: collection, slug } or null
+      var cmsItem = function () {
+        var p = bare(), mm;
+        for (var i = 0; i < COLL.length; i++) {
+          var base = DA ? COLL[i].da : COLL[i].en;
+          if ((mm = p.match(/^(\/[^\/]+)\/([^\/]+)$/)) && mm[1] === base) return { c: COLL[i], slug: mm[2] };
         }
-        path = path.replace(/^\/en(\/|$)/, '/').replace(/\/$/, '') || '/';
-        var SD = flip(SLUG_EN), MD = flip(MODEL_EN);
+        return null;
+      };
+      var item = cmsItem();
+      // DA → EN item slugs: dist/chunks/slugs.js (all collections, from the CMS); the two small built-in maps cover a
+      // failed or slow load for models and customer stories
+      var pairs = function (k) {
+        var S = w.__PW_SLUGS;
+        if (S && S[k]) return S[k];
+        return k === 'models' ? MODEL_SLUG_EN : k === 'customers' ? { 'nordisk-it-servicekoncern': 'nordic-it-services-group' } : null;
+      };
+      var target = function () {
+        var want = DA ? 'en' : 'da', pre = DA ? '/en' : '', tail = w.location.search + w.location.hash;
+        // Webflow prints <link rel="alternate" hreflang> with the localized slug (pris ↔ pricing). Path only, so staging stays
+        // on its own host. Not trusted when it points to the home page from another page (seen on CMS item pages).
+        var alt = qa('link[rel="alternate"][hreflang]').filter(function (l) {
+          var h = (l.getAttribute('hreflang') || '').toLowerCase(); return h === want || h.indexOf(want + '-') === 0;
+        })[0], altPath = null;
+        if (alt && alt.href) { try { altPath = new URL(alt.href, w.location.href).pathname; } catch (e) {} }
+        if (altPath && /^\/(?:en\/?)?$/.test(altPath) && bare() !== '/') altPath = null;
+        if (altPath && altPath.replace(/\/$/, '') === w.location.pathname.replace(/\/$/, '')) altPath = null;
+        if (item) {
+          var c = item.c, P = pairs(c.k), other = P ? (DA ? P[item.slug] : flip(P)[item.slug]) : null;
+          if (other) return pre + (DA ? c.en : c.da) + '/' + other + tail;
+          // no known twin: Webflow's alternate only if it is an item of the same collection, else the other locale's hub
+          if (altPath && altPath.indexOf(pre + (DA ? c.en : c.da) + '/') === 0) return altPath + tail;
+          return pre + (DA ? c.hubEn : c.hubDa) + tail;
+        }
+        if (altPath) return altPath + tail;
+        // fallback: our own DA ↔ EN slug list (drafts and final URLs)
+        var SLUG_EN = {"/accelerator-beregner": "/commission-accelerator-calculator", "/administration": "/commission-management", "/administration-2026": "/commission-management-2026", "/byg-eller-koeb-provisionssoftware": "/build-or-buy-commission-software", "/corrections-beregner": "/corrections-calculator", "/corrections-beregner-2026": "/corrections-calculator-2026", "/delt-provision-beregner": "/split-commission-calculator", "/feriepenge-af-provision-beregner": "/holiday-pay-on-commission-calculator", "/integrationer": "/integrations", "/karriere": "/careers", "/kunder": "/customers", "/kvote-beregner": "/sales-quota-calculator", "/manifestet": "/manifesto", "/medarbejder-app": "/employee-app", "/medarbejder-app-2026": "/employee-app-2026", "/om-os": "/about-us", "/om-os-2026": "/about-us-2026", "/ote-beregner": "/ote-ratio-calculator", "/ote-beregner-2026": "/ote-ratio-calculator-2026", "/partnerprogram": "/partner-program", "/platform-korrektioner-2026": "/platform-corrections-and-clawbacks-2026", "/platform-live-provision-2026": "/platform-live-commission-2026", "/platform-loen-2026": "/platform-payroll-2026", "/platform-opgoerelser-2026": "/platform-statements-and-approvals-2026", "/platform-provisionsmodeller-2026": "/platform-commission-models-2026", "/platform-studio-2026": "/platform-commission-studio-2026", "/platform/korrektioner-og-clawbacks": "/platform/corrections-and-clawbacks", "/platform/live-provision": "/platform/live-commission", "/platform/loen": "/platform/payroll", "/platform/opgoerelser-og-godkendelser": "/platform/statements-and-approvals", "/platform/provisionsmodeller": "/platform/commission-models", "/pris": "/pricing", "/pris-2026": "/pricing-2026", "/provision-under-sygdom-beregner": "/commission-during-sick-leave-calculator", "/provisionsberegner": "/commission-calculator", "/provisionsmodeller": "/commission-models", "/provisionsmodeller-2026": "/commission-models-2026", "/provisionsordbogen": "/commission-dictionary", "/provisionsordbogen-2026": "/commission-dictionary-2026", "/salgsledere": "/sales-leaders", "/salgsledere-2026": "/sales-leaders-2026", "/trappemodel-beregner": "/tiered-commission-calculator", "/virksomhedstyper-oversigt": "/business-types", "/virksomhedstyper-oversigt-2026": "/business-types-2026"};
+        var path = bare();
+        if (DA) { if (SLUG_EN[path]) path = SLUG_EN[path]; return '/en' + (path === '/' ? '' : path) + tail; }
+        var SD = flip(SLUG_EN);
         if (SD[path]) path = SD[path];
-        else if ((mm = path.match(/^\/(?:commission-models|provisionsmodeller)\/([^\/]+)$/))) path = '/provisionsmodeller/' + (MD[mm[1]] || mm[1]);
-        else if ((mm = path.match(/^\/(?:customers|kunder)\/([^\/]+)$/))) path = '/kunder/' + (flip(STORY_EN)[mm[1]] || mm[1]);
-        return path + w.location.search + w.location.hash;
+        return path + tail;
       };
       if (lb.tagName === 'A') lb.setAttribute('href', target());
-      lb.addEventListener('click', function (e) { e.preventDefault(); w.location.href = target(); });
+      // on CMS item pages the slug pairs come from a small add-on file; fetch it now so a click never waits
+      var slugsReady = !item || !w.__pwNeed;
+      if (!slugsReady) w.__pwNeed('slugs', function () { slugsReady = true; if (lb.tagName === 'A') lb.setAttribute('href', target()); });
+      lb.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (slugsReady) { w.location.href = target(); return; }
+        var done = false, go = function () { if (done) return; done = true; w.location.href = target(); };
+        w.__pwNeed('slugs', go); setTimeout(go, 1500);
+      });
     }
 
     // Burger + full-screen menu (≤1199px)
