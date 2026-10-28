@@ -1,10 +1,10 @@
 {
   "name": "prowi-web",
-  "version": "1.25.51",
+  "version": "1.25.52",
   "description": "JavaScript for the 2026 prowi.io site (Webflow). One bundle, served via jsDelivr:",
   "main": "index.js",
   "scripts": {
-    "test": "node test/syntax.test.js && node test/calculators.test.js"
+    "test": "node test/syntax.test.js && node test/calculators.test.js && node test/visuals.test.js"
   },
   "repository": {
     "type": "git",

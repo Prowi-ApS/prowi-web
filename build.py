@@ -106,6 +106,8 @@ TOOL_ROOTS={
  'page-careers':['form.pw-careers__form'],
  'page-faq':['[data-faq="page"]'],
  'page-manifesto':['[data-mf-root]'],
+ # article visuals (v1.25.52): rich-text bodies of the CMS item templates, plus explicit [data-pw-visual] embeds
+ 'visuals':['.pw-post__body','.pw-term__body','.pw-model__guide','.pw-type__longform','.pw-int__longform','[data-pw-visual]'],
 }
 for _f in sorted(_glob.glob('src/tools/*.js')):
     k=os.path.basename(_f)[:-3]

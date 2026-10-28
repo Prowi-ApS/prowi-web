@@ -31,7 +31,15 @@
     team: { c: 1, step: 1, curve: [[0, 0], [100, 100], [150, 100]], sim: { kind: 'bonus', bonus: 8000, quota: 2000000 } },
     residual: { c: 2, curve: [[0, 0], [100, 100], [150, 150]], sim: { kind: 'residual', rate: 3, mrr: 5000, months: 12 } },
     clawback: { c: 2, step: 1, curve: [[0, 0], [100, 100], [150, 150]], sim: { kind: 'clawback', rate: 10, deal: 50000, windows: [[90, 100], [180, 50]] } },
-    spiff: { c: 1, curve: [[0, 0], [100, 100], [150, 150]], sim: { kind: 'spiff', bonus: 500, quota: 400000 } }
+    spiff: { c: 1, curve: [[0, 0], [100, 100], [150, 150]], sim: { kind: 'spiff', bonus: 500, quota: 400000 } },
+    // v1.25.52: models added 2026-10-28. 'accelerator-cliff' is also picked by slug (its CMS model id is 'accelerator').
+    'accelerator-cliff': { c: 2, curve: [[0, 0], [49.9, 0], [50, 50], [100, 100], [150, 175]], sim: { kind: 'accel', rate: 8, rate2: 12, cliff: 50, quota: 400000 } },
+    cap: { c: 1, curve: [[0, 0], [100, 100], [125, 125], [150, 125]], sim: { kind: 'cap', rate: 10, cap: 50000, quota: 400000 } },
+    // no simulator fits these (yet): the item page hides its calculator band and links to the free calculators instead
+    'target-bonus': { c: 1, curve: [[0, 0], [100, 100], [150, 150]], sim: null },
+    'multi-year': { c: 2, curve: [[0, 0], [100, 100], [150, 150]], sim: null },
+    retention: { c: 3, curve: [[0, 0], [100, 100], [150, 150]], sim: null },
+    activity: { c: 1, curve: [[0, 0], [100, 100], [150, 150]], sim: null }
   };
 
   // ---- strings: every JS-rendered string in English and Danish
@@ -63,6 +71,9 @@
       var p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
       if (Math.abs(p2[0] - p1[0]) < 1) { d += ' L' + f1(p2[0]) + ' ' + f1(p2[1]); continue; }
       var c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      // next to a hard step (cliff, floor) the curve leaves/arrives flat, so it never dips below the axis (v1.25.52)
+      if (Math.abs(p3[0] - p2[0]) < 1 && p3 !== p2) c2 = [p2[0] - (p2[0] - p1[0]) / 3, p2[1]];
+      if (Math.abs(p1[0] - p0[0]) < 1 && p0 !== p1) c1 = [p1[0] + (p2[0] - p1[0]) / 3, p1[1]];
       d += ' C' + f1(c1[0]) + ' ' + f1(c1[1]) + ' ' + f1(c2[0]) + ' ' + f1(c2[1]) + ' ' + f1(p2[0]) + ' ' + f1(p2[1]);
     }
     return d;
@@ -226,7 +237,21 @@
   var calc = item.querySelector('.pw-tool__calc');
   if (!calc) return;
   var id = txt(item.querySelector('.pw-model__id'));
+  if (id === 'accelerator' && /cliff/.test(location.pathname)) id = 'accelerator-cliff';
   var model = M[id] || M.flat, sim = model.sim;
+  if (!sim) {
+    // a wrong calculator is worse than none: hide the band, point to the free calculators
+    var band = calc.closest('.pw-tool__band') || calc;
+    band.style.display = 'none';
+    var note = document.createElement('p'), a = document.createElement('a');
+    note.className = 'pw-model__calcs';
+    note.style.cssText = 'max-width:1120px;margin:0 auto;padding:0 clamp(16px,5vw,80px) clamp(40px,5vw,64px);font-size:16px;line-height:1.6;color:var(--_prowi---pw-text-secondary,#34326C)';
+    a.href = EN ? '/en/calculators' : '/beregnere'; a.textContent = t('See all free commission calculators', 'Se alle gratis provisionsberegnere');
+    a.style.cssText = 'color:var(--_prowi---pw-purple,#4C39CA);text-decoration:underline;text-underline-offset:3px';
+    note.appendChild(document.createTextNode(t('Want to run the numbers? ', 'Vil du regne på det? '))); note.appendChild(a);
+    band.parentNode.insertBefore(note, band.nextSibling);
+    return;
+  }
   var S = { att: 100, a: null, b: null };
   function o(k) { return calc.querySelector('[data-o="' + k + '"]'); }
   function set(k, v) { var el = o(k); if (el && el.textContent !== v) el.textContent = v; }
@@ -258,12 +283,24 @@
       R.cells = [{ k: t('Quota', 'Mål'), v: eur(sq), s: t('Annual target', 'Årligt mål') }, { k: t('Sold at {a}', 'Solgt ved {a}', { a: pc(att) }), v: eur(sold), s: t('Commissionable revenue', 'Provisionsberettiget omsætning') }, { k: 'Bonus', v: eur(b), s: t('Fixed amount, budgetable', 'Fast beløb, kan budgetteres') }];
       R.pts = [[0, 0], [100, 100], [150, 100]]; R.p100 = b;
     } else if (k === 'accel') {
-      var r1 = nA(S.b, sim.rate), r2 = sim.rate2, over = Math.max(0, sold - sq), bs = Math.min(sold, sq);
-      pay = bs * r1 / 100 + over * r2 / 100;
+      var r1 = nA(S.b, sim.rate), r2 = sim.rate2, over = Math.max(0, sold - sq), bs = Math.min(sold, sq), cl = sim.cliff || 0;
+      pay = att < cl ? 0 : bs * r1 / 100 + over * r2 / 100;
       R.fields = [QF, { label: t('Base rate (to quota)', 'Basissats (op til målet)'), unit: '%', type: 'pct', def: sim.rate }];
       R.k = t('Commission at {a}', 'Provision ved {a}', { a: pc(att) }); R.v = eur(pay);
-      R.sub = t('{r1} to quota, {r2} above', '{r1} op til målet, {r2} derover', { r1: pc(r1), r2: pc(r2) }) + (over ? t('. {x} over quota at {r2}', '. {x} over målet til {r2}', { x: eur(over), r2: pc(r2) }) : '');
-      R.cells = base(pay); R.pts = r1 ? [[0, 0], [100, 100], [150, 100 + 50 * r2 / r1]] : [[0, 0], [150, 0]]; R.p100 = sq * r1 / 100;
+      R.sub = att < cl ? t('Below the {c} cliff: no commission yet', 'Under tærsklen på {c}: ingen provision endnu', { c: pc(cl) }) : t('{r1} to quota, {r2} above', '{r1} op til målet, {r2} derover', { r1: pc(r1), r2: pc(r2) }) + (over ? t('. {x} over quota at {r2}', '. {x} over målet til {r2}', { x: eur(over), r2: pc(r2) }) : '');
+      R.cells = base(pay); R.pts = r1 ? (cl ? [[0, 0], [cl - 0.1, 0], [cl, cl], [100, 100], [150, 100 + 50 * r2 / r1]] : [[0, 0], [100, 100], [150, 100 + 50 * r2 / r1]]) : [[0, 0], [150, 0]]; R.p100 = sq * r1 / 100;
+    } else if (k === 'cap') {
+      // hard cap: the rate applies until the commission reaches the cap for the period (quota fixed, cap and rate typed)
+      sq = sim.quota; sold = sq * att / 100; r = nA(S.b, sim.rate);
+      var cp = nA(S.a, sim.cap), raw = sold * r / 100, p1 = sq * r / 100, capAt = p1 ? cp / p1 * 100 : 0;
+      pay = Math.min(raw, cp);
+      R.fields = [{ label: t('Cap per year', 'Loft pr. år'), unit: '€', type: 'eur', def: sim.cap }, { label: t('Commission rate', 'Provisionssats'), unit: '%', type: 'pct', def: sim.rate }];
+      R.k = t('Commission at {a}', 'Provision ved {a}', { a: pc(att) }); R.v = eur(pay);
+      R.sub = raw > cp ? t('Cap reached: {x} above the cap is not paid', 'Loftet er nået: {x} over loftet udbetales ikke', { x: eur(raw - cp) }) : t('{r} of {s} sold, {x} below the cap', '{r} af {s} solgt, {x} under loftet', { r: pc(r), s: eur(sold), x: eur(cp - raw) });
+      R.cells = [{ k: t('Without a cap', 'Uden loft'), v: eur(raw), s: t('{r} of sales', '{r} af salget', { r: pc(r) }) },
+        { k: t('Cap', 'Loft'), v: eur(cp), s: capAt ? t('Reached at {a} of a {q} quota', 'Nås ved {a} af et mål på {q}', { a: pc(Math.round(capAt)), q: eur(sq) }) : '' },
+        { k: t('Effective rate', 'Effektiv sats'), v: sold ? pc(d1(pay / sold * 100)) : '—', s: t('Payout ÷ sold', 'Udbetaling ÷ solgt') }];
+      R.pts = capAt && capAt < 150 ? [[0, 0], [capAt, capAt], [150, capAt]] : [[0, 0], [150, 150]]; R.p100 = p1;
     } else if (k === 'tiers') {
       var T = sim.tiers;
       var tierPay = function (a) { var s = 0, pv = 0; T.forEach(function (x) { var hi = Math.min(a, x[0]); if (hi > pv) s += sq * (hi - pv) / 100 * x[1] / 100; pv = Math.max(pv, hi); }); return s; };

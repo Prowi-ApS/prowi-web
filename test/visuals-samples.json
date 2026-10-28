@@ -1,0 +1,1619 @@
+{
+ "tiers_true": [
+  {
+   "path": "/post/trappemodel-provision",
+   "k": 0,
+   "lang": "da",
+   "head": [
+    "Salgsvolumen",
+    "Provisionssats",
+    "Eksempel (DKK)"
+   ],
+   "rows": [
+    [
+     "0 - 500.000 DKK",
+     "5%",
+     "25.000 DKK i provision"
+    ],
+    [
+     "500.001 - 1.000.000 DKK",
+     "7%",
+     "35.000 DKK i provision"
+    ],
+    [
+     "1.000.001 - 2.000.000 DKK",
+     "10%",
+     "100.000 DKK i provision"
+    ],
+    [
+     "Over 2.000.000 DKK",
+     "12%",
+     "Variable"
+    ]
+   ],
+   "near": [
+    "I dette eksempel tjener en sælger, der når 2.500.000 DKK i salg:",
+    "Trin 1: 500.000 x 5% = 25.000 DKK Trin 2: 500.000 x 7% = 35.000 DKK Trin 3: 1.000.000 x 10% = 100.000 DKK Trin 4: 500.000 x 12% = 60.000 DKK Total provision: 220.000 DKK",
+    "Modellen adskiller sig fundamentalt fra flat rate provision, hvor satsen forbliver konstant uanset salgsvolumen. Trappemodellen belønner eksplicit merperformance og skaber et naturligt incitament til at fortsætte salgsindsatsen efter de første mål er nået.",
+    "En trappemodel (også kaldet tiered commission eller graduated commission) er en provisionsstruktur, hvor provisionssatsen stiger i takt med, at sælgeren når højere salgsmål. Jo mere du sælger, jo højere sats får du på de næste salg."
+   ]
+  },
+  {
+   "path": "/post/trappemodel-provision",
+   "k": 3,
+   "lang": "da",
+   "head": [
+    "Trin",
+    "Interval",
+    "Sats",
+    "Beregning"
+   ],
+   "rows": [
+    [
+     "1",
+     "0 - 300.000 DKK",
+     "4%",
+     "300.000 x 4% = 12.000 DKK"
+    ],
+    [
+     "2",
+     "300.001 - 600.000 DKK",
+     "6%",
+     "300.000 x 6% = 18.000 DKK"
+    ],
+    [
+     "3",
+     "600.001+ DKK",
+     "9%",
+     "Variabel"
+    ]
+   ],
+   "near": [
+    "Fordele: Forudsigelig omkostningsstruktur, fair progression, let at forstå. Ulemper: Kan virke demotiverende i starten af perioden.",
+    "Den mest udbredte variant. Provisionssatsen stiger baseret på samlet salg over en periode. Hver gang sælgeren passerer en tærskel, gælder den nye sats kun for salg over denne tærskel."
+   ]
+  },
+  {
+   "path": "/en/post/tiered-commission",
+   "k": 5,
+   "lang": "en",
+   "head": [
+    "Quota Attainment",
+    "Commission Rate",
+    "Example (quota: $150K)"
+   ],
+   "rows": [
+    [
+     "0-80%",
+     "4%",
+     "$0-$120,000 = $4,800"
+    ],
+    [
+     "81-100%",
+     "6%",
+     "$120,001-$150,000 = $1,800"
+    ],
+    [
+     "101-120%",
+     "8%",
+     "$150,001-$180,000 = $2,400"
+    ],
+    [
+     "121%+",
+     "10%",
+     "Over $180,000"
+    ]
+   ],
+   "near": [
+    "Pros: Scalable, fair across territories, directly tied to goals. Cons: Requires accurate quota setting, dependent on forecasting quality.",
+    "Tiers are defined as percentages of quota rather than absolute numbers. This makes the model scalable across reps with different targets."
+   ]
+  },
+  {
+   "path": "/en/post/sales-manager-salary-bonus",
+   "k": 5,
+   "lang": "en",
+   "head": [
+    "Quota attainment",
+    "Multiplier",
+    "Example (base bonus $12,000)"
+   ],
+   "rows": [
+    [
+     "0-80%",
+     "0.8x (or threshold)",
+     "$0 - $7,680"
+    ],
+    [
+     "80-100%",
+     "1.0x (linear)",
+     "$7,680 - $12,000"
+    ],
+    [
+     "100-110%",
+     "1.2x",
+     "$12,000 - $13,440"
+    ],
+    [
+     "110-120%",
+     "1.5x",
+     "$13,440 - $15,240"
+    ],
+    [
+     "120%+",
+     "2.0x",
+     "$15,240+"
+    ]
+   ],
+   "near": []
+  },
+  {
+   "path": "/post/saelger-loen-danmark",
+   "k": 19,
+   "lang": "da",
+   "head": [
+    "Kvote-niveau",
+    "Rate"
+   ],
+   "rows": [
+    [
+     "0-80 % kvote",
+     "0,8x rate"
+    ],
+    [
+     "80-100 % kvote",
+     "1,0x rate"
+    ],
+    [
+     "100-120 % kvote",
+     "1,3x rate"
+    ],
+    [
+     "120 %+ kvote",
+     "1,5x rate"
+    ]
+   ],
+   "near": [
+    "Se hvordan du designer en fair og skalerbar provisionsmodel.",
+    "Top-performere vil have upside. Uden acceleratorer mister du dem til konkurrenter."
+   ]
+  },
+  {
+   "path": "/ordbog/daekningsbidragsbaseret-provision",
+   "k": 3,
+   "lang": "da",
+   "head": [
+    "Dækningsbidragsprocent",
+    "Provisionsrate"
+   ],
+   "rows": [
+    [
+     "Under 30 %",
+     "8 %"
+    ],
+    [
+     "30-40 %",
+     "12 %"
+    ],
+    [
+     "40-50 %",
+     "15 %"
+    ],
+    [
+     "Over 50 %",
+     "18 %"
+    ]
+   ],
+   "near": [
+    "Provisionsraten varierer med dækningsbidragsprocenten:"
+   ]
+  },
+  {
+   "path": "/en/glossary/decelerator",
+   "k": 0,
+   "lang": "en",
+   "head": [
+    "Quota Attainment",
+    "Commission Factor",
+    "Effective Rate"
+   ],
+   "rows": [
+    [
+     "0-50%",
+     "0.25x",
+     "2.5%"
+    ],
+    [
+     "50-70%",
+     "0.5x",
+     "5%"
+    ],
+    [
+     "70-90%",
+     "0.75x",
+     "7.5%"
+    ],
+    [
+     "90-100%",
+     "1.0x",
+     "10%"
+    ],
+    [
+     "100%+",
+     "1.5x (accelerator)",
+     "15%"
+    ]
+   ],
+   "near": [
+    "Example with tiered model:",
+    "A rep closes $400,000 against a $500,000 quota (80% attainment).",
+    "Many companies use a tiered model with multiple levels:"
+   ]
+  },
+  {
+   "path": "/ordbog/accelerator",
+   "k": 0,
+   "lang": "da",
+   "head": [
+    "Kvoteopnåelse",
+    "Provisionssats",
+    "Accelerator"
+   ],
+   "rows": [
+    [
+     "0-100% af kvote",
+     "8%",
+     "1,0x (standard)"
+    ],
+    [
+     "100-120% af kvote",
+     "12%",
+     "1,5x"
+    ],
+    [
+     "Over 120% af kvote",
+     "16%",
+     "2,0x"
+    ]
+   ],
+   "near": []
+  },
+  {
+   "path": "/post/provision-beregning-formler-og-eksempler",
+   "k": 10,
+   "lang": "da",
+   "head": [
+    "Niveau",
+    "Salg",
+    "Sats",
+    "Provision"
+   ],
+   "rows": [
+    [
+     "0-100 % (kvote)",
+     "1.000.000 kr.",
+     "10 %",
+     "100.000 kr."
+    ],
+    [
+     "100-120 %",
+     "200.000 kr.",
+     "15 %",
+     "30.000 kr."
+    ],
+    [
+     "Over 120 %",
+     "100.000 kr.",
+     "20 %",
+     "20.000 kr."
+    ],
+    [
+     "Total",
+     "1.300.000 kr.",
+     "-",
+     "150.000 kr."
+    ]
+   ],
+   "near": [
+    "Uden accelerator ville provisionen have været 130.000 kr. (10 % af alt). Med accelerator får sælgeren 20.000 kr. ekstra - en belønning for at overperforme.",
+    "Læs vores komplette guide til provision acceleratorer.",
+    "En sælger har en kvote på 1.000.000 kr. og har solgt for 1.300.000 kr. (130 % opnåelse)."
+   ]
+  }
+ ],
+ "tiers_false": [
+  {
+   "path": "/en/post/sales-budget-template",
+   "k": 2,
+   "lang": "en",
+   "head": [
+    "Attainment",
+    "Sales",
+    "Commission",
+    "Total pay"
+   ],
+   "rows": [
+    [
+     "80%",
+     "DKK 2,400,000",
+     "DKK 172,800",
+     "DKK 676,800"
+    ],
+    [
+     "100%",
+     "DKK 3,000,000",
+     "DKK 216,000",
+     "DKK 720,000"
+    ],
+    [
+     "120%",
+     "DKK 3,600,000",
+     "DKK 280,800",
+     "DKK 784,800"
+    ]
+   ],
+   "near": [
+    "At 120%, commission is 3,000,000 × 7.2% + 600,000 × 10.8% = 216,000 + 64,800 = DKK 280,800. New reps in ramp have the same rate but a lower quota, and therefore earn less commission at the same attainment. If you pay a guaranteed commission during ramp, it is not in the template and must be added.",
+    "Example: Base salary is DKK 42,000 a month, DKK 504,000 a year, and variable pay at 100% is DKK 216,000. OTE is DKK 720,000, and the pay mix is 70/30. The commission rate is 216,000 ÷ 3,000,000 = 7.2%, and with an accelerator factor of 1.5 the rate above quota is 10.8%. Quota is therefore 4.2 times OTE. How to choose the pay mix and the ratio between quota and OTE is covered in our guide to OTE and quotas, and you can compare several roles in our OTE and pay mix template.",
+    "The OTE and commission sheet is based on the standard plan in Assumptions: base salary, variable pay at 100% and an optional accelerator above quota. The commission rate is variable pay divided by quota."
+   ]
+  },
+  {
+   "path": "/en/post/ote-quotas-guide",
+   "k": 12,
+   "lang": "en",
+   "head": [
+    "Month",
+    "Quota Level",
+    "Typical Approach"
+   ],
+   "rows": [
+    [
+     "1-2",
+     "25%",
+     "Training, no sales expected"
+    ],
+    [
+     "3",
+     "50%",
+     "Building pipeline"
+    ],
+    [
+     "4-5",
+     "75%",
+     "First closes expected"
+    ],
+    [
+     "6+",
+     "100%",
+     "Full productivity"
+    ]
+   ],
+   "near": [
+    "Example Ramp Schedule:",
+    "During the ramp period, new hires typically: - Receive reduced quotas (often 25-50-75% scaling) - May receive guaranteed variable compensation - Earn significantly less than stated OTE - Build the pipeline that will generate future earnings"
+   ]
+  },
+  {
+   "path": "/en/post/sdr-bdr-compensation-guide",
+   "k": 5,
+   "lang": "en",
+   "head": [
+    "Quota Attainment",
+    "Multiplier",
+    "Effective Commission"
+   ],
+   "rows": [
+    [
+     "0-70%",
+     "0x",
+     "No payout"
+    ],
+    [
+     "70-100%",
+     "1x",
+     "Standard rate"
+    ],
+    [
+     "100-120%",
+     "1.5x",
+     "50% extra per deal"
+    ],
+    [
+     "120-150%",
+     "2x",
+     "Double rate"
+    ],
+    [
+     "150%+",
+     "Cap",
+     "Prevents sandbagging"
+    ]
+   ],
+   "near": [
+    "82% of SaaS startups use accelerators, according to ICONIQ."
+   ]
+  },
+  {
+   "path": "/post/trappemodel-provision",
+   "k": 4,
+   "lang": "da",
+   "head": [
+    "Samlet salg",
+    "Sats",
+    "Total provision"
+   ],
+   "rows": [
+    [
+     "0 - 500.000 DKK",
+     "5%",
+     "Op til 25.000 DKK"
+    ],
+    [
+     "500.001 - 1.000.000 DKK",
+     "7% på ALT",
+     "Op til 70.000 DKK"
+    ],
+    [
+     "1.000.001+ DKK",
+     "9% på ALT",
+     "90.000+ DKK"
+    ]
+   ],
+   "near": [
+    "Eksempel: En sælger på 499.000 DKK tjener 24.950 DKK (5%). Ved at lukke en handel til 10.000 DKK springer provisionen til 35.630 DKK (7% af 509.000). Det ene salg genererer 10.680 DKK i ekstra provision.",
+    "Fordele: Ekstrem motivation ved tringrænser, store belønninger for topperformere. Ulemper: Uforudsigelige omkostninger, kan skabe \"gaming\" af timing.",
+    "Når sælgeren når et højere trin, genberegnes al provision for perioden med den nye sats. Dette skaber dramatiske spring i indtjening ved tringrænser."
+   ]
+  },
+  {
+   "path": "/post/trappemodel-provision",
+   "k": 11,
+   "lang": "da",
+   "head": [
+    "Opnåelse af trin 1",
+    "Signal til teamet",
+    "Effekt"
+   ],
+   "rows": [
+    [
+     "Under 50%",
+     "\"Umuligt system\"",
+     "Demotivation, høj turnover"
+    ],
+    [
+     "50-70%",
+     "\"Hårdt men muligt\"",
+     "Moderat motivation"
+    ],
+    [
+     "70-80%",
+     "\"Opnåeligt med indsats\"",
+     "Optimal motivation"
+    ],
+    [
+     "Over 90%",
+     "\"For let\"",
+     "Ingen ekstra indsats"
+    ]
+   ],
+   "near": [
+    "Det første trin skal være realistisk for 70-80% af sælgere. Hvis for få når det første trin, signalerer modellen \"du kan ikke vinde\" - og motivation forsvinder."
+   ]
+  },
+  {
+   "path": "/post/bonus",
+   "k": 8,
+   "lang": "da",
+   "head": [
+    "Attainment",
+    "Andel af medarbejdere",
+    "Vurdering"
+   ],
+   "rows": [
+    [
+     "Under 70 %",
+     "10-15 %",
+     "Underpræstation eller forkert fit"
+    ],
+    [
+     "70-99 %",
+     "20-25 %",
+     "Nær mål, potentiale"
+    ],
+    [
+     "100-110 %",
+     "30-40 %",
+     "Solide performere"
+    ],
+    [
+     "110-130 %",
+     "15-25 %",
+     "Stærke performere"
+    ],
+    [
+     "Over 130 %",
+     "5-10 %",
+     "Top-performere"
+    ]
+   ],
+   "near": []
+  },
+  {
+   "path": "/en/post/commission-rates-by-role",
+   "k": 8,
+   "lang": "en",
+   "head": [
+    "Attainment Level",
+    "Commission Multiplier",
+    "Example (10% base rate)"
+   ],
+   "rows": [
+    [
+     "0-50%",
+     "0.5x (decelerator)",
+     "5% commission"
+    ],
+    [
+     "50-100%",
+     "1x",
+     "10% commission"
+    ],
+    [
+     "100-125%",
+     "1.5x",
+     "15% commission"
+    ],
+    [
+     "125-150%",
+     "2x",
+     "20% commission"
+    ],
+    [
+     "150%+",
+     "2-4x (kicker)",
+     "20-40% commission"
+    ]
+   ],
+   "near": [
+    "Public research does not give a reliable figure for how much accelerators lift revenue. The case for them is that they keep top performers selling after they hit quota.",
+    "82% of SaaS startups use accelerators, and only 14% have commission caps, according to ICONIQ. Here's a typical structure:"
+   ]
+  },
+  {
+   "path": "/en/post/sales-compensation",
+   "k": 9,
+   "lang": "en",
+   "head": [
+    "Role",
+    "OTE Range",
+    "Pay Mix",
+    "Commission Structure"
+   ],
+   "rows": [
+    [
+     "Digital Account Executive",
+     "$100K - $150K",
+     "55/45",
+     "6-10% of net revenue"
+    ],
+    [
+     "Senior Account Executive",
+     "$150K - $200K",
+     "50/50",
+     "8-12% of net revenue"
+    ],
+    [
+     "Agency Sales Director",
+     "$180K - $280K",
+     "55/45",
+     "5-8% + agency tier bonuses"
+    ],
+    [
+     "VP of Sales",
+     "$250K - $400K",
+     "65/35",
+     "Team override + individual"
+    ]
+   ],
+   "near": []
+  }
+ ],
+ "wf_true": [
+  {
+   "path": "/post/provisionsopgoerelse-skabelon",
+   "k": 3,
+   "lang": "da",
+   "head": [
+    "Oprindelig dato",
+    "Kunde",
+    "Type",
+    "Grundlag",
+    "Sats",
+    "Provision"
+   ],
+   "rows": [
+    [
+     "24-02-2026",
+     "Havnens Bageri",
+     "Clawback",
+     "50.000 kr.",
+     "8 %",
+     "−4.000 kr."
+    ],
+    [
+     "15-01-2026",
+     "Fjordtech ApS",
+     "Efterregulering",
+     "10.000 kr.",
+     "8 %",
+     "800 kr."
+    ],
+    [
+     "B. I alt",
+     "",
+     "",
+     "",
+     "",
+     "−3.200 kr."
+    ]
+   ],
+   "near": [
+    "Havnens Bageri opsagde inden for 90 dage, så provisionen fra februar trækkes tilbage. Fjordtech udvidede ordren fra januar med 10.000 kr. før levering, så Anna får provision af forskellen."
+   ]
+  },
+  {
+   "path": "/ordbog/commission-statement",
+   "k": 5,
+   "lang": "da",
+   "head": [
+    "Type",
+    "Handel",
+    "Årsag",
+    "Beløb"
+   ],
+   "rows": [
+    [
+     "Clawback",
+     "Feb - DataCo",
+     "Churn måned 2",
+     "-7.500 kr."
+    ],
+    [
+     "SPIF",
+     "Flerårig bonus",
+     "3-årig aftale",
+     "+3.000 kr."
+    ],
+    [
+     "Netto justeringer",
+     "",
+     "",
+     "-4.500 kr."
+    ]
+   ],
+   "near": []
+  },
+  {
+   "path": "/post/provision-beregning-formler-og-eksempler",
+   "k": 17,
+   "lang": "da",
+   "head": [
+    "Komponent",
+    "Beregning",
+    "Beløb"
+   ],
+   "rows": [
+    [
+     "Grundløn",
+     "Fast",
+     "35.000 kr."
+    ],
+    [
+     "Provision (0-100 %)",
+     "500.000 × 10 %",
+     "50.000 kr."
+    ],
+    [
+     "Accelerator (over 100 %)",
+     "10.000 × 15 %",
+     "1.500 kr."
+    ],
+    [
+     "Clawback",
+     "60.000 × 10 %",
+     "-6.000 kr."
+    ],
+    [
+     "Total løn",
+     "-",
+     "80.500 kr."
+    ]
+   ],
+   "near": [
+    "Denne beregning er fuldt gennemsigtig. Sælgeren kan se præcis hvor hvert beløb kommer fra - og det skaber tillid."
+   ]
+  },
+  {
+   "path": "/integrationer/e-conomic",
+   "k": 1,
+   "lang": "da",
+   "head": [
+    "Bilag",
+    "Bogført",
+    "Beløb ekskl. moms",
+    "Provision (5 %)"
+   ],
+   "rows": [
+    [
+     "Faktura 1041",
+     "6. oktober",
+     "120.000 kr.",
+     "6.000 kr."
+    ],
+    [
+     "Faktura 1056",
+     "14. oktober",
+     "64.000 kr.",
+     "3.200 kr."
+    ],
+    [
+     "Kreditnota til faktura 1019 (september)",
+     "20. oktober",
+     "-20.000 kr.",
+     "-1.000 kr."
+    ],
+    [
+     "Faktura 1072",
+     "27. oktober",
+     "36.000 kr.",
+     "1.800 kr."
+    ],
+    [
+     "I alt",
+     "",
+     "200.000 kr.",
+     "10.000 kr."
+    ]
+   ],
+   "near": [
+    "Septembers opgørelse er allerede godkendt og bliver ikke rørt. Kreditnotaen er bogført i oktober, så den lander på oktobers opgørelse som en linje med minus, og Mette kan se, hvorfor beløbet faldt. Når oktober er lukket og godkendt, lægges 10.000 kr. på hendes saldo i Prowi og kan udbetales med lønnen.",
+    "Planen giver 5 % af fakturabeløbet ekskl. moms. Mette står som Vores reference på tre fakturaer i oktober. Den 20. oktober krediteres 20.000 kr. af en faktura fra september, fordi kunden sender en del af leverancen retur."
+   ]
+  },
+  {
+   "path": "/en/glossary/commission-statement",
+   "k": 4,
+   "lang": "en",
+   "head": [
+    "Description",
+    "Amount"
+   ],
+   "rows": [
+    [
+     "Base commission (0-100%)",
+     "$7,500"
+    ],
+    [
+     "Accelerator (100-125% @ 1.5x)",
+     "$2,813"
+    ],
+    [
+     "Total variable",
+     "$10,313"
+    ]
+   ],
+   "near": []
+  },
+  {
+   "path": "/post/provision-i-e-conomic",
+   "k": 2,
+   "lang": "da",
+   "head": [
+    "Bilag",
+    "Netto ekskl. moms",
+    "Kostpris",
+    "Dækningsbidrag",
+    "Status 31. oktober",
+    "Provision i oktober"
+   ],
+   "rows": [
+    [
+     "Faktura 1041",
+     "84.000 kr.",
+     "58.800 kr.",
+     "25.200 kr.",
+     "Betalt 12. oktober",
+     "2.520,00 kr."
+    ],
+    [
+     "Faktura 1047",
+     "126.500 kr.",
+     "94.875 kr.",
+     "31.625 kr.",
+     "Betalt 28. oktober",
+     "3.162,50 kr."
+    ],
+    [
+     "Faktura 1052",
+     "47.000 kr.",
+     "30.550 kr.",
+     "16.450 kr.",
+     "Ikke betalt",
+     "0,00 kr."
+    ],
+    [
+     "Kreditnota 1055 (delvis kreditering af faktura 1029 fra september)",
+     "-18.000 kr.",
+     "-12.600 kr.",
+     "-5.400 kr.",
+     "Bogført 20. oktober",
+     "-540,00 kr."
+    ],
+    [
+     "I alt",
+     "",
+     "",
+     "",
+     "",
+     "5.142,50 kr."
+    ]
+   ],
+   "near": [
+    "Faktura 1052 giver 1.645 kr. i provision (10 % af 16.450 kr.), men først i den måned, den bliver betalt. Havde planen brugt faktureret som udløser, var oktober-provisionen 6.787,50 kr. i stedet: 10 % af 73.275 kr. i dækningsbidrag minus 540 kr. for kreditnotaen. Forskellen på 1.645 kr. er netop den ubetalte faktura. Det viser, hvorfor valget af udløser skal stå i aftalen: sælgeren mærker det hver måned.",
+    "Eksempel: Planen giver 10 % af dækningsbidraget på fakturaer, hvor sælgeren står som Vores reference, og provisionen er først optjent, når fakturaen er fuldt betalt. Kreditnotaer trækkes fra med samme sats. Mette har fire bilag i oktober:"
+   ]
+  },
+  {
+   "path": "/en/business-types/telco",
+   "k": 1,
+   "lang": "en",
+   "head": [
+    "Item",
+    "Count",
+    "Commission"
+   ],
+   "rows": [
+    [
+     "Small plans",
+     "40",
+     "€1,000"
+    ],
+    [
+     "Medium plans",
+     "15",
+     "€600"
+    ],
+    [
+     "Large plans",
+     "5",
+     "€300"
+    ],
+    [
+     "Volume bonus (60 activations, below 80)",
+     "",
+     "€0"
+    ],
+    [
+     "Cancelled within 30 days (small plans)",
+     "-2",
+     "-€50"
+    ],
+    [
+     "Share of store bonus",
+     "",
+     "€250"
+    ],
+    [
+     "Total for the month",
+     "",
+     "€2,100"
+    ]
+   ],
+   "near": [
+    "Example (illustrative, not a benchmark): €25, €40 or €60 per activation by plan size, a €500 volume bonus at 80 activations, and a €2,000 store bonus shared by eight staff at target."
+   ]
+  }
+ ],
+ "wf_false": [
+  {
+   "path": "/post/provisionssoftware",
+   "k": 5,
+   "lang": "da",
+   "head": [
+    "Trin",
+    "Beløb"
+   ],
+   "rows": [
+    [
+     "Handelsværdi",
+     "400.000 kr."
+    ],
+    [
+     "Basissats (trin 2 ved 95 % af kvoten)",
+     "10 %"
+    ],
+    [
+     "Basisprovision",
+     "40.000 kr."
+    ],
+    [
+     "Ny kunde-multiplikator",
+     "1,25×"
+    ],
+    [
+     "Samlet provision",
+     "50.000 kr."
+    ]
+   ],
+   "near": [
+    "Jeres provisionssoftware bør vise denne beregning, før handlen lukker. Ikke bagefter. Før.",
+    "Vil du regne på forskellige strukturer, så prøv vores OTE-beregner.",
+    "En handel på 400.000 kr. med en ny kunde, lukket af en sælger på 95 % af kvoten:"
+   ]
+  },
+  {
+   "path": "/post/bonusaftale-skabelon",
+   "k": 2,
+   "lang": "da",
+   "head": [
+    "Mål",
+    "Vægt",
+    "Target",
+    "Resultat",
+    "Målopfyldelse",
+    "Udbetaling",
+    "Bonus"
+   ],
+   "rows": [
+    [
+     "Ny omsætning",
+     "50 %",
+     "4.000.000 kr.",
+     "4.400.000 kr.",
+     "110 %",
+     "125 %",
+     "45.000 kr."
+    ],
+    [
+     "Nye kunder",
+     "30 %",
+     "20",
+     "18",
+     "90 %",
+     "75 %",
+     "16.200 kr."
+    ],
+    [
+     "Personligt mål (MBO)",
+     "20 %",
+     "Nået",
+     "Nået",
+     "100 %",
+     "100 %",
+     "14.400 kr."
+    ],
+    [
+     "I alt",
+     "100 %",
+     "",
+     "",
+     "",
+     "105 %",
+     "75.600 kr."
+    ]
+   ],
+   "near": [
+    "Sådan er tallene regnet: 110 % ligger halvvejs mellem target og maks, så udbetalingen er 100 % + 0,5 × 50 % = 125 %, og bonussen for målet er 72.000 × 50 % × 125 % = 45.000 kr. 90 % ligger halvvejs mellem tærskel og target, så udbetalingen er 50 % + 0,5 × 50 % = 75 %, og bonussen er 72.000 × 30 % × 75 % = 16.200 kr. MBO-målet giver 72.000 × 20 % × 100 % = 14.400 kr. I alt 75.600 kr., svarende til en vægtet udbetaling på 105 %.",
+    "Ved fratræden: Fratræder sælgeren den 30. juni, har hun været ansat 6 af årets 12 måneder. Den forholdsmæssige bonus er 75.600 × 6/12 = 37.800 kr., som udbetales, når årets bonus gøres op.",
+    "Eksempel: En sælger har en målbonus på 72.000 kr. om året, svarende til 15 % af en fast årsløn på 480.000 kr. Skalaen giver 50 % udbetaling ved tærsklen (80 % målopfyldelse), 100 % ved target og 150 % ved maks (120 % målopfyldelse). Det er de samme tal, som står i skabelonen."
+   ],
+   "mutate": "total+1"
+  },
+  {
+   "path": "/en/post/sales-budget-template",
+   "k": 2,
+   "lang": "en",
+   "head": [
+    "Attainment",
+    "Sales",
+    "Commission",
+    "Total pay"
+   ],
+   "rows": [
+    [
+     "80%",
+     "DKK 2,400,000",
+     "DKK 172,800",
+     "DKK 676,800"
+    ],
+    [
+     "100%",
+     "DKK 3,000,000",
+     "DKK 216,000",
+     "DKK 720,000"
+    ],
+    [
+     "120%",
+     "DKK 3,600,000",
+     "DKK 280,800",
+     "DKK 784,800"
+    ]
+   ],
+   "near": [
+    "At 120%, commission is 3,000,000 × 7.2% + 600,000 × 10.8% = 216,000 + 64,800 = DKK 280,800. New reps in ramp have the same rate but a lower quota, and therefore earn less commission at the same attainment. If you pay a guaranteed commission during ramp, it is not in the template and must be added.",
+    "Example: Base salary is DKK 42,000 a month, DKK 504,000 a year, and variable pay at 100% is DKK 216,000. OTE is DKK 720,000, and the pay mix is 70/30. The commission rate is 216,000 ÷ 3,000,000 = 7.2%, and with an accelerator factor of 1.5 the rate above quota is 10.8%. Quota is therefore 4.2 times OTE. How to choose the pay mix and the ratio between quota and OTE is covered in our guide to OTE and quotas, and you can compare several roles in our OTE and pay mix template.",
+    "The OTE and commission sheet is based on the standard plan in Assumptions: base salary, variable pay at 100% and an optional accelerator above quota. The commission rate is variable pay divided by quota."
+   ]
+  },
+  {
+   "path": "/en/post/bonus-agreement-template",
+   "k": 2,
+   "lang": "en",
+   "head": [
+    "Target",
+    "Weight",
+    "Target value",
+    "Result",
+    "Attainment",
+    "Payout",
+    "Bonus"
+   ],
+   "rows": [
+    [
+     "New revenue",
+     "50%",
+     "DKK 4,000,000",
+     "DKK 4,400,000",
+     "110%",
+     "125%",
+     "DKK 45,000"
+    ],
+    [
+     "New customers",
+     "30%",
+     "20",
+     "18",
+     "90%",
+     "75%",
+     "DKK 16,200"
+    ],
+    [
+     "Personal objective (MBO)",
+     "20%",
+     "Met",
+     "Met",
+     "100%",
+     "100%",
+     "DKK 14,400"
+    ],
+    [
+     "Total",
+     "100%",
+     "",
+     "",
+     "",
+     "105%",
+     "DKK 75,600"
+    ]
+   ],
+   "near": [
+    "How the numbers are calculated: 110% is halfway between target and maximum, so the payout is 100% + 0.5 × 50% = 125%, and the bonus for the target is 72,000 × 50% × 125% = DKK 45,000. 90% is halfway between threshold and target, so the payout is 50% + 0.5 × 50% = 75%, and the bonus is 72,000 × 30% × 75% = DKK 16,200. The MBO objective gives 72,000 × 20% × 100% = DKK 14,400. DKK 75,600 in total, a weighted payout of 105%.",
+    "On leaving: if the rep leaves on 30 June, they have been employed for 6 of the year's 12 months. The proportional bonus is 75,600 × 6/12 = DKK 37,800, paid when the year's bonus is calculated.",
+    "Example: A rep has a target bonus of DKK 72,000 a year, equal to 15% of a fixed annual salary of DKK 480,000. The scale gives a 50% payout at the threshold (80% attainment), 100% at target and 150% at maximum (120% attainment). These are the numbers in the template."
+   ],
+   "mutate": "midtotal"
+  }
+ ],
+ "flow_true": [
+  {
+   "path": "/ordbog/icm",
+   "lang": "da",
+   "items": [
+    "Plandesign: Planen fastlægger, hvem der tjener hvad på hvilke deals: satser, kvoter, acceleratorer, krediteringsregler og hvornår provisionen er optjent (ved underskrift, fakturering eller betaling).",
+    "Data: Lukkede deals, fakturaer og betalinger hentes fra CRM og økonomisystem og kobles til den rigtige sælger og periode.",
+    "Beregning: Planens regler køres på data, inklusive delinger, trin, lofter og eventuelle clawbacks eller korrektioner fra tidligere perioder.",
+    "Godkendelse: Hver sælger får en provisionsopgørelse, som en leder eller økonomi godkender, før noget udbetales.",
+    "Udbetaling: De godkendte beløb sendes til lønsystemet som en samlet fil og udbetales med lønnen.",
+    "Indsigelser: Sælgerne stiller spørgsmål til konkrete linjer, administratoren undersøger dem, og eventuelle rettelser kommer med i næste cyklus."
+   ]
+  },
+  {
+   "path": "/en/glossary/icm",
+   "lang": "en",
+   "items": [
+    "Plan design: The plan defines who earns what on which deals: rates, quotas, accelerators, crediting rules and when commission is earned (signed, invoiced or paid).",
+    "Data: Closed deals, invoices and payments are collected from the CRM and finance system and matched to the right rep and period.",
+    "Calculation: The plan rules are applied to the data, including splits, tiers, caps and any clawbacks or corrections from earlier periods.",
+    "Approval: Each rep gets a commission statement, and a manager or finance approves it before anything is paid.",
+    "Payout: Approved amounts are sent to payroll as one file and paid with salary.",
+    "Disputes: Reps raise questions on specific lines, the admin investigates, and any correction flows into the next cycle. See avoiding commission disputes."
+   ]
+  },
+  {
+   "path": "/en/post/commission-management-a-complete-explanation-practical-cases-modern-best-practices",
+   "lang": "en",
+   "items": [
+    "Plan: Write down who is on which plan, what counts as a sale (signed, invoiced or paid), rates, tiers, caps, splits and clawback rules, each with a worked example. Reps should acknowledge the plan before the period starts.",
+    "Data: Collect closed deals, owners, amounts and dates from the CRM, plus invoices, credit notes and margin from accounting. Lock the period's data at a fixed cut-off date.",
+    "Calculation: Apply the plan rules to every deal and rep: rates, tiers, accelerators, splits and draw recovery. The commission formulas and examples guide covers the math.",
+    "Approval: A sales manager and finance review each rep's statement, check unusual payouts and approve before anything goes to payroll.",
+    "Payout: Send one approved file to payroll and give each rep a statement that shows how every amount was calculated.",
+    "Disputes and corrections: Answer questions against the statement, and book cancellations, credit notes and clawbacks as corrections in the next open period instead of reopening paid ones."
+   ]
+  }
+ ],
+ "flow_false": [
+  {
+   "path": "/post/provision-excel-skabelon",
+   "lang": "da",
+   "items": [
+    "Indstillinger: Vælg år og afregningsmåned. Skriv sælgerne ind med model, grundlag, kvote, satser og eventuelt loft. Skriv lønartsnummeret ind.",
+    "Salg: Slet eksempeldataene, og tilføj jeres handler. Dækningsbidrag er kun nødvendigt for sælgere, der får provision af DB.",
+    "Beregning: Tjek tallene for måneden. Brug filteret i overskriften til at se en sælger ad gangen.",
+    "Lønfil: Godkend beløbene, og tast eller importer dem i lønsystemet.",
+    "Opgørelse: Vælg hver sælger i rullemenuen, og gem opgørelsen som PDF.",
+    "Gem en kopi pr. måned: Så kan I altid vise, hvad der blev udbetalt, og på hvilket grundlag."
+   ]
+  },
+  {
+   "path": "/en/post/commission-statement-template",
+   "lang": "en",
+   "items": [
+    "The rep confirms the statement. If a deal is missing or a rate is wrong, now is the time to fix it, not after payroll.",
+    "The manager approves the deals, tiers and adjustments.",
+    "Finance approves the amount payable. Only then does the line count as approved on the payroll sheet."
+   ]
+  },
+  {
+   "path": "/post/provision-loensystem",
+   "lang": "da",
+   "items": [
+    "Sælgeren ser sin opgørelse med de deals, satser og korrektioner, der ligger bag beløbet.",
+    "Salgslederen godkender, at deals og krediteringer er rigtige.",
+    "Økonomi godkender perioden og låser den.",
+    "Kun låste, godkendte beløb sendes til løn."
+   ]
+  },
+  {
+   "path": "/en/integrations/zenegy",
+   "lang": "en",
+   "items": [
+    "Connect Zenegy and Prowi. Prowi is listed in Zenegy’s app marketplace. The connection is set up once.",
+    "Check emails. Reps need the same email in Zenegy and in Prowi. That is what the employee is matched on.",
+    "Choose rate and status. Decide which rate in Zenegy the supplements should land on, and whether they are created as pending or approved. Check with your accountant or payroll provider that the rate treats commission correctly for tax, labour market contribution, holiday pay and pension.",
+    "Set up approval. Decide in Prowi who approves the statement, for example the rep and then their manager.",
+    "Pay out each period. When statements are approved, an administrator selects the reps on the payouts page in Prowi and sends the amounts. The supplements wait in Zenegy for the next payroll run.",
+    "Check the first payroll run. Zenegy does not accept test payouts, so check the supplements on the first employees in Zenegy before you run payroll the first time."
+   ]
+  },
+  {
+   "path": "/ordbog/quota-attainment",
+   "lang": "da",
+   "items": [
+    "Fastlæg perioden. Brug samme periode som kvoten: måned, kvartal eller år.",
+    "Læg det krediterede salg sammen. Tæl kun det, planen tæller, fx underskrevet ny ARR eller faktureret omsætning, og kun handler krediteret til denne sælger.",
+    "Træk tilbageførsler fra. Fratræk annulleringer, kreditnotaer og clawbacks, der falder i perioden.",
+    "Divider med kvoten for samme periode, og gang med 100."
+   ]
+  },
+  {
+   "path": "/en/glossary/performance-bonus",
+   "lang": "en",
+   "items": [
+    "Pick one or two measures the person can influence directly.",
+    "Set the target amount as a fixed sum or a share of base salary or OTE.",
+    "Define the curve: threshold, payout at 100%, and whether there is a cap.",
+    "Fix the period and payout date, for example quarterly, paid with the following month's salary.",
+    "Write down the edge cases: what happens with leave, mid-year starts and people who leave before payout."
+   ]
+  }
+ ],
+ "num_true": [
+  {
+   "path": "/post/saelger-loen-danmark",
+   "lang": "da",
+   "heading": "Nøgletal",
+   "items": [
+    {
+     "text": "91.244 kr.: Salgs- og marketingchefer tjente mest, 73 % mere end gennemsnittet for alle lønmodtagere (52.846 kr. om måneden).",
+     "bold": [
+      "91.244 kr.:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "79.337 kr.: IT-sælgere var de bedst betalte sælgere uden ledelsesansvar, svarende til 952.044 kr. om året.",
+     "bold": [
+      "79.337 kr.:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "Ca. 54.800 kr.: Det var medianlønnen for salgskonsulenter og B2B-sælgere, den største B2B-salgsgruppe med ca. 30.000 fuldtidsbeskæftigede.",
+     "bold": [
+      "Ca. 54.800 kr.:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "Ca. 44.400 kr.: Så stor var afstanden mellem nederste og øverste kvartil i IT-salg, hvor en fjerdedel tjente over ca. 98.800 kr. om måneden.",
+     "bold": [
+      "Ca. 44.400 kr.:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "16,7 %: Så meget mindre tjente kvindelige salgskonsulenter end mandlige, mod 12,3 % for alle lønmodtagere (ukorrigeret).",
+     "bold": [
+      "16,7 %:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "2,8 gange: En salgs- og marketingchef tjente 2,8 gange så meget som en butikssælger, der lå på 32.260 kr. om måneden.",
+     "bold": [
+      "2,8 gange:"
+     ],
+     "lead": true
+    }
+   ]
+  },
+  {
+   "path": "/en/post/sales-salary-guide",
+   "lang": "en",
+   "heading": "Key findings",
+   "items": [
+    {
+     "text": "DKK 91,244: Sales and marketing managers earned the most, 73% more than the average for all employees (DKK 52,846 a month).",
+     "bold": [
+      "DKK 91,244:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "DKK 79,337: ICT sales professionals were the best-paid salespeople without management duties, equal to DKK 952,044 a year.",
+     "bold": [
+      "DKK 79,337:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "About DKK 54,800: This was the median for commercial sales representatives, the largest B2B sales group with about 30,000 full-time employees.",
+     "bold": [
+      "About DKK 54,800:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "About DKK 44,400: This was the gap between the lower and upper quartile in ICT sales, where a quarter earned more than about DKK 98,800 a month.",
+     "bold": [
+      "About DKK 44,400:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "16.7%: Women in commercial sales earned this much less than men, compared with 12.3% for all employees (unadjusted).",
+     "bold": [
+      "16.7%:"
+     ],
+     "lead": true
+    },
+    {
+     "text": "2.8 times: A sales and marketing manager earned 2.8 times as much as a shop sales assistant, who averaged DKK 32,260 a month.",
+     "bold": [
+      "2.8 times:"
+     ],
+     "lead": true
+    }
+   ]
+  },
+  {
+   "path": "/en/post/sales-commission-statistics",
+   "lang": "en",
+   "heading": "Key numbers",
+   "items": [
+    {
+     "text": "Only 48% of account executives hit annual quota in 2026.",
+     "bold": [
+      "48%"
+     ],
+     "lead": false
+    },
+    {
+     "text": "Median AE OTE is $200,000, against a median quota of $960,000.",
+     "bold": [
+      "$200,000",
+      "$960,000"
+     ],
+     "lead": false
+    },
+    {
+     "text": "Only 67% of firms say their sales compensation program always pays everyone accurately.",
+     "bold": [
+      "67%"
+     ],
+     "lead": false
+    },
+    {
+     "text": "74% of reps wish there were more transparency in how their compensation is calculated (vendor survey).",
+     "bold": [
+      "74%"
+     ],
+     "lead": true
+    },
+    {
+     "text": "82% of companies offer accelerators; only 14% cap commission.",
+     "bold": [
+      "82%",
+      "14%"
+     ],
+     "lead": true
+    }
+   ]
+  },
+  {
+   "path": "/post/sales-commission-statistics",
+   "lang": "da",
+   "heading": "De vigtigste tal",
+   "items": [
+    {
+     "text": "Kun 48 % af account executives nåede deres årsmål i 2026.",
+     "bold": [
+      "48 %"
+     ],
+     "lead": false
+    },
+    {
+     "text": "Median-OTE for AE'er er $200.000, mod et medianmål på $960.000.",
+     "bold": [
+      "$200.000",
+      "$960.000"
+     ],
+     "lead": false
+    },
+    {
+     "text": "Kun 67 % af virksomhederne siger, at deres provisionsordning altid udbetaler korrekt til alle.",
+     "bold": [
+      "67 %"
+     ],
+     "lead": false
+    },
+    {
+     "text": "74 % af sælgerne ønsker mere gennemsigtighed i, hvordan deres løn beregnes (leverandørundersøgelse).",
+     "bold": [
+      "74 %"
+     ],
+     "lead": true
+    },
+    {
+     "text": "82 % af virksomhederne bruger accelerators; kun 14 % har loft over provisionen.",
+     "bold": [
+      "82 %",
+      "14 %"
+     ],
+     "lead": true
+    }
+   ]
+  }
+ ],
+ "num_false": [
+  {
+   "path": "/en/post/how-many-salespeople-per-employee",
+   "lang": "en",
+   "heading": "Key findings",
+   "items": [
+    {
+     "text": "In a sample of 100 European B2B companies using HubSpot Sales Hub (October 2026), the median company had one person in a commercial role for every 3.6 employees.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "In a sample of 100 European B2B companies using HubSpot Sales Hub (October 2026), companies with 10–60 employees typically had 7–14 people in sales.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "In a sample of 100 European B2B companies using HubSpot Sales Hub (October 2026), about 1 in 3 employees worked in sales at companies with 10–25 employees, and about 1 in 5 at companies with 60–150 employees.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "In a sample of 100 European B2B companies using HubSpot Sales Hub (October 2026), 86% of companies with 10–25 employees already had 5 or more people in sales roles.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "In a sample of 100 European B2B companies using HubSpot Sales Hub (October 2026), a widely used sales-intelligence database listed a median of 2 salespeople per company, while a manual LinkedIn count found a median of 11.",
+     "bold": [],
+     "lead": false
+    }
+   ]
+  },
+  {
+   "path": "/post/hvor-mange-saelgere-per-medarbejder",
+   "lang": "da",
+   "heading": "Nøglefund",
+   "items": [
+    {
+     "text": "I et datasæt med 100 europæiske B2B-virksomheder, der bruger HubSpot Sales Hub (oktober 2026), havde medianvirksomheden en person i en kommerciel rolle for hver 3,6 medarbejdere.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "I et datasæt med 100 europæiske B2B-virksomheder, der bruger HubSpot Sales Hub (oktober 2026), havde virksomheder med 10–60 medarbejdere typisk 7–14 personer i salg.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "I et datasæt med 100 europæiske B2B-virksomheder, der bruger HubSpot Sales Hub (oktober 2026), arbejdede cirka hver tredje medarbejder med salg i virksomheder med 10–25 ansatte og cirka hver femte i virksomheder med 60–150 ansatte.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "I et datasæt med 100 europæiske B2B-virksomheder, der bruger HubSpot Sales Hub (oktober 2026), havde 86 % af virksomhederne med 10–25 medarbejdere allerede 5 eller flere personer i salgsroller.",
+     "bold": [],
+     "lead": false
+    },
+    {
+     "text": "I et datasæt med 100 europæiske B2B-virksomheder, der bruger HubSpot Sales Hub (oktober 2026), angav en udbredt sales intelligence-database en median på 2 sælgere pr. virksomhed, mens en manuel optælling på LinkedIn gav en median på 11.",
+     "bold": [],
+     "lead": false
+    }
+   ]
+  },
+  {
+   "path": "/en/post/ote-quotas-guide",
+   "lang": "en",
+   "heading": "Key Takeaways",
+   "items": [
+    {
+     "text": "OTE is not guaranteed—it represents potential, not promised, earnings. Your actual compensation depends on your performance against quota.",
+     "bold": [
+      "OTE is not guaranteed"
+     ],
+     "lead": true
+    },
+    {
+     "text": "The pay mix matters—the ratio of base to variable compensation significantly impacts your financial risk and reward potential.",
+     "bold": [
+      "The pay mix matters"
+     ],
+     "lead": true
+    },
+    {
+     "text": "Research is essential—before accepting an OTE-based role, investigate quota attainment rates, historical team performance, and what top performers actually earn.",
+     "bold": [
+      "Research is essential"
+     ],
+     "lead": true
+    },
+    {
+     "text": "Negotiate strategically—OTE packages have multiple components (base, variable, caps, accelerators, ramp terms) that can all be negotiated.",
+     "bold": [
+      "Negotiate strategically"
+     ],
+     "lead": true
+    },
+    {
+     "text": "Plan conservatively—budget based on your base salary rather than full OTE, especially during ramp periods.",
+     "bold": [
+      "Plan conservatively"
+     ],
+     "lead": true
+    },
+    {
+     "text": "Get it in writing—all compensation terms should be documented in your offer letter and commission plan.",
+     "bold": [
+      "Get it in writing"
+     ],
+     "lead": true
+    }
+   ]
+  }
+ ],
+ "expr_true": [
+  {
+   "path": "/ordbog/fornyelsesprovision",
+   "lang": "da",
+   "text": "En kontrakt på 300.000 kr. fornyes med en sats på 3 %: 300.000 kr. × 3 % = 9.000 kr. i fornyelsesprovision."
+  },
+  {
+   "path": "/ordbog/salgskvota",
+   "lang": "da",
+   "text": "Et budget på 18.000.000 kr. × 1,125 i overallokering ÷ 4,5 fuldt produktive sælgere giver en fuld kvote på 4.500.000 kr."
+  },
+  {
+   "path": "/en/glossary/renewal-commission",
+   "lang": "en",
+   "text": "A $45,000 contract renews at a 3% renewal rate: $45,000 × 3% = $1,350 in renewal commission to the person responsible for the renewal."
+  },
+  {
+   "path": "/en/glossary/sales-quota",
+   "lang": "en",
+   "text": "$3,600,000 plan × 1.125 over-assignment ÷ 4.5 ramped reps gives a full quota of $900,000 per AE."
+  },
+  {
+   "path": "/ordbog/quota-attainment",
+   "lang": "da",
+   "text": "2.000.000 kr. solgt mod en kvote på 2.500.000 kr.: 2.000.000 ÷ 2.500.000 × 100 = 80 % kvoteopfyldelse."
+  },
+  {
+   "path": "/en/glossary/quota-attainment",
+   "lang": "en",
+   "text": "$200,000 sold against a $250,000 quota: $200,000 ÷ $250,000 × 100 = 80% quota attainment."
+  },
+  {
+   "path": "/ordbog/forecasting",
+   "lang": "da",
+   "text": "Eksempel: En handel på 420.000 kr. med 80 % sandsynlighed og en på 280.000 kr. med 50 % giver et vægtet forecast på 336.000 + 140.000 = 476.000 kr."
+  },
+  {
+   "path": "/en/glossary/draw",
+   "lang": "en",
+   "text": "With a $3,000 monthly draw for a quarter ($9,000) and $9,500 in commission earned, the rep receives $9,500 - $9,000 = $500 at settlement."
+  },
+  {
+   "path": "/ordbog/draw",
+   "lang": "da",
+   "text": "Med et draw på 20.000 kr. om måneden i et kvartal (60.000 kr.) og 66.500 kr. i optjent provision får sælgeren 66.500 - 60.000 = 6.500 kr. ved afregningen."
+  },
+  {
+   "path": "/ordbog/clawback",
+   "lang": "da",
+   "text": "12.000 kr. i provision med 6 måneders pro rata clawback: Opsiger kunden i måned 3, modregnes 12.000 × 4/6 = 8.000 kr. i næste udbetaling."
+  },
+  {
+   "path": "/en/glossary/clawback",
+   "lang": "en",
+   "text": "$1,500 commission with a 6-month pro rata clawback: if the customer cancels in month 3, $1,500 × 4/6 = $1,000 is deducted from the next payout."
+  },
+  {
+   "path": "/en/glossary/annual-contract-value-acv",
+   "lang": "en",
+   "text": "A 3-year contract worth $90,000 has an ACV of $90,000 ÷ 3 = $30,000; at 10% commission on ACV the rep earns $3,000."
+  }
+ ],
+ "expr_false": [
+  {
+   "path": "/ordbog/loebende-provision",
+   "lang": "da",
+   "text": "5 % løbende provision af en kunde, der betaler 10.000 kr. om måneden, giver sælgeren 500 kr. hver måned, eller 6.000 kr. om året."
+  },
+  {
+   "path": "/en/glossary/icm",
+   "lang": "en",
+   "text": "10 reps on 8% commission close €500,000 in March; the ICM process turns that into 10 approved statements and one €40,000 payroll file."
+  },
+  {
+   "path": "/ordbog/margin-based-commission",
+   "lang": "da",
+   "text": "En aftale på 400.000 kr. ved 15 %: bruttoavance 160.000 kr. giver 24.000 kr., DB 120.000 kr. giver 18.000 kr., nettomargin 72.000 kr. giver 10.800 kr."
+  },
+  {
+   "path": "/en/glossary/leaderboard",
+   "lang": "en",
+   "text": "A new rep with $30,000 against a $25,000 ramp quota is at 120% attainment and ranks above a veteran at 116%."
+  },
+  {
+   "path": "/en/glossary/commission-statement",
+   "lang": "en",
+   "text": "$93,750 in sales against a $75,000 quota earns $10,313 in commission; after -$675 in net adjustments, the statement shows a $9,638 payout."
+  },
+  {
+   "path": "/ordbog/commission-statement",
+   "lang": "da",
+   "text": "625.000 kr. i salg mod en kvote på 500.000 kr. giver 68.750 kr. i provision; efter -4.500 kr. i justeringer viser opgørelsen 64.250 kr. til udbetaling."
+  },
+  {
+   "path": "/ordbog/attainment",
+   "lang": "da",
+   "text": "Med et variabelt mål på 450.000 kr. og 2:1 over kvoten giver 120 % attainment 140 % af målet, altså 630.000 kr."
+  },
+  {
+   "path": "/ordbog/accelerator",
+   "lang": "da",
+   "text": "En sælger på 110 % af målet kan tjene 12 % på den ekstra omsætning i stedet for 8 %. Derfor løfter acceleratorer stærke kvartaler endnu højere."
+  }
+ ]
+}
