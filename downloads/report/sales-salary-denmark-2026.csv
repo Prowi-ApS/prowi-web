@@ -1,0 +1,15 @@
+﻿disco,occupation,average_dkk_month,average_dkk_year_x12,median_dkk_month_approx,lower_quartile_dkk_month_approx,upper_quartile_dkk_month_approx,men_average_dkk_month,women_average_dkk_month,gender_pay_gap_pct,full_time_employees
+1221,Sales and marketing managers,91244,1094928,84400,65100,110300,94509,81919,13.3,9936
+2434,ICT sales professionals,79337,952044,73700,54400,98800,83135,70244,15.5,4102
+2433,Technical and medical sales (excl. ICT),75439,905268,71800,57200,89300,,,,5443
+3321,Insurance representatives,66605,799260,,,,,,,2428
+3339,Business services agents n.e.c.,63353,760236,,,,,,,3887
+2431,Advertising and marketing professionals,59985,719820,,,,,,,12544
+3322,Commercial sales representatives,58892,706704,54800,43700,70300,62721,52249,16.7,29989
+3334,Real estate agents and property managers,55160,661920,50700,41100,64200,58903,52054,11.6,approx. 2400
+3333,Employment agents and contractors,48335,580020,,,,,,,3691
+5244,Contact centre salespersons,43189,518268,42300,34300,50000,,,,4254
+4221,Travel consultants and clerks,42686,512232,,,,,,,2463
+5223,Shop sales assistants,32260,387120,,,,,,,46887
+TOT,All employees,52846,634152,48100,39100,60500,56072,49196,12.3,1876252
+"# Source: Prowi, Sales Salary in Denmark 2026 (prowi.io/en/post/sales-salary-guide), based on Statistics Denmark, StatBank table LONS20, 2025. Standardized monthly earnings incl. pension and irregular payments, excl. overtime; all sectors. Median and quartiles converted from hourly earnings x 160.33 hours, rounded to DKK 100. Gender pay gap = 1 - women/men (unadjusted). Empty cell = not covered in this report. Free to use with attribution and a link."

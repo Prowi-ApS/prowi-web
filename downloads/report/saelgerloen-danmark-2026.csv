@@ -1,0 +1,15 @@
+﻿disco;stilling;gennemsnit_kr_md;gennemsnit_kr_aar_x12;median_kr_md_ca;nedre_kvartil_kr_md_ca;oevre_kvartil_kr_md_ca;maend_gennemsnit_kr_md;kvinder_gennemsnit_kr_md;loenforskel_koen_pct;fuldtidsbeskaeftigede
+1221;Ledelse af salg og marketing;91244;1094928;84400;65100;110300;94509;81919;13,3;9936
+2434;Salg af IT og kommunikationsteknologi;79337;952044;73700;54400;98800;83135;70244;15,5;4102
+2433;Teknisk og medicinsk salg (ekskl. IKT);75439;905268;71800;57200;89300;;;;5443
+3321;Forsikringsarbejde;66605;799260;;;;;;;2428
+3339;Andet arbejde inden for forretningsservice;63353;760236;;;;;;;3887
+2431;Arbejde inden for reklame og marketing;59985;719820;;;;;;;12544
+3322;Salgsarbejde (agenter);58892;706704;54800;43700;70300;62721;52249;16,7;29989
+3334;Ejendomsmægler- og ejendomsadministratorarbejde;55160;661920;50700;41100;64200;58903;52054;11,6;ca. 2400
+3333;Jobformidling;48335;580020;;;;;;;3691
+5244;Salgsarbejde i kundekontaktcentre;43189;518268;42300;34300;50000;;;;4254
+4221;Rejsebureauarbejde;42686;512232;;;;;;;2463
+5223;Salgsarbejde i butik;32260;387120;;;;;;;46887
+TOT;Alle lønmodtagere;52846;634152;48100;39100;60500;56072;49196;12,3;1876252
+"# Kilde: Prowi, Sælgerløn i Danmark 2026 (prowi.io/post/saelger-loen-danmark), baseret på Danmarks Statistik, Statistikbanken tabel LONS20, 2025. Standardberegnet månedsfortjeneste inkl. pension og uregelmæssige betalinger, ekskl. overtid; alle sektorer. Median og kvartiler omregnet fra timefortjeneste x 160,33 timer og afrundet til 100 kr. Lønforskel = 1 - kvinder/mænd (ukorrigeret). Tom celle = ikke opgjort i denne rapport. Fri brug med kildeangivelse og link."
