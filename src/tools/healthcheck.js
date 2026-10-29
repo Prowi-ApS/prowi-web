@@ -73,7 +73,7 @@
     da: {
       q: {
         understood: ['Kan jeres sælgere forklare, hvordan deres provision bliver beregnet?', 'Tænk på en typisk sælger, ikke den mest erfarne.',
-          ['Ja, alle kan forklare planen med egne ord', 'De fleste kender hovedreglerne, men ikke detaljerne', 'Kun nogle få forstår den', 'Nej, planen giver ofte spørgsmål']],
+          ['Ja, alle kan forklare planen med egne ord', 'De fleste forstår det overordnet, men ikke detaljerne', 'Kun nogle få forstår den', 'Nej, planen giver ofte spørgsmål']],
         selfcalc: ['Kan en sælger selv regne sin provision ud for en måned og få samme tal som jer?', null,
           ['Ja, de følger tallet løbende og kan se beregningen', 'Ja, med et regneark eller en opgørelse fra os', 'Kun omtrent, de venter på lønsedlen', 'Nej']],
         exceptions: ['Hvor mange undtagelser og særaftaler har I i planen?', 'Fx individuelle satser, manuelle tillæg eller "lige denne gang".',
@@ -159,7 +159,7 @@
     en: {
       q: {
         understood: ['Can your reps explain how their commission is calculated?', 'Think of a typical rep, not the most experienced one.',
-          ['Yes, everyone can explain the plan in their own words', 'Most know the main rules, but not the details', 'Only a few understand it', 'No, the plan often raises questions']],
+          ['Yes, everyone can explain the plan in their own words', 'Most understand it overall, but not the details', 'Only a few understand it', 'No, the plan often raises questions']],
         selfcalc: ['Can a rep work out their own commission for a month and get the same number as you?', null,
           ['Yes, they follow the number as it builds and can see the calculation', 'Yes, with a spreadsheet or a statement from us', 'Only roughly, they wait for the payslip', 'No']],
         exceptions: ['How many exceptions and side agreements does your plan have?', 'For example individual rates, manual top-ups or "just this once".',
