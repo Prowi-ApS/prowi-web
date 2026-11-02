@@ -88,21 +88,26 @@ for (const [k, d] of Object.entries(C)) {
     const st = { v: {}, t: {} };
     (d.toggles || []).forEach(t => { st.t[t.key] = t.def; });
     d.fields.forEach(f => { st.v[f.key] = kit.startVal(f, lang); });
-    const w = d.view(st, lang, kit.helpers(lang), d.strings[lang]);
+    const w = d.view(st, lang, kit.helpers(lang, d.currency), d.strings[lang]);
     assert.ok(w.hero && w.metrics.length === 3 && w.sections.length && w.formula, k + ' ' + lang + ' renders'); n++;
     const all = JSON.stringify(w);
     assert.ok(!/\{\w+\}|undefined|NaN/.test(all), k + ' ' + lang + ': unfilled placeholder or NaN in ' + all.match(/.{40}(\{\w+\}|undefined|NaN).{20}/)); n++;
     if (lang === 'da') { assert.ok(!/[éáóú]/.test(all), k + ': acute accent in Danish copy'); n++; }
     // currency: Danish kr. only; English USD by default, never DKK/kr./krone (v1.25.55)
     if (lang === 'da') { assert.ok(!/[$€£]|DKK/.test(all), k + ' da: foreign currency ' + all.match(/.{30}([$€£]|DKK).{10}/)); n++; }
-    else {
+    else if (d.currency === 'DKK') {
+      // Danish-law calculators: DKK after the number, US number format, Danish start values
+      assert.ok(/\d,\d{3}\u00a0DKK/.test(all) && !/[$€£]|kr\.|krone/.test(all), k + ' en: DKK default ' + all.slice(0, 200)); n++;
+    } else {
       assert.ok(!/DKK|\bkr\b|kr\.|krone/i.test(all), k + ' en: DKK/kr. in ' + all.match(/.{30}(DKK|kr\.|krone).{10}/i)); n++;
       if (d.fields.some(f => f.kind === 'kr')) { assert.ok(/\$\d/.test(all), k + ' en: USD amounts'); n++; }
     }
   }
 }
 // English start values: every amount field has a USD-sized value (DKK ÷ about 7, clean round numbers)
-for (const [k, d] of Object.entries(C)) for (const f of d.fields) if (f.kind === 'kr' && f.def != null) {
+is(Object.entries(C).filter(([k, d]) => d.currency === 'DKK').map(([k]) => k).join(), 'holiday,absence', 'Danish-law calculators default to DKK');
+for (const [k, d] of Object.entries(C)) for (const f of d.fields) if (f.kind === 'kr' && d.currency === 'DKK') { is(f.en, undefined, k + '.' + f.key + ': keeps the DKK start value in English'); }
+for (const [k, d] of Object.entries(C)) for (const f of d.fields) if (f.kind === 'kr' && f.def != null && d.currency !== 'DKK') {
   assert.ok(typeof f.en === 'number' && f.en > 0 && f.en < f.def, k + '.' + f.key + ': no USD start value'); n++;
   const r = f.def / f.en; assert.ok(r > 5.5 && r < 8.5, k + '.' + f.key + ': ' + f.def + ' -> ' + f.en + ' is not about ÷7'); n++;
   assert.ok(f.en % 100 === 0, k + '.' + f.key + ': USD start value not rounded'); n++;
@@ -166,6 +171,30 @@ function mountIn(lang, storage, d) {
   is(m.sel, null, 'DA has no currency menu');
   is(m.root.querySelector('[data-input="sales"]').value, '420.000', 'DA start value 420.000');
   is(m.root.querySelector('.pw-calc__box').lastChild.textContent, 'kr.', 'DA unit after the amount');
+}
+{
+  // holiday-pay and sick-pay (Danish law): DKK by default on English pages, menu shown, own memory
+  const store = { 'pw-calc-currency': 'USD' }; // a USD choice made on another calculator
+  const h = mountIn('en', store, C.holiday);
+  is(h.hero(), '12,600 DKK', 'holiday EN: DKK default with the Danish start values, US number format');
+  is(h.root.querySelector('[data-input="prior"]').value, '168,000', 'holiday EN start value 168,000');
+  is(h.sel && h.sel.value, 'DKK', 'holiday EN: menu shown, DKK selected');
+  is(h.root.querySelector('.pw-calc__box').lastChild.textContent, 'DKK', 'holiday EN: DKK after the amount');
+  const a = mountIn('en', store, C.absence);
+  is(a.hero(), '12,273 DKK', 'sick-pay EN: DKK default, not flipped by the shared USD choice');
+  a.sel.value = 'EUR'; a.sel.dispatchEvent(new Event('change'));
+  is(a.hero(), '€12,273', 'sick-pay EN: viewer can still switch');
+  is(store['pw-calc-currency-dk'] + ' ' + store['pw-calc-currency'], 'EUR USD', 'choice saved under its own key; the shared key is untouched');
+  is(mountIn('en', store, C.holiday).hero(), '€12,600', 'an explicit choice on a Danish-law calculator is remembered for both');
+  is(mountIn('en', store, C.tiers).hero(), '$4,100', 'and does not flip the other calculators');
+  is(mountIn('en', 'throw', C.absence).hero(), '12,273 DKK', 'blocked storage: DKK');
+  // on one page: a switch on tiers does not move holiday-pay, and the other way round
+  const doc = makeDoc('en', {}); global.window = doc.defaultView;
+  for (const id of ['tiers', 'holiday-pay']) { const r = doc.createElement('div'); r.setAttribute('data-tool', id); doc.body.appendChild(r); }
+  const t = kit.mount(doc, C.tiers), hp = kit.mount(doc, C.holiday);
+  const ts = t.root.querySelector('[data-currency-select]'); ts.value = 'GBP'; ts.dispatchEvent(new Event('change'));
+  is(t.currency() + ' ' + hp.currency(), 'GBP DKK', 'same page: tiers switch leaves holiday-pay on DKK');
+  is(mountIn('da', { 'pw-calc-currency-dk': 'EUR' }, C.holiday).hero(), '12.600 kr.', 'holiday DA unchanged');
 }
 console.log('calculators: ' + n + ' checks passed');
 process.exit(0); // the kit's live-region timer would otherwise keep Node waiting

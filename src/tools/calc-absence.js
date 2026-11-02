@@ -113,17 +113,19 @@
 
   var def = {
     id: 'sick-pay', strings: strings, calc: calc, params: params, view: view,
+    // Danish law: English pages default to DKK with the Danish start values; own currency memory (calc-kit.js)
+    currency: 'DKK', curKey: 'pw-calc-currency-dk',
     toggles: [
       { key: 'type', label: 'type', big: true, def: 'sick', opts: [{ v: 'sick', label: 't_sick', sub: 't_sick_sub' }, { v: 'half', label: 't_half', sub: 't_half_sub' }, { v: 'full', label: 't_full', sub: 't_full_sub' }, { v: 'none', label: 't_none', sub: 't_none_sub' }] },
       { key: 'ref', label: 'ref', def: '12', opts: [{ v: '3', label: 'ref3' }, { v: '6', label: 'ref6' }, { v: '12', label: 'ref12' }] },
       { key: 'closedMode', label: 'closedMode', def: 'add', opts: [{ v: 'add', label: 'c_add' }, { v: 'offset', label: 'c_offset' }], show: function (s) { return nz(s.v.closed) > 0; } }
     ],
     fields: [
-      { key: 'refTotal', kind: 'kr', def: 216000, en: 30000, label: 'refTotal', hint: 'refTotal_hint' },
+      { key: 'refTotal', kind: 'kr', def: 216000, label: 'refTotal', hint: 'refTotal_hint' },
       { key: 'workdays', kind: 'dec', def: 22, label: 'workdays', unit: { da: 'dage', en: 'days' }, step: 1, max: 31 },
       { key: 'absent', kind: 'dec', def: 15, label: 'absent', unit: { da: 'dage', en: 'days' }, step: 1, max: 31 },
-      { key: 'base', kind: 'kr', def: 35000, en: 5000, label: 'base' },
-      { key: 'earnedWork', kind: 'kr', def: 5000, en: 700, label: 'earnedWork', hint: 'earnedWork_hint', placeholder: 'none' },
+      { key: 'base', kind: 'kr', def: 35000, label: 'base' },
+      { key: 'earnedWork', kind: 'kr', def: 5000, label: 'earnedWork', hint: 'earnedWork_hint', placeholder: 'none' },
       { key: 'closed', kind: 'kr', def: null, label: 'closed', hint: 'closed_hint', placeholder: 'none' }
     ],
     layout: ['toggle:ref', 'refTotal', { pair: ['workdays', 'absent'] }, 'base', 'earnedWork', 'closed', 'toggle:closedMode']

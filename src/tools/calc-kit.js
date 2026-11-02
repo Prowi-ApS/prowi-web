@@ -13,9 +13,10 @@
    changes the symbol only, saved in localStorage "pw-calc-currency" (shared with the commission calculator); the root gets
    data-currency. English start values: a field's `en` (Danish start value ÷ about 7, rounded). Mapping, DKK -> USD:
    tiers sales 420.000 -> 60,000, limits 200.000/350.000/500.000 -> 30,000/50,000/70,000; accelerator quota 350.000 ->
-   50,000, sales 420.000 -> 60,000; split deal 300.000 -> 40,000; holiday-pay last year 168.000 -> 24,000, salary 30.000 ->
-   4,300; sick-pay reference total 216.000 -> 30,000, salary 35.000 -> 5,000, earned 5.000 -> 700; quota target 12 mio.
-   -> 1,700,000. Rates, days and percentages are unchanged.
+   50,000, sales 420.000 -> 60,000; split deal 300.000 -> 40,000; quota target 12 mio. -> 1,700,000. Rates, days and
+   percentages are unchanged.
+   holiday-pay and sick-pay implement Danish law: on English pages they default to DKK with the Danish start values
+   (def.currency 'DKK', own storage key 'pw-calc-currency-dk'), still with the menu.
 
    Calculator modules queue themselves in window.__pwCalcQ (the loader may run them before this file) and the kit mounts
    them; after the kit has run, window.__pwCalcMount(def) mounts at once. In Node the kit exports its formatting and
@@ -68,8 +69,8 @@
   // amounts with two decimals when there are øre/cents (646,05 kr., $646.05), none when it is a whole number (840 kr.)
   function fmtKr2(n, lang, cur) { var v = Math.round((Number(n) || 0) * 100) / 100; return money(v % 1 ? fmtFixed(v, lang, 2) : fmtNum(v, lang, 0), lang, cur); }
   // the viewer's saved currency (English pages); storage can be missing or blocked, then USD
-  function savedCur(win) { try { var c = win && win.localStorage && win.localStorage.getItem(KEY); return CURS.indexOf(c) > -1 ? c : null; } catch (e) { return null; } }
-  function saveCur(win, c) { try { win.localStorage.setItem(KEY, c); } catch (e) { /* private mode */ } }
+  function savedCur(win, key) { try { var c = win && win.localStorage && win.localStorage.getItem(key); return CURS.indexOf(c) > -1 ? c : null; } catch (e) { return null; } }
+  function saveCur(win, key, c) { try { win.localStorage.setItem(key, c); } catch (e) { /* private mode */ } }
   // start values: English pages use the field's `en` value (USD-sized example numbers) when it has one
   function startVal(f, lang) { var v = lang === 'en' && f.en !== undefined ? f.en : f.def; return v == null ? null : v; }
   function fmtPct(p, lang, dec) {
@@ -185,7 +186,10 @@
     root.setAttribute('data-calc-ready', '1');
     var lang = /^en/i.test(doc.documentElement.getAttribute('lang') || '') ? 'en' : 'da';
     // English pages: the viewer's currency (saved) or USD; Danish pages: kr.
-    var cur = lang === 'en' ? savedCur(typeof window !== 'undefined' && window) || 'USD' : 'DKK';
+    // A calculator of Danish law (holiday-pay, sick-pay) sets currency: 'DKK' and curKey: its default and its own storage key,
+    // so a USD choice made on another calculator never flips it; only a choice made on one of these does.
+    var curKey = def.curKey || KEY;
+    var cur = lang === 'en' ? savedCur(typeof window !== 'undefined' && window, curKey) || def.currency || 'USD' : 'DKK';
     var S = def.strings[lang], H = helpers(lang, cur);
     root.setAttribute('data-currency', cur);
     if (!doc.getElementById('pw-calc-css')) {
@@ -336,7 +340,7 @@
     // switch the symbol (and number layout) only; the amounts stay as typed. Other calculators on the page follow.
     function setCur(c, save) {
       c = curOf(lang, c);
-      if (save) { saveCur(window, c); for (var i = 0; i < MOUNTED.length; i++) if (MOUNTED[i] !== api) MOUNTED[i].setCurrency(c); }
+      if (save) { saveCur(window, curKey, c); for (var i = 0; i < MOUNTED.length; i++) if (MOUNTED[i] !== api && MOUNTED[i].key === curKey) MOUNTED[i].setCurrency(c); }
       if (c === cur) return;
       cur = c; H = helpers(lang, cur); root.setAttribute('data-currency', cur);
       if (cs && cs.value !== cur) cs.value = cur;
@@ -428,7 +432,7 @@
       liveTimer = setTimeout(function () { setText(live, w.live || (w.kicker + ': ' + w.hero + '.')); }, 500);
     }
     render();
-    var api = { state: state, render: render, root: root, setCurrency: function (c) { setCur(c, false); }, currency: function () { return cur; } };
+    var api = { state: state, render: render, root: root, key: curKey, setCurrency: function (c) { setCur(c, false); }, currency: function () { return cur; } };
     if (lang === 'en') MOUNTED.push(api);
     return api;
   }
