@@ -105,7 +105,7 @@
     id: 'quota', strings: strings, calc: calc, params: params, view: view,
     toggles: [],
     fields: [
-      { key: 'target', kind: 'kr', def: 12000000, en: 1700000, label: 'target', hint: 'target_hint' },
+      { key: 'target', kind: 'kr', def: 12000000, en: 1600000, label: 'target', hint: 'target_hint' },
       { key: 'over', kind: 'pct', def: 15, label: 'over', hint: 'over_hint', max: 100 },
       { key: 'reps', kind: 'dec', def: 6, label: 'reps', step: 1, max: 1000 },
       { key: 'newReps', kind: 'dec', def: 2, label: 'newReps', placeholder: 'none', step: 1, max: 1000 },

@@ -19,14 +19,15 @@ is(kit.parse('12.5', 'da', 'pct'), 12.5, 'dot decimal on a Danish page');
 is(kit.parse('1.5', 'en', 'x'), 1.5, 'en multiplier');
 is(kit.parse('', 'da', 'kr'), null, 'empty');
 is(kit.fmtKr(1234567, 'da'), '1.234.567 kr.', 'da kr');
-is(kit.fmtKr(1234567, 'en'), '$1,234,567', 'en defaults to USD, en-US format');
-is(kit.fmtKr(1234567, 'en', 'EUR'), '€1,234,567', 'en EUR');
+is(kit.fmtKr(1234567, 'en'), '€1,234,567', 'en defaults to EUR, en-US separators');
+is(kit.fmtKr(1234567, 'en', 'USD'), '$1,234,567', 'en USD');
 is(kit.fmtKr(1234567, 'en', 'GBP'), '£1,234,567', 'en GBP');
 is(kit.fmtKr(1234567, 'en', 'DKK'), '1,234,567 DKK', 'en DKK after the number');
-is(kit.fmtKr(1234567, 'en', 'XYZ'), '$1,234,567', 'unknown currency falls back to USD');
+is(kit.fmtKr(1234567, 'en', 'XYZ'), '€1,234,567', 'unknown currency falls back to EUR');
 is(kit.fmtKr(1234567, 'da', 'USD'), '1.234.567 kr.', 'da is always kr., whatever is asked');
-is(kit.fmtKr(-1000, 'en'), '−$1,000', 'minus before the symbol');
-is(kit.fmtKr2(1000.5, 'en'), '$1,000.50', 'en cents');
+is(kit.fmtKr(-1000, 'en'), '−€1,000', 'minus before the symbol');
+is(kit.fmtKr2(1000.5, 'en'), '€1,000.50', 'en cents');
+is(kit.fmtKr2(1000.5, 'en', 'USD'), '$1,000.50', 'en USD cents');
 is(kit.fmtKr2(646.05, 'da'), '646,05 kr.', 'da øre');
 is(kit.fmtKr2(840, 'en', 'DKK'), '840 DKK', 'whole amount, no decimals');
 is(kit.parse('$1,250,000', 'en', 'kr'), 1250000, 'en amount typed with $');
@@ -93,31 +94,32 @@ for (const [k, d] of Object.entries(C)) {
     const all = JSON.stringify(w);
     assert.ok(!/\{\w+\}|undefined|NaN/.test(all), k + ' ' + lang + ': unfilled placeholder or NaN in ' + all.match(/.{40}(\{\w+\}|undefined|NaN).{20}/)); n++;
     if (lang === 'da') { assert.ok(!/[éáóú]/.test(all), k + ': acute accent in Danish copy'); n++; }
-    // currency: Danish kr. only; English USD by default, never DKK/kr./krone (v1.25.55)
+    // currency: Danish kr. only; English EUR by default, never DKK/kr./krone (v1.25.56)
     if (lang === 'da') { assert.ok(!/[$€£]|DKK/.test(all), k + ' da: foreign currency ' + all.match(/.{30}([$€£]|DKK).{10}/)); n++; }
     else if (d.currency === 'DKK') {
       // Danish-law calculators: DKK after the number, US number format, Danish start values
       assert.ok(/\d,\d{3}\u00a0DKK/.test(all) && !/[$€£]|kr\.|krone/.test(all), k + ' en: DKK default ' + all.slice(0, 200)); n++;
     } else {
       assert.ok(!/DKK|\bkr\b|kr\.|krone/i.test(all), k + ' en: DKK/kr. in ' + all.match(/.{30}(DKK|kr\.|krone).{10}/i)); n++;
-      if (d.fields.some(f => f.kind === 'kr')) { assert.ok(/\$\d/.test(all), k + ' en: USD amounts'); n++; }
+      if (d.fields.some(f => f.kind === 'kr')) { assert.ok(/€\d/.test(all) && !/\$/.test(all), k + ' en: EUR amounts'); n++; }
     }
   }
 }
-// English start values: every amount field has a USD-sized value (DKK ÷ about 7, clean round numbers)
+// English start values: every amount field has a EUR-sized value (DKK ÷ 7.46, rounded to the thousand)
 is(Object.entries(C).filter(([k, d]) => d.currency === 'DKK').map(([k]) => k).join(), 'holiday,absence', 'Danish-law calculators default to DKK');
 for (const [k, d] of Object.entries(C)) for (const f of d.fields) if (f.kind === 'kr' && d.currency === 'DKK') { is(f.en, undefined, k + '.' + f.key + ': keeps the DKK start value in English'); }
 for (const [k, d] of Object.entries(C)) for (const f of d.fields) if (f.kind === 'kr' && f.def != null && d.currency !== 'DKK') {
-  assert.ok(typeof f.en === 'number' && f.en > 0 && f.en < f.def, k + '.' + f.key + ': no USD start value'); n++;
-  const r = f.def / f.en; assert.ok(r > 5.5 && r < 8.5, k + '.' + f.key + ': ' + f.def + ' -> ' + f.en + ' is not about ÷7'); n++;
-  assert.ok(f.en % 100 === 0, k + '.' + f.key + ': USD start value not rounded'); n++;
+  assert.ok(typeof f.en === 'number' && f.en > 0 && f.en < f.def, k + '.' + f.key + ': no EUR start value'); n++;
+  const r = f.def / f.en; assert.ok(r > 7.3 && r < 7.6, k + '.' + f.key + ': ' + f.def + ' -> ' + f.en + ' is not about ÷7.46'); n++;
+  assert.ok(f.en % 1000 === 0, k + '.' + f.key + ': EUR start value not rounded'); n++;
 }
-// USD maths on the English defaults (same rates, so only the amounts scale)
-eq(C.tiers.calc({ method: 'marginal', sales: 60000, limits: [30000, 50000, 70000], rates: [5, 8, 10, 12] }).commission, 4100, 'tiers EN default $4,100');
-eq(C.accelerator.calc({ quota: 50000, sales: 60000, base: 8, how: 'mult', mult: 1.5 }).commission, 5200, 'accelerator EN default $5,200');
+// EUR maths on the English defaults (same rates, so only the amounts scale)
+eq(C.tiers.calc({ method: 'marginal', sales: 56000, limits: [27000, 47000, 67000], rates: [5, 8, 10, 12] }).commission, 3850, 'tiers EN default €3,850');
+eq(C.accelerator.calc({ quota: 47000, sales: 56000, base: 8, how: 'mult', mult: 1.5 }).commission, 4840, 'accelerator EN default €4,840');
 
-// The page: mount in a small DOM (test/_dom.js). EN: currency menu, USD by default, switching changes the symbol only,
-// remembered per viewer in localStorage, works without storage. DA: no menu, kr. (v1.25.55)
+// The page: mount in a small DOM (test/_dom.js). EN: EUR by default; the unit of the first amount field is the currency
+// switch (a native <select> laid over "€ ▾"); switching changes the symbol only, is remembered per viewer in localStorage
+// and works without storage. DA: no switch, kr. (v1.25.56)
 const { makeDoc } = require('./_dom');
 function mountIn(lang, storage, d) {
   const doc = makeDoc(lang, storage); global.window = doc.defaultView;
@@ -125,74 +127,81 @@ function mountIn(lang, storage, d) {
   const api = kit.mount(doc, d);
   return { doc, root, api, hero: () => root.querySelector('.pw-calc__value').textContent, sel: root.querySelector('[data-currency-select]') };
 }
+const pick = (sel, v) => { sel.value = v; sel.dispatchEvent(new Event('change')); };
 {
   const store = {}, m = mountIn('en', store, C.tiers);
-  is(m.hero(), '$4,100', 'EN mounts in USD with US number format');
-  is(m.root.getAttribute('data-currency'), 'USD', 'EN data-currency');
-  assert.ok(m.sel && m.sel.tagName === 'SELECT', 'EN has a currency menu'); n++;
-  is(m.sel.children.map(o => o.value).join(), 'USD,EUR,GBP,DKK', 'menu options');
-  const lab = m.root.querySelector('label[for="' + m.sel.id + '"]');
-  is(lab && lab.textContent, 'Currency', 'menu has a visible label tied to it');
-  const box = m.root.querySelector('.pw-calc__box');
-  is(box.firstChild.className + ' ' + box.firstChild.textContent, 'pw-calc__unit $', 'USD symbol before the amount');
-  is(m.root.querySelector('[data-input="sales"]').value, '60,000', 'EN start value $60,000');
-  m.sel.value = 'EUR'; m.sel.dispatchEvent(new Event('change'));
-  is(m.hero(), '€4,100', 'switch to EUR: same number, new symbol');
-  is(store['pw-calc-currency'], 'EUR', 'choice saved in localStorage');
-  m.sel.value = 'DKK'; m.sel.dispatchEvent(new Event('change'));
-  is(m.hero(), '4,100 DKK', 'switch to DKK: symbol after the number');
-  is(box.lastChild.textContent, 'DKK', 'DKK unit after the amount');
-  is(m.root.querySelector('[data-input="sales"]').value, '60,000', 'inputs keep their numbers (no conversion)');
-  m.sel.value = 'GBP'; m.sel.dispatchEvent(new Event('change'));
-  is(m.hero(), '£4,100', 'switch to GBP');
-  assert.ok(m.root.querySelector('.pw-calc__band').innerHTML.indexOf('£30,000–£50,000') > -1, 'tier range carries the symbol on both ends'); n++;
+  is(m.hero(), '€3,850', 'EN mounts in EUR: symbol first, en-US separators');
+  is(m.root.getAttribute('data-currency'), 'EUR', 'EN data-currency');
+  assert.ok(m.sel && m.sel.tagName === 'SELECT', 'EN has a currency switch (native select)'); n++;
+  is(m.root.querySelectorAll('[data-currency-select]').length, 1, 'one switch per calculator');
+  is(m.root.querySelectorAll('.pw-calc__cur').length, 1, 'no separate currency row');
+  is(m.sel.children.map(o => o.value).join(), 'EUR,USD,GBP,DKK', 'switch options');
+  is(m.sel.getAttribute('aria-label'), 'Currency', 'switch has an accessible name');
+  const box = m.root.querySelector('[data-input="sales"]').parentNode, sw = m.sel.parentNode;
+  is(sw.className + '|' + (sw.parentNode === box) + '|' + (box.firstChild === sw), 'pw-calc__cur|true|true', 'switch is the prefix of the first amount box');
+  is(sw.firstChild.textContent + '|' + sw.firstChild.getAttribute('aria-hidden'), '€ ▾|true', 'switch shows "€ ▾" (decorative text, the select is what is announced)');
+  const box2 = m.root.querySelector('[data-input="t1"]').parentNode;
+  is(box2.firstChild.className + ' ' + box2.firstChild.textContent + ' ' + !box2.querySelector('select'), 'pw-calc__unit € true', 'other amount boxes: plain € prefix that follows');
+  is(m.root.querySelector('[data-input="sales"]').value, '56,000', 'EN start value €56,000');
+  pick(m.sel, 'USD');
+  is(m.hero(), '$3,850', 'switch to USD: same number, new symbol');
+  is(sw.firstChild.textContent + ' ' + box2.firstChild.textContent, '$ ▾ $', 'switch and other units follow');
+  is(store['pw-calc-currency'], 'USD', 'choice saved in localStorage');
+  pick(m.sel, 'DKK');
+  is(m.hero(), '3,850 DKK', 'switch to DKK: symbol after the number');
+  is(box.lastChild === sw && sw.firstChild.textContent, 'DKK ▾', 'DKK: the switch moves after the amount');
+  is(box2.lastChild.textContent, 'DKK', 'DKK unit after the other amounts');
+  is(m.root.querySelector('[data-input="sales"]').value, '56,000', 'inputs keep their numbers (no conversion)');
+  pick(m.sel, 'GBP');
+  is(m.hero(), '£3,850', 'switch to GBP');
+  is(box.firstChild, sw, 'GBP: switch back in front');
+  assert.ok(m.root.querySelector('.pw-calc__band').innerHTML.indexOf('£27,000–£47,000') > -1, 'tier range carries the symbol on both ends'); n++;
   assert.ok(!/DKK|kr\./.test(m.root.querySelector('.pw-calc__band').innerHTML) && /£/.test(m.root.querySelector('.pw-calc__band').innerHTML), 'breakdown follows the currency'); n++;
   // a second visit starts in the saved currency
-  is(mountIn('en', store, C.accelerator).hero(), '£5,200', 'saved currency is used on the next calculator');
+  is(mountIn('en', store, C.accelerator).hero(), '£4,840', 'saved currency is used on the next calculator');
 }
 {
   // two calculators on one page follow the same choice
   const doc = makeDoc('en', {}); global.window = doc.defaultView;
   for (const id of ['tiers', 'split']) { const r = doc.createElement('div'); r.setAttribute('data-tool', id); doc.body.appendChild(r); }
   const a = kit.mount(doc, C.tiers), b = kit.mount(doc, C.split);
-  const s = a.root.querySelector('[data-currency-select]'); s.value = 'EUR'; s.dispatchEvent(new Event('change'));
-  is(b.currency() + ' ' + b.root.querySelector('[data-currency-select]').value, 'EUR EUR', 'other calculator on the page follows');
+  pick(a.root.querySelector('[data-currency-select]'), 'USD');
+  is(b.currency() + ' ' + b.root.querySelector('[data-currency-select]').value, 'USD USD', 'other calculator on the page follows');
 }
 {
   const m = mountIn('en', 'throw', C.tiers);
-  is(m.hero(), '$4,100', 'blocked storage: USD');
-  m.sel.value = 'EUR'; m.sel.dispatchEvent(new Event('change'));
-  is(m.hero(), '€4,100', 'blocked storage: switching still works');
-  is(mountIn('en', { 'pw-calc-currency': 'BTC' }, C.tiers).hero(), '$4,100', 'unknown saved value: USD');
+  is(m.hero(), '€3,850', 'blocked storage: EUR');
+  pick(m.sel, 'USD');
+  is(m.hero(), '$3,850', 'blocked storage: switching still works');
+  is(mountIn('en', { 'pw-calc-currency': 'BTC' }, C.tiers).hero(), '€3,850', 'unknown saved value: EUR');
 }
 {
-  const m = mountIn('da', { 'pw-calc-currency': 'EUR' }, C.tiers);
+  const m = mountIn('da', { 'pw-calc-currency': 'USD' }, C.tiers);
   is(m.hero(), '29.000 kr.', 'DA unchanged: kr., Danish format, DKK start values (ignores a saved EN choice)');
-  is(m.sel, null, 'DA has no currency menu');
+  is(m.sel, null, 'DA has no currency switch');
   is(m.root.querySelector('[data-input="sales"]').value, '420.000', 'DA start value 420.000');
-  is(m.root.querySelector('.pw-calc__box').lastChild.textContent, 'kr.', 'DA unit after the amount');
+  is(m.root.querySelector('.pw-calc__box').lastChild.className + ' ' + m.root.querySelector('.pw-calc__box').lastChild.textContent, 'pw-calc__unit kr.', 'DA unit after the amount');
 }
 {
-  // holiday-pay and sick-pay (Danish law): DKK by default on English pages, menu shown, own memory
-  const store = { 'pw-calc-currency': 'USD' }; // a USD choice made on another calculator
+  // holiday-pay and sick-pay (Danish law): DKK by default on English pages, switch shown, own memory
+  const store = { 'pw-calc-currency': 'USD' }; // a choice made on another calculator
   const h = mountIn('en', store, C.holiday);
   is(h.hero(), '12,600 DKK', 'holiday EN: DKK default with the Danish start values, US number format');
   is(h.root.querySelector('[data-input="prior"]').value, '168,000', 'holiday EN start value 168,000');
-  is(h.sel && h.sel.value, 'DKK', 'holiday EN: menu shown, DKK selected');
-  is(h.root.querySelector('.pw-calc__box').lastChild.textContent, 'DKK', 'holiday EN: DKK after the amount');
+  is(h.sel && h.sel.value, 'DKK', 'holiday EN: switch shown, DKK selected');
+  is(h.root.querySelector('[data-input="prior"]').parentNode.lastChild.firstChild.textContent, 'DKK ▾', 'holiday EN: "DKK ▾" after the amount');
   const a = mountIn('en', store, C.absence);
-  is(a.hero(), '12,273 DKK', 'sick-pay EN: DKK default, not flipped by the shared USD choice');
-  a.sel.value = 'EUR'; a.sel.dispatchEvent(new Event('change'));
+  is(a.hero(), '12,273 DKK', 'sick-pay EN: DKK default, not flipped by the shared choice');
+  pick(a.sel, 'EUR');
   is(a.hero(), '€12,273', 'sick-pay EN: viewer can still switch');
   is(store['pw-calc-currency-dk'] + ' ' + store['pw-calc-currency'], 'EUR USD', 'choice saved under its own key; the shared key is untouched');
   is(mountIn('en', store, C.holiday).hero(), '€12,600', 'an explicit choice on a Danish-law calculator is remembered for both');
-  is(mountIn('en', store, C.tiers).hero(), '$4,100', 'and does not flip the other calculators');
+  is(mountIn('en', store, C.tiers).hero(), '$3,850', 'and does not flip the other calculators');
   is(mountIn('en', 'throw', C.absence).hero(), '12,273 DKK', 'blocked storage: DKK');
-  // on one page: a switch on tiers does not move holiday-pay, and the other way round
   const doc = makeDoc('en', {}); global.window = doc.defaultView;
   for (const id of ['tiers', 'holiday-pay']) { const r = doc.createElement('div'); r.setAttribute('data-tool', id); doc.body.appendChild(r); }
   const t = kit.mount(doc, C.tiers), hp = kit.mount(doc, C.holiday);
-  const ts = t.root.querySelector('[data-currency-select]'); ts.value = 'GBP'; ts.dispatchEvent(new Event('change'));
+  pick(t.root.querySelector('[data-currency-select]'), 'GBP');
   is(t.currency() + ' ' + hp.currency(), 'GBP DKK', 'same page: tiers switch leaves holiday-pay on DKK');
   is(mountIn('da', { 'pw-calc-currency-dk': 'EUR' }, C.holiday).hero(), '12.600 kr.', 'holiday DA unchanged');
 }

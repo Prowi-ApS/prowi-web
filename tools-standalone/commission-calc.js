@@ -3,8 +3,9 @@
    page-level custom code, pinned by commit with an SRI hash.
 
    The static Webflow markup is the default state (fast sats, 420.000 kr. sales, 350.000 kr. quota).
-   English (v1.25.55): amounts in USD by default ($60,000 sales, $50,000 quota; EN_DEF below), with a currency menu
-   (USD / EUR / GBP / DKK) that only changes the symbol, never the numbers. The choice is saved in localStorage
+   English (v1.25.56): amounts in EUR by default (€56,000 sales, €47,000 quota; EN_DEF below). The unit of the first
+   amount field ("€ ▾") is the currency switch: a native <select> (EUR / USD / GBP / DKK) laid over the unit, so click, tap
+   and keyboard all work; it only changes the symbol, never the numbers. The choice is saved in localStorage
    "pw-calc-currency", shared with the free calculators of the site bundle (calc-kit.js).
    This script swaps the [data-input] spans for real inputs, wires the [data-mode] / [data-period] /
    [data-retro] toggles and re-renders the [data-o] outputs. In Node it exports the pure maths and
@@ -59,7 +60,7 @@
       grp_mode: 'Provisionsmodel', grp_period: 'Periode', grp_retro: 'Hvornår gælder den høje sats'
     },
     en: {
-      kr: '$', pctSpace: false, dash: '—', currency: 'Currency',
+      kr: '€', pctSpace: false, dash: '—', currency: 'Currency',
       sum_fast: '{rate} of {sales}',
       sum_tiers: 'Tiered plan with {n} tiers on {sales} in sales',
       sum_accel: '{base} up to quota and {high} above quota',
@@ -106,18 +107,18 @@
     if (r === 0) r = 0; // no "-0"
     return (r < 0 ? '−' : '') + group(String(Math.abs(r)), lang);
   }
-  /* Currency: Danish pages always kr.; English pages USD unless the viewer picked another one. $, € and £ go before
-     the number ($33,600, −$1,000), DKK after it (33,600 DKK). */
-  var CURS = ['USD', 'EUR', 'GBP', 'DKK'], SYM = { USD: '$', EUR: '€', GBP: '£' }, KEY = 'pw-calc-currency';
-  function curOf(lang, cur) { return lang !== 'en' ? 'DKK' : CURS.indexOf(cur) > -1 ? cur : 'USD'; }
+  /* Currency: Danish pages always kr.; English pages EUR unless the viewer picked another one. €, $ and £ go before
+     the number (€4,480, −€1,000), DKK after it (4,480 DKK). */
+  var CURS = ['EUR', 'USD', 'GBP', 'DKK'], SYM = { USD: '$', EUR: '€', GBP: '£' }, KEY = 'pw-calc-currency';
+  function curOf(lang, cur) { return lang !== 'en' ? 'DKK' : CURS.indexOf(cur) > -1 ? cur : 'EUR'; }
   function unit(lang, cur) { return lang !== 'en' ? STR.da.kr : SYM[curOf(lang, cur)] || 'DKK'; }
   function fmtKr(n, lang, cur) {
     var s = fmtNum(n, lang), y = lang === 'en' && SYM[curOf(lang, cur)];
     if (!y) return s + NB + unit(lang, cur);
     return s.charAt(0) === '−' ? '−' + y + s.slice(1) : y + s;
   }
-  // USD-sized start values for English pages (DKK default ÷ 7, rounded to a clean number); the markup carries the DKK ones
-  var EN_DEF = { sales: 60000, quota: 50000, base: 4600, t1: 30000, t2: 50000 };
+  // EUR-sized start values for English pages (DKK default ÷ 7.46, rounded); the markup carries the DKK ones
+  var EN_DEF = { sales: 56000, quota: 47000, base: 4300, t1: 27000, t2: 47000 };
   // percent value (10 = 10 %), at most `dec` decimals, trailing zeros trimmed
   function fmtPct(p, lang, dec) {
     if (p == null || !isFinite(p)) return STR[lang === 'en' ? 'en' : 'da'].dash;
@@ -253,9 +254,18 @@
     '.pw-cc-js [role="radio"]:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}' +
     '.pw-cc-js label{cursor:pointer;margin:0;font-weight:inherit}' +
     '.pw-cc-js .pw-cc__hero-value{transition:transform 300ms cubic-bezier(.2,.8,.2,1)}' +
-    '.pw-cc__cur{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:13px}' +
-    '.pw-cc__cur select{height:32px;padding:0 8px;border-radius:8px;border:1px solid rgba(17,6,99,.14);background:#fff;color:#110663;font:inherit;font-size:13px;font-weight:500;cursor:pointer}' +
-    '.pw-cc__cur select:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}';
+    '.pw-cc-js .pw-cc__cur{position:relative;flex:none;display:inline-flex;align-items:center;align-self:stretch;margin:6px -4px;padding:0 6px;border-radius:8px;font-size:15px;font-weight:500;color:#110663;white-space:nowrap;cursor:pointer;transition:background-color 140ms}' +
+    '.pw-cc-js .pw-cc__cur:hover,.pw-cc-js .pw-cc__cur:focus-within{background:#F4F1FE}' +
+    '.pw-cc-js .pw-cc__cur:focus-within{outline:2px solid #4C39CA;outline-offset:1px}' +
+    '.pw-cc-js .pw-cc__cur-select{position:absolute;top:0;left:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;font-size:16px;cursor:pointer;-webkit-appearance:none;appearance:none}' +
+    // layout by the calculator's own width (side panels, narrow embeds), whatever the viewport: see fit() in mount()
+    '.pw-cc-js.pw-cc--mid{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}' +
+    '.pw-cc-js.pw-cc--narrow{grid-template-columns:minmax(0,1fr)}' +
+    '.pw-cc--narrow .pw-cc__hero-value,.pw-cc--narrow .pw-cc__metric{white-space:normal;overflow-wrap:anywhere}' +
+    '.pw-cc--tiny .pw-cc__hero-value{font-size:34px}.pw-cc--tiny .pw-cc__metric{font-size:22px}' +
+    '.pw-cc--tiny .pw-cc__modes,.pw-cc--tiny .pw-tool__inputs,.pw-cc--tiny .pw-ote__hero-card,.pw-cc--tiny .pw-ote__card,.pw-cc--tiny .pw-ote__scen-band{padding:18px 16px}' +
+    '.pw-cc--tiny .pw-cc__pair,.pw-cc--tiny .pw-cc__row,.pw-cc--tiny .pw-cc__row--total{grid-template-columns:minmax(0,1fr)}.pw-cc--tiny .pw-cc__seg{grid-auto-flow:row;grid-auto-columns:auto}' +
+    '.pw-cc--tiny .pw-cc__row-amount{text-align:left;white-space:normal}';
 
   function mount(doc) {
     var root = doc.querySelector('[data-tool="commission"]');
@@ -263,7 +273,7 @@
     root.setAttribute('data-cc-ready', '1');
     var lang = /^en/i.test(doc.documentElement.getAttribute('lang') || '') ? 'en' : 'da';
     var S = STR[lang], win = doc.defaultView || (typeof window !== 'undefined' ? window : null), cur = 'DKK';
-    if (lang === 'en') { cur = 'USD'; try { var sc = win.localStorage.getItem(KEY); if (CURS.indexOf(sc) > -1) cur = sc; } catch (e) { /* no storage */ } }
+    if (lang === 'en') { cur = 'EUR'; try { var sc = win.localStorage.getItem(KEY); if (CURS.indexOf(sc) > -1) cur = sc; } catch (e) { /* no storage */ } }
     root.setAttribute('data-currency', cur);
     if (!doc.getElementById('pw-cc-css')) {
       var st = doc.createElement('style'); st.id = 'pw-cc-css'; st.textContent = CSS; doc.head.appendChild(st);
@@ -314,32 +324,45 @@
       });
     });
 
+    // English: the unit of the first amount field becomes the currency switch ("€ ▾"), a native <select> laid over it;
+    // the other units follow. Changes the symbol, never the numbers.
+    var sel = null, swText = null;
+    if (lang === 'en' && units.length) {
+      var sw = units[0][0];
+      while (sw.firstChild) sw.removeChild(sw.firstChild);
+      sw.className += ' pw-cc__cur'; sw.removeAttribute('aria-hidden');
+      swText = doc.createElement('span'); swText.setAttribute('aria-hidden', 'true');
+      sel = doc.createElement('select'); sel.className = 'pw-cc__cur-select';
+      sel.setAttribute('aria-label', S.currency); sel.title = S.currency; sel.setAttribute('data-currency-select', '');
+      CURS.forEach(function (c) { var o = doc.createElement('option'); o.value = c; o.textContent = c + (SYM[c] ? ' (' + SYM[c] + ')' : ''); sel.appendChild(o); });
+      sel.value = cur;
+      sel.addEventListener('change', function () {
+        cur = curOf(lang, sel.value);
+        try { win.localStorage.setItem(KEY, cur); } catch (e) { /* private mode */ }
+        root.setAttribute('data-currency', cur); placeUnits(); render();
+      });
+      sw.appendChild(swText); sw.appendChild(sel);
+    }
     function placeUnits() {
-      units.forEach(function (x) {
-        var us = x[0], box = x[1]; us.textContent = unit(lang, cur);
+      units.forEach(function (x, i) {
+        var us = x[0], box = x[1];
+        if (sel && i === 0) swText.textContent = unit(lang, cur) + ' ▾'; else us.textContent = unit(lang, cur);
         if (lang === 'en' && SYM[cur]) { if (box.firstElementChild !== us) box.insertBefore(us, box.firstElementChild); }
         else if (box.lastElementChild !== us) box.appendChild(us);
       });
     }
     placeUnits();
-    // currency menu (English only), at the top of the input column; changes the symbol, never the numbers
-    var sel = null;
-    if (lang === 'en') {
-      var col = root.querySelector('.pw-tool__inputs');
-      if (col) {
-        var cw = doc.createElement('div'); cw.className = 'pw-cc__cur';
-        var cl = doc.createElement('label'); cl.textContent = S.currency; cl.htmlFor = 'pw-cc-currency';
-        sel = doc.createElement('select'); sel.id = 'pw-cc-currency'; sel.setAttribute('data-currency-select', '');
-        CURS.forEach(function (c) { var o = doc.createElement('option'); o.value = c; o.textContent = c + (SYM[c] ? ' (' + SYM[c] + ')' : ''); sel.appendChild(o); });
-        sel.value = cur;
-        sel.addEventListener('change', function () {
-          cur = curOf(lang, sel.value);
-          try { win.localStorage.setItem(KEY, cur); } catch (e) { /* private mode */ }
-          root.setAttribute('data-currency', cur); placeUnits(); render();
-        });
-        cw.appendChild(cl); cw.appendChild(sel); col.insertBefore(cw, col.firstChild);
-      }
+    // layout by the calculator's own width, not the viewport's
+    var sized = '';
+    function fit() {
+      var w = root.getBoundingClientRect ? root.getBoundingClientRect().width : 0;
+      if (!w) return;
+      var k = w < 400 ? ' pw-cc--narrow pw-cc--tiny' : w < 720 ? ' pw-cc--narrow' : w < 960 ? ' pw-cc--mid' : '';
+      if (k === sized) return;
+      sized = k; root.className = root.className.replace(/\s*pw-cc--(mid|narrow|tiny)\b/g, '') + k;
     }
+    fit();
+    try { if (win && win.ResizeObserver) new win.ResizeObserver(fit).observe(root); } catch (e) { /* media queries only */ }
 
     function onType(inp, key, kind) {
       var raw = inp.value;

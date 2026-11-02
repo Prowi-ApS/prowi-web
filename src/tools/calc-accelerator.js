@@ -129,8 +129,8 @@
       { key: 'how', label: 'how', def: 'mult', opts: [{ v: 'mult', label: 'h_mult' }, { v: 'rate', label: 'h_rate' }] }
     ],
     fields: [
-      { key: 'quota', kind: 'kr', def: 350000, en: 50000, label: 'quota' },
-      { key: 'sales', kind: 'kr', def: 420000, en: 60000, label: 'sales' },
+      { key: 'quota', kind: 'kr', def: 350000, en: 47000, label: 'quota' },
+      { key: 'sales', kind: 'kr', def: 420000, en: 56000, label: 'sales' },
       { key: 'base', kind: 'pct', def: 8, label: 'base' },
       { key: 'mult', kind: 'x', def: 1.5, label: 'mult', hint: 'mult_hint', show: function (s) { return s.t.how !== 'rate'; } },
       { key: 'high', kind: 'pct', def: 12, label: 'high', show: function (s) { return s.t.how === 'rate'; } },

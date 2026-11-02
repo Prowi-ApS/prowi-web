@@ -134,10 +134,10 @@
     toggles: [{ key: 'method', label: 'method', big: true, def: 'marginal',
       opts: [{ v: 'marginal', label: 'm_marg', sub: 'm_marg_sub' }, { v: 'whole', label: 'm_whole', sub: 'm_whole_sub' }] }],
     fields: [
-      { key: 'sales', kind: 'kr', def: 420000, en: 60000, label: 'sales' },
-      { key: 't1', kind: 'kr', def: 200000, en: 30000, label: 't1' }, { key: 'r1', kind: 'pct', def: 5, label: 'r1' },
-      { key: 't2', kind: 'kr', def: 350000, en: 50000, label: 't2' }, { key: 'r2', kind: 'pct', def: 8, label: 'r2' },
-      { key: 't3', kind: 'kr', def: 500000, en: 70000, label: 't3', placeholder: 'noLimit' }, { key: 'r3', kind: 'pct', def: 10, label: 'r3' },
+      { key: 'sales', kind: 'kr', def: 420000, en: 56000, label: 'sales' },
+      { key: 't1', kind: 'kr', def: 200000, en: 27000, label: 't1' }, { key: 'r1', kind: 'pct', def: 5, label: 'r1' },
+      { key: 't2', kind: 'kr', def: 350000, en: 47000, label: 't2' }, { key: 'r2', kind: 'pct', def: 8, label: 'r2' },
+      { key: 't3', kind: 'kr', def: 500000, en: 67000, label: 't3', placeholder: 'noLimit' }, { key: 'r3', kind: 'pct', def: 10, label: 'r3' },
       { key: 'r4', kind: 'pct', def: 12, label: 'r4', show: function (s) { return nz(s.v.t3) > nz(s.v.t2); } }
     ],
     layout: ['sales', { pair: ['t1', 'r1'] }, { pair: ['t2', 'r2'] }, { pair: ['t3', 'r3'], hint: 't3hint' }, 'r4']
