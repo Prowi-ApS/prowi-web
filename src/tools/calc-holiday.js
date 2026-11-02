@@ -121,11 +121,11 @@
     toggles: [{ key: 'method', label: 'method', big: true, def: '125',
       opts: [{ v: '125', label: 'm125', sub: 'm125_sub' }, { v: 'avg', label: 'mavg', sub: 'mavg_sub' }] }],
     fields: [
-      { key: 'prior', kind: 'kr', def: 168000, label: 'prior', hint: 'prior_hint' },
+      { key: 'prior', kind: 'kr', def: 168000, en: 24000, label: 'prior', hint: 'prior_hint' },
       { key: 'days', kind: 'dec', def: 15, label: 'days', unit: { da: 'dage', en: 'days' }, step: 1, max: 60 },
       { key: 'workdays', kind: 'dec', def: 21.67, label: 'workdays', hint: 'workdays_hint', unit: { da: 'dage', en: 'days' }, step: 1, max: 31, show: function (s) { return s.t.method === 'avg'; } },
       { key: 'earned', kind: 'kr', def: null, label: 'earned', placeholder: 'none', hint: 'earned_hint' },
-      { key: 'base', kind: 'kr', def: 30000, label: 'base', hint: 'base_hint' }
+      { key: 'base', kind: 'kr', def: 30000, en: 4300, label: 'base', hint: 'base_hint' }
     ],
     layout: ['prior', 'days', 'workdays', 'earned', 'base']
   };

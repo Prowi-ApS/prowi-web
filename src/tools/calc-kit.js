@@ -9,6 +9,14 @@
    [data-tool="sick-pay"], [data-tool="quota"]. The site footer counts Plausible "Calculator used" on the first input
    event inside [data-tool]; the toggles fire an input event too, so a visitor who only clicks a toggle is counted.
 
+   Currency (v1.25.55): Danish pages kr.; English pages USD by default with a "Currency" menu (USD / EUR / GBP / DKK) that
+   changes the symbol only, saved in localStorage "pw-calc-currency" (shared with the commission calculator); the root gets
+   data-currency. English start values: a field's `en` (Danish start value ÷ about 7, rounded). Mapping, DKK -> USD:
+   tiers sales 420.000 -> 60,000, limits 200.000/350.000/500.000 -> 30,000/50,000/70,000; accelerator quota 350.000 ->
+   50,000, sales 420.000 -> 60,000; split deal 300.000 -> 40,000; holiday-pay last year 168.000 -> 24,000, salary 30.000 ->
+   4,300; sick-pay reference total 216.000 -> 30,000, salary 35.000 -> 5,000, earned 5.000 -> 700; quota target 12 mio.
+   -> 1,700,000. Rates, days and percentages are unchanged.
+
    Calculator modules queue themselves in window.__pwCalcQ (the loader may run them before this file) and the kit mounts
    them; after the kit has run, window.__pwCalcMount(def) mounts at once. In Node the kit exports its formatting and
    parsing helpers so the maths can be tested (test/calculators.test.js). */
@@ -45,10 +53,25 @@
     if (Number(s) === 0) v = 0;
     return (v < 0 ? '−' : '') + group(p[0], lang) + (p[1] ? (lang === 'en' ? '.' : ',') + p[1] : '');
   }
-  function unitKr(lang) { return lang === 'en' ? 'DKK' : 'kr.'; }
-  function fmtKr(n, lang) { return fmtNum(n, lang, 0) + NB + unitKr(lang); }
-  // kroner with two decimals when there are øre (646,05 kr.), none when it is a whole number (840 kr.)
-  function fmtKr2(n, lang) { var v = Math.round((Number(n) || 0) * 100) / 100; return (v % 1 ? fmtFixed(v, lang, 2) : fmtNum(v, lang, 0)) + NB + unitKr(lang); }
+  /* Currency (v1.25.55). Danish pages: always kr. English pages: USD by default, or what the viewer picked in the
+     calculator's currency menu (USD / EUR / GBP / DKK, remembered in localStorage KEY). Only the symbol changes, never
+     the numbers (no exchange rates). Symbols go before the number ($1,000), DKK after it (1,000 DKK). */
+  var CURS = ['USD', 'EUR', 'GBP', 'DKK'], SYM = { USD: '$', EUR: '€', GBP: '£' }, KEY = 'pw-calc-currency';
+  function curOf(lang, cur) { return lang !== 'en' ? 'DKK' : CURS.indexOf(cur) > -1 ? cur : 'USD'; }
+  function unitKr(lang, cur) { return lang !== 'en' ? 'kr.' : SYM[curOf(lang, cur)] || 'DKK'; }
+  function money(s, lang, cur) {
+    var y = SYM[curOf(lang, cur)];
+    if (!y) return s + NB + unitKr(lang, cur);
+    return s.charAt(0) === '−' ? '−' + y + s.slice(1) : y + s; // −$1,000
+  }
+  function fmtKr(n, lang, cur) { return money(fmtNum(n, lang, 0), lang, cur); }
+  // amounts with two decimals when there are øre/cents (646,05 kr., $646.05), none when it is a whole number (840 kr.)
+  function fmtKr2(n, lang, cur) { var v = Math.round((Number(n) || 0) * 100) / 100; return money(v % 1 ? fmtFixed(v, lang, 2) : fmtNum(v, lang, 0), lang, cur); }
+  // the viewer's saved currency (English pages); storage can be missing or blocked, then USD
+  function savedCur(win) { try { var c = win && win.localStorage && win.localStorage.getItem(KEY); return CURS.indexOf(c) > -1 ? c : null; } catch (e) { return null; } }
+  function saveCur(win, c) { try { win.localStorage.setItem(KEY, c); } catch (e) { /* private mode */ } }
+  // start values: English pages use the field's `en` value (USD-sized example numbers) when it has one
+  function startVal(f, lang) { var v = lang === 'en' && f.en !== undefined ? f.en : f.def; return v == null ? null : v; }
   function fmtPct(p, lang, dec) {
     if (p == null || !isFinite(p)) return '—';
     return fmtNum(p, lang, dec == null ? 2 : dec) + (lang === 'en' ? '%' : NB + '%');
@@ -56,7 +79,7 @@
   /* What a person typed. Danish: "1.250.000" and "2,5". English: "1,250,000" and "2.5". Decimal kinds also take "2.5" on a
      Danish page (a dot followed by one or two digits is a decimal point there). null for an empty field; no negatives. */
   function parse(str, lang, kind) {
-    var s = String(str == null ? '' : str).replace(/[\s ]/g, '').replace(/kr\.?|dkk|%|×|x/gi, '');
+    var s = String(str == null ? '' : str).replace(/[\s ]/g, '').replace(/kr\.?|dkk|usd|eur|gbp|[$€£%×x]/gi, '');
     if (!/[0-9]/.test(s)) return null;
     var decimal = kind !== 'kr' && kind !== 'int';
     if (lang === 'en') s = s.replace(/,/g, '');
@@ -72,12 +95,12 @@
   }
   function nz(v) { v = Number(v); return isFinite(v) && v > 0 ? v : 0; }
   function tpl(s, o) { return String(s).replace(/\{(\w+)\}/g, function (m, k) { return o[k] == null ? m : o[k]; }); }
-  function helpers(lang) {
-    lang = lang === 'en' ? 'en' : 'da';
+  function helpers(lang, cur) {
+    lang = lang === 'en' ? 'en' : 'da'; cur = curOf(lang, cur);
     return {
-      lang: lang, nz: nz, tpl: tpl,
-      K: function (n) { return fmtKr(n, lang); },
-      K2: function (n) { return fmtKr2(n, lang); },
+      lang: lang, cur: cur, nz: nz, tpl: tpl,
+      K: function (n) { return fmtKr(n, lang, cur); },
+      K2: function (n) { return fmtKr2(n, lang, cur); },
       P: function (n, d) { return fmtPct(n, lang, d); },
       N: function (n, d) { return fmtNum(n, lang, d); },
       X: function (n) { return fmtNum(n, lang, 2) + '×'; },
@@ -145,6 +168,9 @@
     '.pw-calc__explain{margin:0;font-size:14px;line-height:1.6;color:' + C.text2 + '}',
     '.pw-calc__fine{margin:0;font-size:12.5px;line-height:1.5;color:' + C.muted + '}',
     '.pw-calc__fine a,.pw-calc__explain a{color:' + C.purple + ';text-decoration:underline;text-underline-offset:3px}',
+    '.pw-calc__cur{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:-8px;font-size:13px;color:' + C.text2 + '}',
+    '.pw-calc__cur select{height:32px;padding:0 8px;border-radius:8px;border:1px solid ' + C.strong + ';background:' + C.white + ';color:' + C.dark + ';font:inherit;font-size:13px;font-weight:500;cursor:pointer}',
+    '.pw-calc__cur select:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}',
     '.pw-calc__sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;white-space:nowrap;clip-path:inset(50%)}',
     '@media (max-width:991px){.pw-calc{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}}',
     '@media (max-width:767px){.pw-calc{grid-template-columns:minmax(0,1fr)}.pw-calc__value{white-space:normal}}',
@@ -158,7 +184,10 @@
     if (!root || root.getAttribute('data-calc-ready')) return;
     root.setAttribute('data-calc-ready', '1');
     var lang = /^en/i.test(doc.documentElement.getAttribute('lang') || '') ? 'en' : 'da';
-    var S = def.strings[lang], H = helpers(lang);
+    // English pages: the viewer's currency (saved) or USD; Danish pages: kr.
+    var cur = lang === 'en' ? savedCur(typeof window !== 'undefined' && window) || 'USD' : 'DKK';
+    var S = def.strings[lang], H = helpers(lang, cur);
+    root.setAttribute('data-currency', cur);
     if (!doc.getElementById('pw-calc-css')) {
       var st = doc.createElement('style'); st.id = 'pw-calc-css'; st.textContent = CSS; (doc.head || doc.documentElement).appendChild(st);
     }
@@ -168,11 +197,18 @@
     var state = { v: {}, t: {} };
     var inputs = {}, fieldEls = [], toggleEls = [];
     (def.toggles || []).forEach(function (t) { state.t[t.key] = t.def; });
-    (def.fields || []).forEach(function (f) { state.v[f.key] = f.def == null ? null : f.def; });
+    (def.fields || []).forEach(function (f) { state.v[f.key] = startVal(f, lang); });
     function fmtIn(v, kind) { return v == null ? '' : kind === 'kr' || kind === 'int' ? fmtNum(v, lang, 0) : fmtNum(v, lang, 2); }
     function unitOf(f) {
       if (f.unit) return f.unit[lang] || f.unit;
-      return f.kind === 'kr' ? unitKr(lang) : f.kind === 'pct' ? '%' : f.kind === 'x' ? '×' : '';
+      return f.kind === 'kr' ? unitKr(lang, cur) : f.kind === 'pct' ? '%' : f.kind === 'x' ? '×' : '';
+    }
+    // amount units: $, € and £ stand before the number in the box, kr. and DKK after it
+    var krUnits = [];
+    function placeUnit(us, box, inp) {
+      us.textContent = unitKr(lang, cur);
+      if (SYM[cur] && lang === 'en') { if (box.firstChild !== us) box.insertBefore(us, inp); }
+      else if (box.lastChild !== us) box.appendChild(us);
     }
     function ping(node) { try { node.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) { /* old browsers */ } }
 
@@ -230,7 +266,10 @@
       inp.value = fmtIn(state.v[f.key], f.kind);
       box.appendChild(inp);
       var u = unitOf(f);
-      if (u) { var us = el('span', 'pw-calc__unit', u); us.setAttribute('aria-hidden', 'true'); box.appendChild(us); }
+      if (u) {
+        var us = el('span', 'pw-calc__unit', u); us.setAttribute('aria-hidden', 'true'); box.appendChild(us);
+        if (f.kind === 'kr' && !f.unit) { krUnits.push([us, box, inp]); placeUnit(us, box, inp); }
+      }
       wrap.appendChild(lab); wrap.appendChild(box);
       if (f.hint) { var h = el('div', 'pw-calc__hint', S[f.hint] || f.hint); h.id = id + '-hint'; inp.setAttribute('aria-describedby', h.id); wrap.appendChild(h); }
       inp.addEventListener('input', function () { onType(inp, f); });
@@ -286,6 +325,24 @@
 
     // layout: big toggles (mode band) first, then the input column, then results
     var inCol = el('div', 'pw-calc__inputs');
+    if (lang === 'en') {
+      var cw = el('div', 'pw-calc__cur'), cl = el('label', null, 'Currency'), cs = el('select');
+      cs.id = uid + '-currency'; cl.htmlFor = cs.id; cs.setAttribute('data-currency-select', '');
+      CURS.forEach(function (c) { var o = el('option', null, c + (SYM[c] ? ' (' + SYM[c] + ')' : '')); o.value = c; cs.appendChild(o); });
+      cs.value = cur;
+      cs.addEventListener('change', function () { setCur(cs.value, true); });
+      cw.appendChild(cl); cw.appendChild(cs); inCol.appendChild(cw);
+    }
+    // switch the symbol (and number layout) only; the amounts stay as typed. Other calculators on the page follow.
+    function setCur(c, save) {
+      c = curOf(lang, c);
+      if (save) { saveCur(window, c); for (var i = 0; i < MOUNTED.length; i++) if (MOUNTED[i] !== api) MOUNTED[i].setCurrency(c); }
+      if (c === cur) return;
+      cur = c; H = helpers(lang, cur); root.setAttribute('data-currency', cur);
+      if (cs && cs.value !== cur) cs.value = cur;
+      krUnits.forEach(function (x) { placeUnit(x[0], x[1], x[2]); });
+      render();
+    }
     (def.toggles || []).forEach(function (t) { if (t.big) calc.appendChild(toggle(t)); });
     (def.layout || []).forEach(function (item) {
       if (typeof item === 'string') {
@@ -371,8 +428,14 @@
       liveTimer = setTimeout(function () { setText(live, w.live || (w.kicker + ': ' + w.hero + '.')); }, 500);
     }
     render();
-    return { state: state, render: render };
+    var api = { state: state, render: render, root: root, setCurrency: function (c) { setCur(c, false); }, currency: function () { return cur; } };
+    if (lang === 'en') MOUNTED.push(api);
+    return api;
   }
+  var MOUNTED = [];
 
-  return { mount: mount, helpers: helpers, parse: parse, fmtNum: fmtNum, fmtFixed: fmtFixed, fmtKr: fmtKr, fmtPct: fmtPct, nz: nz, tpl: tpl, CSS: CSS };
+  return {
+    mount: mount, helpers: helpers, parse: parse, fmtNum: fmtNum, fmtFixed: fmtFixed, fmtKr: fmtKr, fmtKr2: fmtKr2, fmtPct: fmtPct,
+    nz: nz, tpl: tpl, startVal: startVal, CURS: CURS, KEY: KEY, CSS: CSS
+  };
 });

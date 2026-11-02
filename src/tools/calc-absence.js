@@ -119,11 +119,11 @@
       { key: 'closedMode', label: 'closedMode', def: 'add', opts: [{ v: 'add', label: 'c_add' }, { v: 'offset', label: 'c_offset' }], show: function (s) { return nz(s.v.closed) > 0; } }
     ],
     fields: [
-      { key: 'refTotal', kind: 'kr', def: 216000, label: 'refTotal', hint: 'refTotal_hint' },
+      { key: 'refTotal', kind: 'kr', def: 216000, en: 30000, label: 'refTotal', hint: 'refTotal_hint' },
       { key: 'workdays', kind: 'dec', def: 22, label: 'workdays', unit: { da: 'dage', en: 'days' }, step: 1, max: 31 },
       { key: 'absent', kind: 'dec', def: 15, label: 'absent', unit: { da: 'dage', en: 'days' }, step: 1, max: 31 },
-      { key: 'base', kind: 'kr', def: 35000, label: 'base' },
-      { key: 'earnedWork', kind: 'kr', def: 5000, label: 'earnedWork', hint: 'earnedWork_hint', placeholder: 'none' },
+      { key: 'base', kind: 'kr', def: 35000, en: 5000, label: 'base' },
+      { key: 'earnedWork', kind: 'kr', def: 5000, en: 700, label: 'earnedWork', hint: 'earnedWork_hint', placeholder: 'none' },
       { key: 'closed', kind: 'kr', def: null, label: 'closed', hint: 'closed_hint', placeholder: 'none' }
     ],
     layout: ['toggle:ref', 'refTotal', { pair: ['workdays', 'absent'] }, 'base', 'earnedWork', 'closed', 'toggle:closedMode']

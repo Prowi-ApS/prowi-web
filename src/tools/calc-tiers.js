@@ -79,7 +79,7 @@
       rows: 'Step-by-step calculation', row_tier: 'Tier {i}: {from}–{to}', row_top: 'Tier {i}: above {from}', row_calc: '{basis} × {rate}',
       row_whole: 'All sales, tier {i} reached', row_total: 'Total commission', row_total_calc: 'Effective rate {eff} of sales', row_total_none: 'No sales in the period',
       f_marg: 'Commission = sum of (sales inside the tier × the tier rate)', f_whole: 'Commission = all sales × the rate of the highest tier reached',
-      x_marg: 'With the marginal method, commission rises smoothly. An extra krone only earns the higher rate on the part of sales above the limit.',
+      x_marg: 'With the marginal method, commission rises smoothly. Each extra sale only earns the higher rate on the part of sales above the limit.',
       x_whole: 'With the whole-amount method, commission jumps when a limit is reached, because the higher rate also applies to the sales below it. That cliff can tempt reps to move deals between periods.',
       fine: 'The calculation is a guide, before tax. Real plans often add more rules, e.g. caps, clawbacks and split commission. Prowi calculates them automatically, deal by deal.',
       live: 'Commission: {c}, effective rate: {eff}, other method: {o}.'
@@ -97,7 +97,7 @@
     var rows = [];
     if (marg) {
       r.tiers.forEach(function (x) {
-        rows.push({ label: x.last ? tpl(S.row_top, { i: x.i, from: K(x.from) }) : tpl(S.row_tier, { i: x.i, from: H.N(x.from), to: K(x.to) }),
+        rows.push({ label: x.last ? tpl(S.row_top, { i: x.i, from: K(x.from) }) : tpl(S.row_tier, { i: x.i, from: H.lang === 'en' && H.cur !== 'DKK' ? K(x.from) : H.N(x.from), to: K(x.to) }),
           calc: tpl(S.row_calc, { basis: K(x.basis), rate: P(x.rate) }), amount: K(x.amount) });
       });
     } else {
@@ -134,10 +134,10 @@
     toggles: [{ key: 'method', label: 'method', big: true, def: 'marginal',
       opts: [{ v: 'marginal', label: 'm_marg', sub: 'm_marg_sub' }, { v: 'whole', label: 'm_whole', sub: 'm_whole_sub' }] }],
     fields: [
-      { key: 'sales', kind: 'kr', def: 420000, label: 'sales' },
-      { key: 't1', kind: 'kr', def: 200000, label: 't1' }, { key: 'r1', kind: 'pct', def: 5, label: 'r1' },
-      { key: 't2', kind: 'kr', def: 350000, label: 't2' }, { key: 'r2', kind: 'pct', def: 8, label: 'r2' },
-      { key: 't3', kind: 'kr', def: 500000, label: 't3', placeholder: 'noLimit' }, { key: 'r3', kind: 'pct', def: 10, label: 'r3' },
+      { key: 'sales', kind: 'kr', def: 420000, en: 60000, label: 'sales' },
+      { key: 't1', kind: 'kr', def: 200000, en: 30000, label: 't1' }, { key: 'r1', kind: 'pct', def: 5, label: 'r1' },
+      { key: 't2', kind: 'kr', def: 350000, en: 50000, label: 't2' }, { key: 'r2', kind: 'pct', def: 8, label: 'r2' },
+      { key: 't3', kind: 'kr', def: 500000, en: 70000, label: 't3', placeholder: 'noLimit' }, { key: 'r3', kind: 'pct', def: 10, label: 'r3' },
       { key: 'r4', kind: 'pct', def: 12, label: 'r4', show: function (s) { return nz(s.v.t3) > nz(s.v.t2); } }
     ],
     layout: ['sales', { pair: ['t1', 'r1'] }, { pair: ['t2', 'r2'] }, { pair: ['t3', 'r3'], hint: 't3hint' }, 'r4']

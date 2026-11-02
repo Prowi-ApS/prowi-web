@@ -143,5 +143,10 @@ parts.append(minify(open('src/tools/_shared.js',encoding='utf-8').read())+'\n')
 # cookie consent banner + footer "Cookie settings" link (replaces Conzent; the site head applies a stored choice early)
 parts.append(minify(open('src/consent.js',encoding='utf-8').read())+'\n')
 out=''.join(parts)
+# 6. Standalone commission calculator (/provisionsberegner, /en/commission-calculator): not part of the bundle; that page's
+#    footer loads tools-standalone/commission-calc.min.js pinned by commit + SRI. Same esbuild flags as its first build.
+if os.path.exists('tools-standalone/commission-calc.js') and os.path.exists(ESBUILD) and not os.environ.get('PW_NOMINIFY'):
+    _cc=subprocess.run([ESBUILD,'--minify','--target=es2017','--loader=js'],input=open('tools-standalone/commission-calc.js','rb').read(),capture_output=True,check=True).stdout
+    open('tools-standalone/commission-calc.min.js','wb').write(_cc)
 open(OUT,'w',encoding='utf-8').write(out)
 print(OUT, len(out), 'bytes; chunks:', {k:os.path.getsize('dist/'+v['f']) for k,v in CHUNKS.items()})

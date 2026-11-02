@@ -102,7 +102,7 @@
     toggles: [{ key: 'mode', label: 'mode', big: true, def: 'top',
       opts: [{ v: 'top', label: 'm_top', sub: 'm_top_sub' }, { v: 'pool', label: 'm_pool', sub: 'm_pool_sub' }] }],
     fields: [
-      { key: 'value', kind: 'kr', def: 300000, label: 'value' },
+      { key: 'value', kind: 'kr', def: 300000, en: 40000, label: 'value' },
       { key: 'rate', kind: 'pct', def: 10, label: 'rate' },
       { key: 'a', kind: 'pct', def: 60, label: 'a', max: 100 },
       { key: 'b', kind: 'pct', def: 40, label: 'b', max: 100 },

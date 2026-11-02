@@ -3,6 +3,9 @@
    page-level custom code, pinned by commit with an SRI hash.
 
    The static Webflow markup is the default state (fast sats, 420.000 kr. sales, 350.000 kr. quota).
+   English (v1.25.55): amounts in USD by default ($60,000 sales, $50,000 quota; EN_DEF below), with a currency menu
+   (USD / EUR / GBP / DKK) that only changes the symbol, never the numbers. The choice is saved in localStorage
+   "pw-calc-currency", shared with the free calculators of the site bundle (calc-kit.js).
    This script swaps the [data-input] spans for real inputs, wires the [data-mode] / [data-period] /
    [data-retro] toggles and re-renders the [data-o] outputs. In Node it exports the pure maths and
    formatting (used by the tests and by the generator of the static markup). */
@@ -56,7 +59,7 @@
       grp_mode: 'Provisionsmodel', grp_period: 'Periode', grp_retro: 'Hvornår gælder den høje sats'
     },
     en: {
-      kr: 'DKK', pctSpace: false, dash: '—',
+      kr: '$', pctSpace: false, dash: '—', currency: 'Currency',
       sum_fast: '{rate} of {sales}',
       sum_tiers: 'Tiered plan with {n} tiers on {sales} in sales',
       sum_accel: '{base} up to quota and {high} above quota',
@@ -103,7 +106,18 @@
     if (r === 0) r = 0; // no "-0"
     return (r < 0 ? '−' : '') + group(String(Math.abs(r)), lang);
   }
-  function fmtKr(n, lang) { return fmtNum(n, lang) + NB + STR[lang === 'en' ? 'en' : 'da'].kr; }
+  /* Currency: Danish pages always kr.; English pages USD unless the viewer picked another one. $, € and £ go before
+     the number ($33,600, −$1,000), DKK after it (33,600 DKK). */
+  var CURS = ['USD', 'EUR', 'GBP', 'DKK'], SYM = { USD: '$', EUR: '€', GBP: '£' }, KEY = 'pw-calc-currency';
+  function curOf(lang, cur) { return lang !== 'en' ? 'DKK' : CURS.indexOf(cur) > -1 ? cur : 'USD'; }
+  function unit(lang, cur) { return lang !== 'en' ? STR.da.kr : SYM[curOf(lang, cur)] || 'DKK'; }
+  function fmtKr(n, lang, cur) {
+    var s = fmtNum(n, lang), y = lang === 'en' && SYM[curOf(lang, cur)];
+    if (!y) return s + NB + unit(lang, cur);
+    return s.charAt(0) === '−' ? '−' + y + s.slice(1) : y + s;
+  }
+  // USD-sized start values for English pages (DKK default ÷ 7, rounded to a clean number); the markup carries the DKK ones
+  var EN_DEF = { sales: 60000, quota: 50000, base: 4600, t1: 30000, t2: 50000 };
   // percent value (10 = 10 %), at most `dec` decimals, trailing zeros trimmed
   function fmtPct(p, lang, dec) {
     if (p == null || !isFinite(p)) return STR[lang === 'en' ? 'en' : 'da'].dash;
@@ -120,7 +134,7 @@
      kind 'pct' also takes "2.5" on a Danish page (a dot followed by one or two digits is a decimal point
      there, never a thousands separator). Returns null for an empty field. Negative input is not allowed. */
   function parse(str, lang, kind) {
-    var s = String(str == null ? '' : str).replace(/[\s ]/g, '').replace(/kr\.?|dkk|%/gi, '');
+    var s = String(str == null ? '' : str).replace(/[\s ]/g, '').replace(/kr\.?|dkk|usd|eur|gbp|[$€£%]/gi, '');
     if (!/[0-9]/.test(s)) return null;
     if (lang === 'en') s = s.replace(/,/g, '');
     else if (s.indexOf(',') > -1) s = s.replace(/\./g, '').replace(',', '.');
@@ -187,13 +201,13 @@
   }
 
   /* ---------------- texts for a result (shared by the page and the static-markup generator) ---------------- */
-  function view(p, lang) {
+  function view(p, lang, cur) {
     lang = lang === 'en' ? 'en' : 'da';
     var S = STR[lang], r = calc(p);
-    var K = function (n) { return fmtKr(n, lang); }, P = function (n, d) { return fmtPct(n, lang, d); };
+    var K = function (n) { return fmtKr(n, lang, cur); }, P = function (n, d) { return fmtPct(n, lang, d); };
     var rows = r.rows.map(function (x) {
       var label;
-      if (x.key === 'tier') label = tpl(x.last ? S.row_tier_last : S.row_tier, { i: x.i, from: x.last ? K(x.from) : fmtNum(x.from, lang), to: K(x.to) });
+      if (x.key === 'tier') label = tpl(x.last ? S.row_tier_last : S.row_tier, { i: x.i, from: x.last || (lang === 'en' && SYM[curOf(lang, cur)]) ? K(x.from) : fmtNum(x.from, lang), to: K(x.to) });
       else if (x.key === 'under' || x.key === 'over') label = tpl(S['row_' + x.key], { q: K(r.quota) });
       else if (x.key === 'db') label = tpl(S.row_db, { dg: P(x.dg), sales: K(r.sales) });
       else label = S['row_' + x.key];
@@ -238,14 +252,19 @@
     '.pw-cc-js .pw-tool__input-box:focus-within{border-color:#4C39CA;box-shadow:0 0 0 4px rgba(76,57,202,.18)}' +
     '.pw-cc-js [role="radio"]:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}' +
     '.pw-cc-js label{cursor:pointer;margin:0;font-weight:inherit}' +
-    '.pw-cc-js .pw-cc__hero-value{transition:transform 300ms cubic-bezier(.2,.8,.2,1)}';
+    '.pw-cc-js .pw-cc__hero-value{transition:transform 300ms cubic-bezier(.2,.8,.2,1)}' +
+    '.pw-cc__cur{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:13px}' +
+    '.pw-cc__cur select{height:32px;padding:0 8px;border-radius:8px;border:1px solid rgba(17,6,99,.14);background:#fff;color:#110663;font:inherit;font-size:13px;font-weight:500;cursor:pointer}' +
+    '.pw-cc__cur select:focus-visible{outline:2px solid #4C39CA;outline-offset:2px}';
 
   function mount(doc) {
     var root = doc.querySelector('[data-tool="commission"]');
     if (!root || root.getAttribute('data-cc-ready')) return;
     root.setAttribute('data-cc-ready', '1');
     var lang = /^en/i.test(doc.documentElement.getAttribute('lang') || '') ? 'en' : 'da';
-    var S = STR[lang];
+    var S = STR[lang], win = doc.defaultView || (typeof window !== 'undefined' ? window : null), cur = 'DKK';
+    if (lang === 'en') { cur = 'USD'; try { var sc = win.localStorage.getItem(KEY); if (CURS.indexOf(sc) > -1) cur = sc; } catch (e) { /* no storage */ } }
+    root.setAttribute('data-currency', cur);
     if (!doc.getElementById('pw-cc-css')) {
       var st = doc.createElement('style'); st.id = 'pw-cc-css'; st.textContent = CSS; doc.head.appendChild(st);
     }
@@ -255,7 +274,7 @@
     if (lang === 'en') Array.prototype.forEach.call(doc.querySelectorAll('a[data-cc-en]'), function (a) { a.setAttribute('href', a.getAttribute('data-cc-en')); });
 
     var state = { mode: 'fast', months: 1, retro: false, v: {} };
-    var kinds = {};
+    var kinds = {}, units = [];
 
     /* inputs: swap each span for an <input>, and its label span for a <label> */
     Array.prototype.forEach.call(root.querySelectorAll('[data-input]'), function (span) {
@@ -263,6 +282,10 @@
       kinds[key] = kind;
       var def = span.getAttribute('data-default');
       var v = def == null ? parse(span.textContent, lang, kind) : (def === '' ? null : Number(def));
+      if (lang === 'en' && kind === 'kr' && v != null && EN_DEF[key] != null) v = EN_DEF[key];
+      // the amount unit next to the box (static "kr." / "DKK"): follows the currency, symbols before the number
+      var box = span.parentNode, us = kind === 'kr' && box && box.lastElementChild;
+      if (us && us !== span) units.push([us, box]);
       var inp = doc.createElement('input');
       inp.type = 'text';
       inp.id = 'pw-cc-' + key;
@@ -290,6 +313,33 @@
         inp.value = x == null ? '' : (kind === 'pct' ? fmtPct(x, lang).replace(/\s*%$/, '').replace(NB, '') : fmtNum(x, lang));
       });
     });
+
+    function placeUnits() {
+      units.forEach(function (x) {
+        var us = x[0], box = x[1]; us.textContent = unit(lang, cur);
+        if (lang === 'en' && SYM[cur]) { if (box.firstElementChild !== us) box.insertBefore(us, box.firstElementChild); }
+        else if (box.lastElementChild !== us) box.appendChild(us);
+      });
+    }
+    placeUnits();
+    // currency menu (English only), at the top of the input column; changes the symbol, never the numbers
+    var sel = null;
+    if (lang === 'en') {
+      var col = root.querySelector('.pw-tool__inputs');
+      if (col) {
+        var cw = doc.createElement('div'); cw.className = 'pw-cc__cur';
+        var cl = doc.createElement('label'); cl.textContent = S.currency; cl.htmlFor = 'pw-cc-currency';
+        sel = doc.createElement('select'); sel.id = 'pw-cc-currency'; sel.setAttribute('data-currency-select', '');
+        CURS.forEach(function (c) { var o = doc.createElement('option'); o.value = c; o.textContent = c + (SYM[c] ? ' (' + SYM[c] + ')' : ''); sel.appendChild(o); });
+        sel.value = cur;
+        sel.addEventListener('change', function () {
+          cur = curOf(lang, sel.value);
+          try { win.localStorage.setItem(KEY, cur); } catch (e) { /* private mode */ }
+          root.setAttribute('data-currency', cur); placeUnits(); render();
+        });
+        cw.appendChild(cl); cw.appendChild(sel); col.insertBefore(cw, col.firstChild);
+      }
+    }
 
     function onType(inp, key, kind) {
       var raw = inp.value;
@@ -391,7 +441,7 @@
 
     var liveTimer = 0, lastCommission = null;
     function render() {
-      var w = view(params(), lang);
+      var w = view(params(), lang, cur);
       setText('commission', w.commission);
       setText('summary', w.summary);
       var warn = out('warn');
@@ -430,5 +480,5 @@
     render();
   }
 
-  return { calc: calc, view: view, parse: parse, fmtNum: fmtNum, fmtKr: fmtKr, fmtPct: fmtPct, STR: STR, mount: mount };
+  return { calc: calc, view: view, parse: parse, fmtNum: fmtNum, fmtKr: fmtKr, fmtPct: fmtPct, STR: STR, EN_DEF: EN_DEF, CURS: CURS, KEY: KEY, mount: mount };
 });
