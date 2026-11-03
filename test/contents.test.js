@@ -1,7 +1,7 @@
 // In-page contents module (src/tools/contents.js, v1.25.57): pure helpers, and proof that it stays off every page type
-// it is not for (Insider posts, glossary, integrations, business types, landing pages). The dialog itself (focus trap,
-// Esc, anchors, widths 1440/1024/864/390) is checked in headless Chromium against the template fixtures; see the
-// release notes of v1.25.57. Run: npm test   (plain Node, no dependencies)
+// it is not for (Insider posts, glossary, integrations, business types, landing pages). The sidebar list, the tab strip
+// and the widths 360-1500 are checked in headless Chromium against the template fixtures (release notes of v1.25.57).
+// Run: npm test   (plain Node, no dependencies)
 const assert = require('assert');
 const fs = require('fs'), path = require('path');
 const C = require('../src/tools/contents.js');
@@ -40,15 +40,12 @@ const H = t => ({ id: '', textContent: t });
 const hs = [H('Same title'), H('Same title'), { id: 'kept', textContent: 'Has id' }, H('“”')];
 is(C.assignIds(hs, null, 'case-sec'), ['same-title', 'same-title-2', 'kept', 'case-sec-4'], 'unique ids, existing id kept, fallback');
 is(C.num(0), '01', '01'); is(C.num(9), '10', '10');
-// ---- labels
+// ---- labels (as on posts)
 is(C.L.da.contents, 'Indhold', 'da label'); is(C.L.en.contents, 'Contents', 'en label');
-is(C.L.da.unit(4), '4 afsnit', 'da count'); is(C.L.en.unit(1), '1 section', 'en singular'); is(C.L.en.unit(4), '4 sections', 'en plural');
-is(C.L.da.close, 'Luk', 'da close'); is(C.L.en.close, 'Close', 'en close');
-yes(!/[áéíóú]/.test(JSON.stringify(C.L.da) + C.L.da.unit(2)), 'no acute accents in Danish copy');
 
 // ---- scope: which layouts the module handles, and nothing else
 is(C.TEMPLATES.map(t => t.key), ['case', 'model'], 'customer stories (contents) + commission models (un-stick only)');
-is(C.TEMPLATES.map(t => !!t.contents), [true, false], 'only stories get the contents button');
+is(C.TEMPLATES.map(t => !!t.contents), [true, false], 'only stories get contents (sidebar list + tab strip)');
 const roots = C.TEMPLATES.map(t => t.root);
 const build = fs.readFileSync(path.join(__dirname, '..', 'build.py'), 'utf8');
 yes(/'contents':\['\.pw-case__story','\.pw-model__body'\]/.test(build), 'build.py loads the chunk only on story / model layouts');
@@ -87,7 +84,14 @@ for (const k in OTHER) {
 // the CSS only acts under the layout state the module sets (desktop look untouched while the sidebar is a column)
 yes(/\[data-pw-cnt="stacked"\] \.pw-cnt-hide\{display:none!important\}/.test(C.CSS), 'sidebar hidden only when stacked');
 yes(/\[data-pw-cnt="stacked"\] \.pw-cnt-unstick\{position:static!important/.test(C.CSS), 'un-stuck only when stacked');
-yes(/\.pw-cnt-bar\{display:none\}/.test(C.CSS) && /\[data-pw-cnt="stacked"\] \.pw-cnt-bar\{display:flex\}/.test(C.CSS), 'button only when stacked');
-yes(!/\.pw-post|\.pw-term|\.pw-int|\.pw-type/.test(C.CSS), 'no rules for other templates');
+yes(/\.pw-ptoc\.pw-ptoc--off\{display:none\}/.test(C.CSS), 'tab strip off unless stacked');
+// sidebar list rules are scoped to the story sidebar, so they can never restyle the post contents list
+yes(C.CSS.split('}').filter(r => /pw-post__toc/.test(r)).every(r => /^\.pw-case__aside /.test(r.split(',')[0]) && r.split('{')[0].split(',').every(x => /^\.pw-case__aside /.test(x))), 'post contents classes only under .pw-case__aside');
+yes(!/\.pw-post__(layout|aside|body|article)|\.pw-term|\.pw-int|\.pw-type/.test(C.CSS), 'no rules for other templates');
+// the tab strip CSS is the post template's (page code head, 2026-10-27), only without its media query
+const POST_STRIP = ['.pw-ptoc__tab{flex:none;display:flex;align-items:baseline;gap:8px;max-width:80vw;padding:14px 18px;',
+  '.pw-ptoc__tab--on{background:linear-gradient(90deg,rgba(76,57,202,.18) var(--p,0%),rgba(76,57,202,.06) var(--p,0%));color:var(--_prowi---pw-dark-purple,#110663);font-weight:500}',
+  '.pw-ptoc--on{opacity:1;visibility:visible;transform:none;transition:opacity 200ms,transform 200ms}'];
+POST_STRIP.forEach(r => yes(C.CSS.indexOf(r) > -1, 'strip rule as on posts: ' + r.slice(0, 40)));
 
 console.log('contents: ' + n + ' checks pass');
