@@ -248,6 +248,8 @@
       '/provisionsmodeller': { base: '/commission-models', slugs: MODEL_SLUG_EN } };
     qa('a[href^="/"]').forEach(function (a) {
       if (a.closest('.w-richtext')) return;
+      // language switch links point to the other locale on purpose (header switch, Webflow locale switcher, hreflang)
+      if (a.closest('.pw-nav__lang, [class*="w-locales"], [hreflang], [data-locale-switch]')) return;
       var h = a.getAttribute('href'); if (/^\/en(\/|$)/.test(h) || /^\/\//.test(h)) return;
       var m = h.match(/^(\/[^\/?#]*)(.*)$/); var head = m ? m[1] : h, rest = m ? m[2] : '';
       if (EN_PATH[head] && (!rest || rest.charAt(0) !== '/')) head = EN_PATH[head];
@@ -1174,20 +1176,223 @@
     });
   })();
 
+  /* ---------- Book a demo: the pop-up (see demo() below main) ---------- */
+  demo();
+
+  /* ---------- Footer: copyright year ---------- */
+  qa('footer span, footer div', root).forEach(function (el) {
+    if (el.children.length === 0 && /©\s*\d{4}/.test(el.textContent)) el.textContent = el.textContent.replace(/©\s*\d{4}/, '© ' + new Date().getFullYear());
+  });
+
+  }
+
+
   /* ---------- Book a demo: the pop-up (lives in the footer component, so every page has it) ----------
      Design: DEMO-MODAL-HANDOVER.md ("Unlock calendar"). Three steps in one dialog:
      1 name + work email (the native Webflow form "Book demo" is submitted here, so the Zapier flow gets every lead),
      2 three one-at-a-time questions, 3 Anders' cal.com calendar inline (prefilled; answers + UTM in the notes),
-     then a booked state. Any link to the demo page, #demo-form or [data-demo-open] opens it in place. */
-  (function demo() {
-    var modal = q('.pw-demo-modal'); if (!modal) return;
-    var dm = q('.pw-dm', modal); if (!dm) return;
+     then a booked state. Any link to the demo page, #demo-form or [data-demo-open] opens it in place.
+     Hardened in v1.25.61 (the English footer once lost its form inputs, the old early return left every Book demo click
+     going to /en/demo): the click handler is bound first, before anything reads the form; missing form fields are
+     rebuilt with the Danish markup's ids/names/types; when the form cannot be used (or its set-up fails) the pop-up opens
+     straight on the Cal.com calendar. Problems are logged with console.warn, never thrown. Runs once (main() calls it
+     in place; the boot code calls it again if anything before it threw). */
+  function demo() {
+    if (demo.done) return; demo.done = true;
+    var warn = function (m, e) { try { if (w.console && console.warn) console.warn('[prowi demo] ' + m, e || ''); } catch (x) {} };
+    try {
+    var modal = q('.pw-demo-modal');
+    if (!modal) {
+      // no pop-up markup at all: a calendar-only pop-up with the same classes (Webflow's site CSS styles them)
+      warn('pop-up markup (.pw-demo-modal) missing: using a calendar-only pop-up');
+      modal = d.createElement('div'); modal.className = 'pw-demo-modal';
+      modal.innerHTML = '<span class="pw-demo-modal__backdrop" aria-hidden="true"></span><div class="pw-demo-modal__panel"><a href="#" class="pw-demo-modal__close">&times;</a><div class="pw-dm"></div></div>';
+    }
     // out of the footer: a transformed ancestor (section reveal) would otherwise pin the fixed layer to it
     if (modal.parentNode !== d.body) d.body.appendChild(modal);
-    var form = q('form', dm), email = q('input[type="email"]', dm), name = q('input[name="Name"]', dm);
-    var err = q('.pw-demo-modal__error', dm), sub = form && q('input[type="submit"]', form);
+    var dm = q('.pw-dm', modal) || q('.pw-demo-modal__panel', modal) || modal;
+
+    // 1. Every "Book demo" CTA opens the pop-up in place: bound before anything else, whatever state the form is in.
+    // Matched on the link's resolved path (any host, so Webflow preview and staging hosts count too: /demo, /en/demo,
+    // /book-demo, /demo-2026 ...), on #demo-form / #demo, on [data-demo-open] / [data-demo-source], on .pw-cta-demo (the
+    // demo page's own CTA) or on the button text. Runs in the capture phase on window, ahead of Webflow's own link
+    // handling, and stops the click so nothing navigates to the Demo page.
+    var DEMO_PATH = /^\/(?:en\/)?(?:demo|book-demo)(?:-2026)?\/?$/;
+    var DEMO_HASH = /^#(?:demo-form|demo|book-demo)$/;
+    var DEMO_TEXT = /^\s*(?:book\s+(?:a\s+|en\s+)?demo)\s*$/i;
+    // Never a trigger: language switch links. The header switch (.pw-nav__lang) gets its href set to the other locale's
+    // twin of this page, which on the demo page is /demo <-> /en/demo, so before v1.25.61 a click on it opened the
+    // pop-up there instead of switching language. Also Webflow's locale switcher (.w-locales-*), [hreflang] links, and
+    // any link from a demo page to the same page in the other language.
+    var LOCALE_SEL = '.pw-nav__lang, [class*="w-locales"], [hreflang], [data-locale-switch]';
+    var isEn = function (p) { return /^\/en(?:\/|$)/.test(p); };
+    var isLocaleLink = function (a, path) {
+      if (a.closest(LOCALE_SEL)) return true;
+      var cur = w.location.pathname;
+      return !!path && DEMO_PATH.test(cur) && DEMO_PATH.test(path) && isEn(cur) !== isEn(path);
+    };
+    var isDemoLink = function (a) {
+      var h0 = a.getAttribute('href') || '', p0 = '';
+      if (a.tagName === 'A' && h0 && h0.charAt(0) !== '#') { try { p0 = new URL(h0, w.location.href).pathname; } catch (err) {} }
+      if (isLocaleLink(a, p0)) return false;
+      if (a.hasAttribute('data-demo-open') || a.hasAttribute('data-demo-source')) return true;
+      if (a.classList && a.classList.contains('pw-cta-demo')) return true;
+      var h = a.getAttribute('href') || '';
+      if (DEMO_HASH.test(h)) return true;
+      if (a.tagName === 'A' && h && h.charAt(0) !== '#' && !/^(?:mailto|tel|javascript):/i.test(h)) {
+        var path = ''; try { path = new URL(h, w.location.href).pathname; } catch (err) {}
+        if (DEMO_PATH.test(path)) return true;
+      }
+      var lab = a.querySelector('.pw-cta__label') || a;
+      return DEMO_TEXT.test(lab.textContent || '');
+    };
+    w.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('a,button'); if (!a || modal.contains(a)) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; // new tab / window: the browser's choice
+      var hit = false; try { hit = isDemoLink(a); } catch (er) { warn('trigger check failed', er); }
+      if (!hit) return;
+      e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      try {
+        // from the mobile menu: close it first (this capture handler stops the menu link's own close handler, so the
+        // menu, z-index 9000, would stay on top of the pop-up)
+        var mm = a.closest('.pw-menu'); if (mm) { var mc = q('.pw-menu__close', mm); if (mc) mc.click(); }
+        var cls = (a.className && typeof a.className === 'string' ? a.className.split(/\s+/)[0] : '') || 'link';
+        var named = a.getAttribute('data-demo-source');
+        open(named || cls, !!named);
+      } catch (er) { warn('opening the pop-up failed', er); }
+    }, true);
+
+    // 2. The dialog shell: open / close / keyboard. Shared by the full flow and the calendar-only fallback.
     var closeBtn = q('.pw-demo-modal__close', modal), backdrop = q('.pw-demo-modal__backdrop', modal);
-    if (!form || !email || !sub) return;
+    var TXS = DA ? { close: 'Luk', dialog: 'Book demo' } : { close: 'Close', dialog: 'Book a demo' };
+    modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-label', TXS.dialog);
+    if (closeBtn) { closeBtn.setAttribute('aria-label', TXS.close); closeBtn.setAttribute('role', 'button'); }
+    var track = function (ev, o) { try { w.dataLayer = w.dataLayer || []; var p = { event: ev }; for (var k in o) p[k] = o[k]; w.dataLayer.push(p); } catch (e) {} };
+    // where the visitor came from: kept for the session so a later page still carries the landing UTMs
+    var store = {}; try { store = JSON.parse(sessionStorage.getItem('pwAttribution') || '{}'); } catch (e) {}
+    try {
+      var qs = new URLSearchParams(w.location.search), hs = new URLSearchParams((w.location.hash || '').replace(/^#/, ''));
+      ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (k) { var v = qs.get(k) || hs.get(k); if (v) store[k] = v; });
+      if (!store.referrer && d.referrer && d.referrer.indexOf(w.location.host) < 0) store.referrer = d.referrer;
+      sessionStorage.setItem('pwAttribution', JSON.stringify(store));
+    } catch (e) {}
+    // cal.com: the embed loaded on first open; its events go to whichever mode is running
+    var CAL = 'anders-goosmann/30min', calBox = q('.pw-dm__calbox', dm);
+    var H = { ready: function () { if (calBox) calBox.classList.add('is-ready'); track('demo_cal_ready', {}); }, booked: function () {} };
+    var loadCal = function () {
+      (function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var dd = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; dd.head.appendChild(dd.createElement('script')).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(w, 'https://app.cal.com/embed/embed.js', 'init');
+      if (w.__pwCalInit) return; w.__pwCalInit = true;
+      w.Cal('init', '30min', { origin: 'https://app.cal.com' });
+      w.Cal.config = w.Cal.config || {}; w.Cal.config.forwardQueryParams = true;
+      var ns = w.Cal.ns['30min'];
+      ns('on', { action: 'linkReady', callback: function (e) { H.ready(e); } });
+      ns('on', { action: 'bookingSuccessfulV2', callback: function (e) { H.booked(e); } });
+      ns('on', { action: 'bookingSuccessful', callback: function (e) { H.booked(e); } });
+      ns('ui', { hideEventTypeDetails: false, layout: 'month_view', theme: 'light', cssVarsPerTheme: { light: { 'cal-brand': '#4C39CA' } } });
+    };
+    var F = null; // the full flow (set below when the form is usable): beforeOpen / afterOpen / key
+    var calOnlyDone = false;
+    // fallback: the calendar step shown directly (no form step, no questions), so a booking is always possible
+    var calOnly = function () {
+      qa('.pw-dm__step', dm).forEach(function (s) {
+        var three = s.getAttribute('data-step') === '3';
+        s.classList.toggle('is-active', three); s.classList.remove('is-done', 'is-todo');
+        if (!three) s.style.display = 'none';
+        var ch = q('.pw-dm__change', s); if (ch) ch.style.display = 'none';
+      });
+      if (!calBox) { calBox = d.createElement('div'); calBox.className = 'pw-dm__calbox'; dm.appendChild(calBox); }
+      calBox.classList.remove('is-locked');
+      if (calOnlyDone) return; calOnlyDone = true;
+      loadCal(); calBox.classList.remove('is-ready');
+      var old = q('#my-cal-inline-30min') || q('.pw-dm__cal', calBox), box = d.createElement('div');
+      box.className = 'pw-dm__cal'; box.id = 'my-cal-inline-30min';
+      if (old && calBox.contains(old)) old.parentNode.replaceChild(box, old); else { if (old) old.removeAttribute('id'); calBox.appendChild(box); }
+      var u = [store.utm_source, store.utm_medium, store.utm_campaign].filter(Boolean).join(' / ');
+      var cfg = { layout: 'month_view', useSlotsViewOnSmallScreen: 'true', theme: 'light' };
+      if (u) cfg.notes = 'utm: ' + u;
+      w.Cal.ns['30min']('inline', { elementOrSelector: '#my-cal-inline-30min', calLink: CAL, config: cfg });
+    };
+    var toFallback = function (why, e) {
+      warn(why + ': the pop-up opens on the calendar', e); F = null;
+      H.booked = function () { modal.classList.add('is-booked'); track('demo_booked', {}); };
+    };
+    var opener = null, closing = null;
+    var open = function (src, named) {
+      if (closing) { clearTimeout(closing); closing = null; modal.classList.remove('is-closing'); }
+      if (modal.classList.contains('is-open')) return;
+      opener = d.activeElement;
+      if (F) try { F.beforeOpen(src, named); } catch (e) { toFallback('opening the form failed', e); }
+      modal.classList.add('is-open'); d.body.style.overflow = 'hidden';
+      try { loadCal(); if (F) F.afterOpen(); else calOnly(); } catch (e) {
+        toFallback('showing the form failed', e); try { calOnly(); } catch (e2) { warn('calendar fallback failed', e2); }
+      }
+      track('demo_open', { source_cta: src || 'link' });
+    };
+    var close = function () {
+      if (!modal.classList.contains('is-open') || closing) return;
+      modal.classList.add('is-closing');
+      closing = setTimeout(function () { closing = null; modal.classList.remove('is-open', 'is-closing'); }, REDUCED ? 0 : 220);
+      d.body.style.overflow = '';
+      if (opener && opener.focus) try { opener.focus({ preventScroll: true }); } catch (e) {}
+    };
+    if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); close(); });
+    if (backdrop) backdrop.addEventListener('click', close);
+    d.addEventListener('keydown', function (e) {
+      if (!modal.classList.contains('is-open')) return;
+      if (e.key === 'Escape') { close(); return; }
+      if (F && F.key(e)) return;
+      if (e.key === 'Tab') { // keep focus inside the dialog
+        var f = qa('a[href], button, input:not([type="hidden"]), iframe, [tabindex]:not([tabindex="-1"])', modal).filter(function (el) { return el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden'; });
+        if (!f.length) return; var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && d.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && d.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    if (w.location.hash === '#demo-form') setTimeout(function () { open('hash'); }, 400);
+
+    // 3. The form flow. Missing fields are rebuilt first; without a form (or if anything here throws) -> calendar only.
+    try { F = demoFlow(); } catch (e) { F = null; warn('form set-up failed', e); }
+    if (!F) toFallback(q('form', dm) ? 'form set-up failed' : 'form missing');
+    } catch (e) { warn('pop-up set-up failed', e); }
+
+    function demoFlow() {
+    var form = q('form', dm); if (!form) return null;
+    // repair: the fields as the Danish markup has them (Webflow FormTextInput / FormButton, published classes)
+    var mk = function (at) { var el = d.createElement('input'); for (var k in at) el.setAttribute(k, at[k]); return el; };
+    var fixed = [];
+    var labels = qa('.pw-demo-modal__label', form);
+    var row = q('.pw-demo-modal__row', form);
+    var mkLabel = function (t) {
+      if (!row) { row = d.createElement('div'); row.className = 'pw-demo-modal__row'; form.insertBefore(row, form.firstChild); }
+      var l = d.createElement('label'); l.className = 'pw-demo-modal__label'; l.appendChild(d.createTextNode(t)); row.appendChild(l); fixed.push('label'); return l;
+    };
+    var isMailLabel = function (l) { return !!q('input[type="email"]', l) || /mail/i.test(l.textContent || ''); };
+    if (!q('input[name="Name"]', dm)) {
+      var nl = labels.filter(function (l) { return !isMailLabel(l); })[0] || mkLabel(DA ? 'Navn' : 'Name');
+      if (labels.indexOf(nl) < 0) labels.unshift(nl);
+      nl.appendChild(mk({ 'class': 'pw-demo-modal__input w-input', maxlength: '256', name: 'Name', 'data-name': 'Name', placeholder: 'Dit navn', type: 'text', id: 'pw-demo-name', autocomplete: 'name', required: '' }));
+      fixed.push('#pw-demo-name');
+    }
+    if (!q('input[type="email"]', dm)) {
+      var el = labels.filter(isMailLabel)[0] || mkLabel(DA ? 'Arbejdsmail' : 'Work email');
+      if (labels.indexOf(el) < 0) labels.push(el);
+      var ein = mk({ 'class': 'pw-demo-modal__input w-input', maxlength: '256', name: 'Email', 'data-name': 'Email', placeholder: 'you@company.com', type: 'email', id: 'pw-demo-email', autocomplete: 'email', required: '' });
+      var errIn = q('.pw-demo-modal__error', el); if (errIn) el.insertBefore(ein, errIn); else el.appendChild(ein);
+      fixed.push('#pw-demo-email');
+    }
+    var sub0 = q('input[type="submit"]', form);
+    [['pw-demo-reps', 'Reps on commission'], ['pw-demo-crm', 'CRM'], ['pw-demo-source', 'Heard about Prowi'], ['pw-demo-utm-source', 'utm_source'],
+      ['pw-demo-utm-medium', 'utm_medium'], ['pw-demo-utm-campaign', 'utm_campaign'], ['pw-demo-referrer', 'Referrer'], ['pw-demo-page', 'Page']].forEach(function (f) {
+      if (q('input[name="' + f[1] + '"]', form)) return;
+      var hi = mk({ 'class': 'w-input', maxlength: '256', name: f[1], 'data-name': f[1], type: 'hidden', id: f[0] });
+      if (sub0 && sub0.parentNode) sub0.parentNode.insertBefore(hi, sub0); else form.appendChild(hi);
+      fixed.push('#' + f[0]);
+    });
+    if (!sub0) { form.appendChild(mk({ type: 'submit', 'data-wait': 'Sender …', 'class': 'pw-demo-modal__submit w-button', value: 'Book demo' })); fixed.push('submit'); }
+    if (fixed.length) warn('form fields missing in the page markup, rebuilt: ' + fixed.join(', '));
+
+    var email = q('input[type="email"]', dm), name = q('input[name="Name"]', dm);
+    var err = q('.pw-demo-modal__error', dm), sub = form && q('input[type="submit"]', form);
+    if (!form || !email || !sub) return null;
     var EN = {
       role: 'Co-founder of Prowi', title: 'Book 30 minutes with Anders.', sub: 'Your plan, run live. Not a slideshow.', lang: 'English or Danish',
       get: 'What you get', get1: 'Your plan, run live', get2: 'One closed deal, start to payslip', get3: 'A straight answer', hs: 'Official HubSpot app · Rated 5/5',
@@ -1203,11 +1408,9 @@
       : { name: 'Name', email: 'Work email', next: 'Continue', wait: 'Continue', reps: 'reps', of: 'of', err: 'Please use your work email. Personal addresses (Gmail, Outlook, iCloud …) aren’t accepted.', phName: 'Your name', phEmail: 'name@company.com', close: 'Close', dialog: 'Book a demo', fail: 'Something went wrong. Try again, or email anders@prowi.io directly.' };
     var setFirstText = function (el, s) { if (!el) return; for (var i = 0; i < el.childNodes.length; i++) { var n = el.childNodes[i]; if (n.nodeType === 3 && n.nodeValue.trim()) { n.nodeValue = s; return; } } };
     if (!DA) qa('[data-dm-t]', dm).forEach(function (el) { var s = EN[el.getAttribute('data-dm-t')]; if (s) el.textContent = s; });
-    var labels = qa('.pw-demo-modal__label', dm); setFirstText(labels[0], TX.name); setFirstText(labels[1], TX.email);
+    labels = qa('.pw-demo-modal__label', dm); setFirstText(labels[0], TX.name); setFirstText(labels[1], TX.email);
     if (err) err.textContent = TX.err;
     var ft = q('.pw-demo-modal__fail-text', dm); if (ft) ft.textContent = TX.fail;
-    modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-label', TX.dialog);
-    if (closeBtn) { closeBtn.setAttribute('aria-label', TX.close); closeBtn.setAttribute('role', 'button'); }
     sub.value = TX.next; sub.setAttribute('data-wait', TX.wait);
     [name, email].forEach(function (el) { if (el) el.value = ''; });
     if (name) name.setAttribute('placeholder', TX.phName);
@@ -1216,16 +1419,6 @@
     var hid = function (n) { return q('input[name="' + n + '"]', form); };
     ['Reps on commission', 'CRM', 'Heard about Prowi'].forEach(function (n) { var el = hid(n); if (el) el.value = ''; });
 
-    var track = function (ev, o) { try { w.dataLayer = w.dataLayer || []; var p = { event: ev }; for (var k in o) p[k] = o[k]; w.dataLayer.push(p); } catch (e) {} };
-
-    // where the visitor came from: kept for the session so a later page still carries the landing UTMs
-    var store = {}; try { store = JSON.parse(sessionStorage.getItem('pwAttribution') || '{}'); } catch (e) {}
-    try {
-      var qs = new URLSearchParams(w.location.search), hs = new URLSearchParams((w.location.hash || '').replace(/^#/, ''));
-      ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (k) { var v = qs.get(k) || hs.get(k); if (v) store[k] = v; });
-      if (!store.referrer && d.referrer && d.referrer.indexOf(w.location.host) < 0) store.referrer = d.referrer;
-      sessionStorage.setItem('pwAttribution', JSON.stringify(store));
-    } catch (e) {}
     var S = { step: 1, q: 0, reps: '', crm: '', src: '', source: '', booked: null };
     var fill = function () {
       var set = function (n, v) { var el = hid(n); if (el) el.value = v || ''; };
@@ -1300,18 +1493,7 @@
       a.addEventListener('click', function (e) { e.preventDefault(); go(+a.closest('.pw-dm__step').getAttribute('data-step')); });
     });
     // step 3: cal.com inline, loaded on first open, mounted on entering the step (again if name or email changed)
-    var CAL = 'anders-goosmann/30min', calBox = q('.pw-dm__calbox', dm), calKey = null;
-    var loadCal = function () {
-      (function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var dd = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; dd.head.appendChild(dd.createElement('script')).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === 'string') { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ['initNamespace', namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(w, 'https://app.cal.com/embed/embed.js', 'init');
-      if (w.__pwCalInit) return; w.__pwCalInit = true;
-      w.Cal('init', '30min', { origin: 'https://app.cal.com' });
-      w.Cal.config = w.Cal.config || {}; w.Cal.config.forwardQueryParams = true;
-      var ns = w.Cal.ns['30min'];
-      ns('on', { action: 'linkReady', callback: function () { if (calBox) calBox.classList.add('is-ready'); track('demo_cal_ready', {}); } });
-      ns('on', { action: 'bookingSuccessfulV2', callback: booked });
-      ns('on', { action: 'bookingSuccessful', callback: booked });
-      ns('ui', { hideEventTypeDetails: false, layout: 'month_view', theme: 'light', cssVarsPerTheme: { light: { 'cal-brand': '#4C39CA' } } });
-    };
+    var calKey = null;
     var notes = function () {
       var p = [];
       if (S.reps) p.push('Reps on commission: ' + S.reps); if (S.crm) p.push('CRM: ' + S.crm); if (S.src) p.push('Heard via: ' + S.src);
@@ -1337,7 +1519,7 @@
     };
     // booked
     var bkP = q('.pw-dm__bk-p', dm);
-    var booked = function (e) {
+    H.booked = function (e) {
       var x = (e && e.detail && e.detail.data) || {}, b = x.booking || x;
       var t = b.startTime || b.start || b.date || x.startTime || x.start || x.date;
       var when = '';
@@ -1348,82 +1530,27 @@
       S.booked = x; w.__prowiBooked = x; render(); focusStep(); track('demo_booked', {});
     };
     var bkBack = q('.pw-dm__bk-back', dm);
-    // open / close
-    var opener = null;
-    var open = function (src, named) {
-      if (closing) { clearTimeout(closing); closing = null; modal.classList.remove('is-closing'); }
-      if (modal.classList.contains('is-open')) return;
-      opener = d.activeElement; if (named) S.source = src; // a CTA that names its source (data-demo-source) reaches the form and the booking notes
-      fill(); modal.classList.add('is-open'); d.body.style.overflow = 'hidden';
-      loadCal(); render(); focusStep();
-      track('demo_open', { source_cta: src || 'link' });
-    };
-    var closing = null;
-    var close = function () {
-      if (!modal.classList.contains('is-open') || closing) return;
-      modal.classList.add('is-closing');
-      closing = setTimeout(function () { closing = null; modal.classList.remove('is-open', 'is-closing'); }, REDUCED ? 0 : 220);
-      d.body.style.overflow = '';
-      if (opener && opener.focus) try { opener.focus({ preventScroll: true }); } catch (e) {}
-    };
-    if (closeBtn) closeBtn.addEventListener('click', function (e) { e.preventDefault(); close(); });
-    if (backdrop) backdrop.addEventListener('click', close);
     if (bkBack) bkBack.addEventListener('click', function (e) { e.preventDefault(); close(); });
-    d.addEventListener('keydown', function (e) {
-      if (!modal.classList.contains('is-open')) return;
-      if (e.key === 'Escape') { close(); return; }
-      if (S.step === 2 && !S.booked && /^[1-7]$/.test(e.key) && !(e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) {
-        var opts = qa('.pw-dm__q.is-on .pw-dm__opt', dm), o = opts[+e.key - 1];
-        if (o) { e.preventDefault(); o.click(); } return;
-      }
-      if (e.key === 'Tab') { // keep focus inside the dialog
-        var f = qa('a[href], button, input:not([type="hidden"]), iframe, [tabindex]:not([tabindex="-1"])', modal).filter(function (el) { return el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden'; });
-        if (!f.length) return; var first = f[0], last = f[f.length - 1];
-        if (e.shiftKey && d.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && d.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
-    });
-    // Every "Book demo" CTA opens the pop-up in place. Matched on the link's resolved path (any host, so Webflow preview
-    // and staging hosts count too), on [data-demo-open], or on the button text. Runs in the capture phase on window,
-    // ahead of Webflow's own link handling, and stops the click so nothing navigates to the Demo page.
-    var DEMO_PATH = /^\/(?:en\/)?(?:demo|book-demo)(?:-2026)?\/?$/;
-    var DEMO_TEXT = /^\s*(?:book\s+(?:a\s+)?demo|book\s+en\s+demo)\s*$/i;
-    var isDemoLink = function (a) {
-      if (a.hasAttribute('data-demo-open')) return true;
-      var h = a.getAttribute('href') || '';
-      if (h === '#demo-form') return true;
-      if (a.tagName === 'A' && h && h.charAt(0) !== '#') {
-        var path = ''; try { path = new URL(h, w.location.href).pathname; } catch (err) {}
-        if (DEMO_PATH.test(path)) return true;
-      }
-      var lab = a.querySelector('.pw-cta__label') || a;
-      return DEMO_TEXT.test(lab.textContent || '');
-    };
-    w.addEventListener('click', function (e) {
-      var a = e.target.closest && e.target.closest('a,button'); if (!a || modal.contains(a)) return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-      if (isDemoLink(a)) {
-        e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-        // from the mobile menu: close it first (this capture handler stops the menu link's own close handler, so the
-        // menu, z-index 9000, would stay on top of the pop-up)
-        var mm = a.closest('.pw-menu'); if (mm) { var mc = q('.pw-menu__close', mm); if (mc) mc.click(); }
-        var cls =(a.className && typeof a.className === 'string' ? a.className.split(/\s+/)[0] : '') || 'link';
-        var named = a.getAttribute('data-demo-source');
-        open(named || cls, !!named);
-      }
-    }, true);
-    if (w.location.hash === '#demo-form') setTimeout(function () { open('hash'); }, 400);
     render();
-  })();
-
-  /* ---------- Footer: copyright year ---------- */
-  qa('footer span, footer div', root).forEach(function (el) {
-    if (el.children.length === 0 && /©\s*\d{4}/.test(el.textContent)) el.textContent = el.textContent.replace(/©\s*\d{4}/, '© ' + new Date().getFullYear());
-  });
-
+    return {
+      // a CTA that names its source (data-demo-source) reaches the form and the booking notes
+      beforeOpen: function (src, named) { if (named) S.source = src; fill(); },
+      afterOpen: function () { render(); focusStep(); },
+      key: function (e) {
+        if (S.step === 2 && !S.booked && /^[1-7]$/.test(e.key) && !(e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) {
+          var opts = qa('.pw-dm__q.is-on .pw-dm__opt', dm), o = opts[+e.key - 1];
+          if (o) { e.preventDefault(); o.click(); } return true;
+        }
+        return false;
+      }
+    };
+    }
   }
 
   // English pages: the string maps arrive in their own file (dist/chunks/en.js, requested by src/loader.js before this
-  // code runs). Translate first, then run the rest. Danish pages run at once.
-  if (LANG === 'en' && w.__pwNeed) w.__pwNeed('en', function () { enStrings(); main(); }, true);
-  else { enStrings(); main(); }
+  // code runs). Translate first, then run the rest. Danish pages run at once. The demo pop-up is set up even if
+  // anything before it threw (demo() runs once; the error itself still reaches the console).
+  var boot = function () { try { enStrings(); main(); } finally { demo(); } };
+  if (LANG === 'en' && w.__pwNeed) w.__pwNeed('en', boot, true);
+  else boot();
 })();
