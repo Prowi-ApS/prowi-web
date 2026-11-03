@@ -86,7 +86,9 @@ yes(/\[data-pw-cnt="stacked"\] \.pw-cnt-hide\{display:none!important\}/.test(C.C
 yes(/\[data-pw-cnt="stacked"\] \.pw-cnt-unstick\{position:static!important/.test(C.CSS), 'un-stuck only when stacked');
 yes(/\.pw-ptoc\.pw-ptoc--off\{display:none\}/.test(C.CSS), 'tab strip off unless stacked');
 // sidebar list rules are scoped to the story sidebar, so they can never restyle the post contents list
-yes(C.CSS.split('}').filter(r => /pw-post__toc/.test(r)).every(r => /^\.pw-case__aside /.test(r.split(',')[0]) && r.split('{')[0].split(',').every(x => /^\.pw-case__aside /.test(x))), 'post contents classes only under .pw-case__aside');
+yes(C.CSS.split('}').filter(r => /pw-post__toc/.test(r)).every(r => r.replace(/^@media[^{]*\{/, '').split('{')[0].split(',').every(x => /^(\[data-pw-cnt="side"\] )?\.(pw-case__aside|pw-cnt-railed) /.test(x.trim()))), 'post contents classes only under the story sidebar (.pw-case__aside / .pw-cnt-railed)');
+yes(/\[data-pw-cnt="side"\] \.pw-cnt-railed \.pw-post__toc-item,\[data-pw-cnt="side"\] \.pw-cnt-railed \.pw-post__toc-item--on\{border-left-color:transparent\}/.test(C.CSS), 'rules on the rail only in side mode and only when aligned');
+yes(/margin-left:calc\(-1 \* var\(--pw-cnt-dx,0px\)\)/.test(C.CSS) && !/--pw-toc-dx/.test(C.CSS), 'own offset variable, never the posts\' --pw-toc-dx');
 yes(!/\.pw-post__(layout|aside|body|article)|\.pw-term|\.pw-int|\.pw-type/.test(C.CSS), 'no rules for other templates');
 // the tab strip CSS is the post template's (page code head, 2026-10-27), only without its media query
 const POST_STRIP = ['.pw-ptoc__tab{flex:none;display:flex;align-items:baseline;gap:8px;max-width:80vw;padding:14px 18px;',

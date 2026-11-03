@@ -13,7 +13,11 @@
    - side: the beats list in the sidebar becomes the Insider post contents list: the same markup and Webflow classes as
      cms-insider.js builds on posts (a.pw-post__toc-item / --on, .pw-post__toc-num 01 02 ..., .pw-post__toc-text), one
      entry per beat heading, the current section marked while scrolling (same scroll-spy line as posts), click scrolls
-     the heading in under the nav bar. The story's own sidebar label stays.
+     the heading in under the nav bar. The story's own sidebar label stays. As on posts (post template page code,
+     v1.25.58 here): the list's line sits on the page rail (the grey vertical of .pw-rail, PW Rail component), i.e.
+     label + list are pulled left by --pw-cnt-dx = list left - (rail left - 0.5 px), the items' own left rules turn
+     transparent and one 2 px marker glides to the current item (.pw-post__toc-marker). Without a visible rail the
+     list keeps its own rules.
    - stacked: the sidebar is hidden and the page gets the tab strip that Insider posts show under 1024 px (.pw-ptoc,
      same markup, CSS and behaviour as the post template's page code: fixed under the nav while the story is on screen,
      current tab filled as the reader moves through its section, edge fades). On posts the strip still comes from the
@@ -111,6 +115,13 @@
     '.pw-case__aside .pw-post__toc-num,.pw-case__aside .pw-post__toc-num--on{flex:0 0 auto;font-size:11px;font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--_prowi---pw-text-placeholder);transition:color 160ms ease-out}' +
     '.pw-case__aside .pw-post__toc-num--on{color:var(--_prowi---pw-purple)}' +
     '.pw-case__aside .pw-post__toc-text{min-width:0}' +
+    // on the rail, as on posts at >= 1024 px (post template page code head): only while the sidebar is a column
+    '[data-pw-cnt="side"] .pw-cnt-railed .pw-case__aside-label,[data-pw-cnt="side"] .pw-cnt-railed .pw-cnt-toc{margin-left:calc(-1 * var(--pw-cnt-dx,0px))}' +
+    '.pw-cnt-toc{position:relative}' +
+    '[data-pw-cnt="side"] .pw-cnt-railed .pw-post__toc-item,[data-pw-cnt="side"] .pw-cnt-railed .pw-post__toc-item--on{border-left-color:transparent}' +
+    '.pw-case__aside .pw-post__toc-marker{position:absolute;left:-0.5px;top:0;width:2px;height:0;border-radius:1px;background:var(--_prowi---pw-purple);opacity:0;pointer-events:none;transition:top 380ms cubic-bezier(.2,.6,.2,1),height 380ms cubic-bezier(.2,.6,.2,1),opacity 200ms}' +
+    '[data-pw-cnt="side"] .pw-cnt-railed .pw-post__toc-marker--on{opacity:1}' +
+    '@media (prefers-reduced-motion:reduce){.pw-case__aside .pw-post__toc-marker{transition:none}}' +
     '.pw-ptoc{display:block;position:fixed;left:0;right:0;top:var(--pw-ptoc-top,64px);z-index:50;background:var(--_prowi---pw-white,#fff);border-top:1px solid var(--_prowi---pw-border-hairline,rgba(17,6,99,.08));border-bottom:1px solid var(--_prowi---pw-border-hairline,rgba(17,6,99,.08));opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity 200ms,transform 200ms,visibility 0s linear 200ms}' +
     '.pw-ptoc--on{opacity:1;visibility:visible;transform:none;transition:opacity 200ms,transform 200ms}' +
     '.pw-ptoc.pw-ptoc--off{display:none}' +
@@ -217,7 +228,30 @@
         if (nm) nm.className = nm.className.replace(/\bpw-post__toc-num(--on)?\b/, on ? 'pw-post__toc-num--on' : 'pw-post__toc-num');
         if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
       });
+      place();
     }
+
+    // 1b. on the page rail, like the post sidebar (post template page code: railAlign + marker)
+    var mkr = mk('span', 'pw-post__toc-marker'); mkr.setAttribute('aria-hidden', 'true'); nav.appendChild(mkr);
+    function railAlign() {
+      if (mode !== 'side') return;
+      var rail = null;
+      each(doc.querySelectorAll('.pw-rail'), function (r) { if (!rail && r.offsetWidth > 0 && (r.closest && r.closest('section') || doc).contains(layout)) rail = r; });
+      if (!rail) { aside.classList.remove('pw-cnt-railed'); return; }
+      var cur = -parseFloat(win.getComputedStyle(nav).marginLeft) || 0;
+      var natural = nav.getBoundingClientRect().left + cur;
+      var dx = natural - (rail.getBoundingClientRect().left - 0.5);
+      if (dx >= 0 && dx < 240) { layout.style.setProperty('--pw-cnt-dx', (Math.round(dx * 2) / 2) + 'px'); aside.classList.add('pw-cnt-railed'); }
+      else aside.classList.remove('pw-cnt-railed');
+    }
+    function place() {
+      var on = nav.querySelector('.pw-post__toc-item--on');
+      if (mode !== 'side' || !on) { mkr.classList.remove('pw-post__toc-marker--on'); return; }
+      mkr.style.top = on.offsetTop + 'px'; mkr.style.height = on.offsetHeight + 'px';
+      mkr.classList.add('pw-post__toc-marker--on');
+    }
+    win.addEventListener('resize', function () { railAlign(); place(); });
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { railAlign(); place(); });
 
     // 2. tab strip under the nav, as on posts below 1024 px (post template page code, "Contents strip")
     var bar = mk('nav', 'pw-ptoc pw-ptoc--off'); bar.setAttribute('aria-label', T.contents);
@@ -293,7 +327,7 @@
         mode = m;
         bar.classList.toggle('pw-ptoc--off', m !== 'stacked');
         if (m !== 'stacked') bar.classList.remove('pw-ptoc--on');
-        curList = curTab = -1; update(); edges();
+        curList = curTab = -1; railAlign(); update(); edges(); place();
       },
       nav: nav, bar: bar, items: items, tabs: tabs
     };
