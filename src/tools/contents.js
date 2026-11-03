@@ -13,7 +13,8 @@
    - side: the beats list in the sidebar becomes the Insider post contents list: the same markup and Webflow classes as
      cms-insider.js builds on posts (a.pw-post__toc-item / --on, .pw-post__toc-num 01 02 ..., .pw-post__toc-text), one
      entry per beat heading, the current section marked while scrolling (same scroll-spy line as posts), click scrolls
-     the heading in under the nav bar. The story's own sidebar label stays. As on posts (post template page code,
+     the heading in under the nav bar. The sidebar label reads "Indhold" / "Contents" like the post sidebar label
+     (v1.25.59; the template's static "Historien i fem trin" text is replaced in the label's inner span). As on posts (post template page code,
      v1.25.58 here): the list's line sits on the page rail (the grey vertical of .pw-rail, PW Rail component), i.e.
      label + list are pulled left by --pw-cnt-dx = list left - (rail left - 0.5 px), the items' own left rules turn
      transparent and one 2 px marker glides to the current item (.pw-post__toc-marker). Without a visible rail the
@@ -218,6 +219,9 @@
     if (src) { src.style.display = 'none'; src.setAttribute('aria-hidden', 'true'); src.parentNode.insertBefore(nav, src.nextSibling); }
     else aside.appendChild(nav);
     aside.classList.add('pw-cnt-has-toc');
+    // label as on posts ("Indhold" / "Contents", the post sidebar's [data-insider-toc-label] text), in every mode
+    var lab = aside.querySelector(tp.label);
+    if (lab) { var ls = lab.querySelector('span') || lab; ls.textContent = T.contents; lab.setAttribute('data-pw-cnt-label', ''); }
     var curList = -1;
     function setList(i) {
       if (i === curList) return; curList = i;

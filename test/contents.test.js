@@ -42,6 +42,9 @@ is(C.assignIds(hs, null, 'case-sec'), ['same-title', 'same-title-2', 'kept', 'ca
 is(C.num(0), '01', '01'); is(C.num(9), '10', '10');
 // ---- labels (as on posts)
 is(C.L.da.contents, 'Indhold', 'da label'); is(C.L.en.contents, 'Contents', 'en label');
+const PAGE = fs.readFileSync(path.join(__dirname, '..', 'src', 'page.js'), 'utf8');
+yes(PAGE.indexOf('"Indhold": "Contents"') > -1, 'same pair as the post sidebar label translation in page.js');
+is(C.TEMPLATES[0].label, '.pw-case__aside-label', 'story label element');
 
 // ---- scope: which layouts the module handles, and nothing else
 is(C.TEMPLATES.map(t => t.key), ['case', 'model'], 'customer stories (contents) + commission models (un-stick only)');
