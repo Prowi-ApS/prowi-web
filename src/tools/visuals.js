@@ -524,7 +524,7 @@
     bodies.forEach(function (bd) {
       Array.prototype.forEach.call(bd.querySelectorAll('table'), function (t) {
         if (off(t) || count >= 6) return;
-        var tb = rowsOf(t), spec = detectTiers(tb, lang), anchor = t.closest('.pw-post__table-scroll') || t, v = null;
+        var tb = rowsOf(t), spec = detectTiers(tb, lang), anchor = t.closest('.pw-tx') || t.closest('.pw-post__table-scroll') || t, v = null;
         if (anchor.parentNode !== bd && anchor.parentNode && anchor.parentNode.parentNode === bd && anchor.parentNode.children.length === 1) anchor = anchor.parentNode;
         if (spec) v = tiersVis(spec, findMarker(spec, textNear(anchor, 1).concat(textNear(anchor, -1)), lang));
         else if ((spec = detectWaterfall(tb, lang))) v = wfVis(spec);
@@ -603,6 +603,8 @@
       }
       var ref = j.at || j.end.lastElementChild || j.end;
       offscreen(ref, function () {
+        // a table the tables module (tables.js) has since put in its card: the visual goes above the card, not into it
+        if (j.at && !j.inside && j.at.closest && j.at.closest('.pw-tx')) j.at = j.at.closest('.pw-tx');
         if (j.inside) j.at.appendChild(j.node);
         else if (j.at) j.at.parentNode.insertBefore(j.node, j.at);
         else j.end.appendChild(j.node);

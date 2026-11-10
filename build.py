@@ -111,6 +111,8 @@ TOOL_ROOTS={
  # in-page contents / sidebar layout on CMS item templates with a sidebar next to the article (v1.25.57):
  # customer stories (contents button + dialog when the beats column does not fit) and commission models (un-stick)
  'contents':['.pw-case__story','.pw-model__body'],
+ # rich-text tables (v1.25.62): scroll affordance for wide tables + the expand dialog; only on pages that have a table
+ 'tables':['.pw-post__body table','.pw-term__body table','.pw-model__guide table','.pw-type__longform table','.pw-int__longform table'],
  # article visuals (v1.25.52): rich-text bodies of the CMS item templates, plus explicit [data-pw-visual] embeds
  'visuals':['.pw-post__body','.pw-term__body','.pw-model__guide','.pw-type__longform','.pw-int__longform','[data-pw-visual]'],
 }
